@@ -6,7 +6,9 @@ void function LTSRebalance_TitanPassivesInit()
 {
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 	AddSpawnCallback( "npc_titan", ApplyPassiveRebalance )
-	AddSoulTransferFunc( UnstableReactor_TransferCallbacks )
+	AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
+	AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
+	AddCallback_OnNPCKilled( UnstableReactor_OnDeath )
 }
 
 void function ApplyPassiveRebalance( entity titan )
@@ -44,8 +46,6 @@ void function ApplyPassiveRebalance( entity titan )
 		TakePassive( owner, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) // We don't want normal nuke eject behavior
 		array passives = expect array( soul.passives )
 		passives[ ePassives.PAS_BUILD_UP_NUCLEAR_CORE ] = true
-		AddEntityCallback_OnKilled( titan, UnstableReactor_OnDeath )
-		AddTitanCallback_OnHealthSegmentLost( titan, UnstableReactor_OnSegmentLost )
 	}
 }
 
@@ -82,29 +82,18 @@ void function UnstableReactor_MakeFX( entity titan )
 
 void function UnstableReactor_OnSegmentLost( entity titan, entity attacker )
 {
-	UnstableReactor_Blast( titan )
+	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
+		UnstableReactor_Blast( titan )
 }
 
-void function UnstableReactor_OnDeath( entity titan, var damageInfo )
+void function UnstableReactor_OnDeath( entity titan, entity attacker, var damageInfo )
 {
-	UnstableReactor_Blast( titan )
-}
-
-void function UnstableReactor_TransferCallbacks( entity soul, entity titan, entity oldTitan )
-{
-	if ( !SoulHasPassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
+	if ( !titan.IsTitan() )
 		return
 
-	if ( IsValid( titan ) )
-	{
-		AddEntityCallback_OnKilled( titan, UnstableReactor_OnDeath )
-		AddTitanCallback_OnHealthSegmentLost( titan, UnstableReactor_OnSegmentLost )
-	}
-	if ( IsValid( oldTitan ) && oldTitan.IsPlayer() ) // No need to remove off NPCs, they get destroyed
-	{
-		RemoveEntityCallback_OnKilled( oldTitan, UnstableReactor_OnDeath )
-		RemoveTitanCallback_OnHealthSegmentLost( oldTitan, UnstableReactor_OnSegmentLost )
-	}
+	entity soul = titan.GetTitanSoul()
+	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
+		UnstableReactor_Blast( titan )
 }
 #endif
 
