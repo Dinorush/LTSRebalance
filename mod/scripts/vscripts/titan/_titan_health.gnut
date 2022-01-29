@@ -53,6 +53,7 @@ void function TitanHealth_Init()
 	RegisterSignal( SIGNAL_TITAN_HEALTH_REGEN )
 	RegisterSignal( SIGNAL_TITAN_SHIELD_REGEN )
 	RegisterSignal( "Doomed" )
+	RegisterSignal( "DoomInvulnEnd" )
 	RegisterSignal( "TitanUnDoomed" )
 	RegisterSignal( "StopShieldRegen" )
 	RegisterSignal( "WeakTitanHealthInitialized" )
@@ -449,7 +450,7 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 			}
 
 			thread DoomedHealthThink( titanSoul, damageInfo )
-            thread UseDuckTapeDoomInvul( ent, titanSoul )
+            //thread UseDuckTapeDoomInvul( ent, titanSoul )
 
 			titanDamage.doomedNow = true
 			titanDamage.doomedDamage = int( DamageInfo_GetDamage( damageInfo ) )
@@ -620,6 +621,8 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 	soulOwner.Signal( "Doomed" )
 	titanSoul.Signal( "Doomed" )
 
+	thread SetDoomInvulnThink( soulOwner )
+
 	// allow the damage to go through before resetting the health, so that we get proper damage indicators, etc...
 	// this process should also be in code
 	WaitEndFrame()
@@ -643,6 +646,7 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 		//soulOwner.SetHealthPerSegment( 0 )
 
 		soulOwner.ClearDoomed()
+		soulOwner.Signal( "DoomInvulnEnd" )
 
 		if ( soulOwner.IsPlayer() && PlayerHasAutoEject( soulOwner ) )
 		{
@@ -667,6 +671,7 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 	}
 	soulOwner.SetHealth( doomedHealth )
 	soulOwner.SetMaxHealth( maxDoomedHealth )
+	soulOwner.Signal( "DoomInvulnEnd" )
 	//soulOwner.SetHealthPerSegment( 0 )
 
 	string settings = GetSoulPlayerSettings( titanSoul )
@@ -708,6 +713,36 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 
 		wait tickRate
 	}
+}
+
+// LTSRebalance - This ensures damage taken is set to 0 until doomed health gets set. Fix to what I believe causes doom skip:
+// 					damage seeping through a gap between the if statement that sets damage to 0 and health getting reset
+void function SetDoomInvulnThink( entity titan )
+{
+	titan.EndSignal( "DisembarkingTitan" )
+	titan.EndSignal( "OnDestroy" )
+	titan.EndSignal( "OnDeath" )
+	titan.EndSignal( "TitanEjectionStarted" )
+	titan.EndSignal( "OnSyncedMelee" )
+
+	AddEntityCallback_OnDamage( titan, DoomInvuln_OnDamage )
+
+	OnThreadEnd(
+		function() : ( titan )
+		{
+			if ( IsValid( titan ) )
+				RemoveEntityCallback_OnDamaged( titan, DoomInvuln_OnDamage )
+		}
+	)
+
+	titan.WaitSignal( "DoomInvulnEnd" )
+}
+
+void function DoomInvuln_OnDamage( entity titan, var damageInfo )
+{
+	if( DamageInfo_GetForceKill( damageInfo ) )
+		return
+	DamageInfo_SetDamage( damageInfo, 0 )
 }
 
 void function UseDuckTapeDoomInvul( entity titan, entity soul, float duration = TITAN_DOOMED_INVUL_TIME )
