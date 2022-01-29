@@ -1538,13 +1538,13 @@ bool function ValidateVortexDirection( entity vortexWeapon, entity inflictor )
         if( inflictor.GetVelocity() == <0, 0, 0>)
             return true
         else
-            enemyDir = inflictor.GetVelocity()
+            enemyDir = Normalize( inflictor.GetVelocity() )
     }
     else
         enemyDir = inflictor.GetWeaponOwner().GetPlayerOrNPCViewVector()
 
     // Reject all bullets caught moving in the direction of the shield
-    if ( DotProduct( ownerDir, enemyDir ) <= 0 )
+    if ( DotProduct( ownerDir, enemyDir ) > 0 )
         return false
 
     return true
