@@ -20,6 +20,8 @@ WeaponData
 	"bolt_hitsize_growfinal_lerptime"				"0.18"
 	"bolt_hitsize_growfinal_size"					"2.0"
 
+	"net_optimize"		                            "0" // I think this is responsible for projectiles making no sound/ping
+
 	"spread_max_kick_stand_hip"						"1.5"
 	"spread_max_kick_stand_ads"						"0.75"
 	"spread_max_kick_crouch_hip"  					"1.5"
