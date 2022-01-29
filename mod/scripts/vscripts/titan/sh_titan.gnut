@@ -370,10 +370,10 @@ function TitanEjectPlayer( entity ejectTitan, bool instant = false ) //TODO: Thi
 	e.overrideAttacker <- soul.soul.nukeAttacker
 
 	local nuclearPayload = 0
-	if ( IsValid( e.player ) )
-		nuclearPayload = GetNuclearPayload( ejectTitan )
-	else
-		nuclearPayload = NPC_GetNuclearPayload( ejectTitan )
+	// if ( IsValid( e.player ) )
+	// 	nuclearPayload = GetNuclearPayload( ejectTitan )
+	// else
+	// 	nuclearPayload = NPC_GetNuclearPayload( ejectTitan )
 
 	e.nuclearPayload <- nuclearPayload
 
