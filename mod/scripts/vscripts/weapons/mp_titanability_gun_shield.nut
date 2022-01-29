@@ -66,12 +66,14 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	owner.EndSignal( "TitanEjectionStarted" )
 	//owner.EndSignal( "SettingsChanged")
 
+	print( "LTS Rebalance: Forced ADS before Gun Shield start: " + weapon.GetForcedADS() )
+
 	weapon.e.gunShieldActive = true
     if( !weapon.HasMod( "pas_legion_spinup" ) )
 	    weapon.SetForcedADS()
     #if SERVER
     entity soul = owner.GetTitanSoul()
-    if( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) || shieldWeapon.HasMod( "fd_gun_shield" ) )
+    if( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) )
         weapon.AddMod( "pas_legion_gunshield" )
     else if( owner.IsPlayer() )
 		owner.SetMeleeDisabled()
@@ -97,7 +99,7 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	// {
 	// 	wait 0.1
 	// }
-
+	print( "LTS Rebalance: Forced ADS after Gun Shield start: " + weapon.GetForcedADS() )
 	#if SERVER
 		thread Sv_CreateGunShield( owner, weapon, shieldWeapon, duration )
 	#endif
@@ -166,10 +168,11 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 	OnThreadEnd(
 		function() : ( titan, vortexSphere, vortexWeapon, shieldWallFX )
 		{
+			print( "LTS Rebalance: Forced ADS before Gun Shield end: " + vortexWeapon.GetForcedADS() )
 			if ( IsValid( vortexWeapon ) )
 			{
                 // Remove Shield debuffs when it breaks
-                if ( !vortexWeapon.HasMod( "LongRangePowerShot" ) && !vortexWeapon.HasMod( "CloseRangePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
+                if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
 				{
 					while( vortexWeapon.GetForcedADS() )
 						vortexWeapon.ClearForcedADS()
@@ -212,6 +215,7 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 				EmitSoundOnEntity( titan, "titan_energyshield_down" )
 				PlayFXOnEntity( FX_TITAN_GUN_SHIELD_BREAK, titan, "PROPGUN" )
 			}
+			print( "LTS Rebalance: Forced ADS after Gun Shield end: " + vortexWeapon.GetForcedADS() )
 		}
 	)
 

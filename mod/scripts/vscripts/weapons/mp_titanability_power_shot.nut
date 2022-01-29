@@ -36,6 +36,8 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 	if ( milestone != 0 )
 		return 0
 
+	print( "LTS Rebalance: Forced ADS before Power Shot start: " + primaryWeapon.GetForcedADS() )
+
 	if ( weaponOwner.IsPlayer() )
 	{
 		thread SetPowershotLimits( weaponOwner, primaryWeapon )
@@ -74,7 +76,7 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 	}
     // #endif
     thread StopRegenDuringPowerShot( weapon, weaponOwner )
-
+	print( "LTS Rebalance: Forced ADS after Power Shot start: " + primaryWeapon.GetForcedADS() )
 	return weapon.GetAmmoPerShot()
 }
 
@@ -130,12 +132,13 @@ void function ClearPowerShotLimits( entity weaponOwner, entity weapon )
 
 void function PowerShotCleanup( entity owner, entity weapon, array<string> modNames, array<string> modsToAdd )
 {
+	print( "LTS Rebalance: Forced ADS before Power Shot end: " + weapon.GetForcedADS() )
 	if ( IsValid( owner ) && owner.IsPlayer() )
 		owner.Signal( "PowerShotCleanup")
     #if SERVER
 	if ( IsValid( weapon ) )
 	{
-		if ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) )
+		if ( weapon.HasMod( "pas_legion_spinup" ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
 		{
 			while( weapon.GetForcedADS() )
 				weapon.ClearForcedADS()
@@ -152,6 +155,7 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
 		weapon.SetMods( mods )
 	}
     #endif
+	print( "LTS Rebalance: Forced ADS after Power Shot end: " + weapon.GetForcedADS() )
 }
 
 #if SERVER
