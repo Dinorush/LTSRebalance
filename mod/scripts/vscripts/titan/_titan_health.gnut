@@ -635,6 +635,7 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
     if ( !titanSoul.IsDoomed() )
     {
         soulOwner.ClearDoomed()
+		soulOwner.Signal( "DoomInvulnEnd" )
         return
     }
 
@@ -725,7 +726,7 @@ void function SetDoomInvulnThink( entity titan )
 	titan.EndSignal( "TitanEjectionStarted" )
 	titan.EndSignal( "OnSyncedMelee" )
 
-	AddEntityCallback_OnDamage( titan, DoomInvuln_OnDamage )
+	AddEntityCallback_OnDamaged( titan, DoomInvuln_OnDamage )
 
 	OnThreadEnd(
 		function() : ( titan )
