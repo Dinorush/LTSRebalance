@@ -53,7 +53,7 @@ void function EnergyThief_OnPlayerOrNPCKilled( entity victim, entity attacker, v
 
 void function EnergyThief_GrantShield( entity victim, entity attacker )
 {
-	if ( !victim.IsTitan() )
+	if ( !victim.IsTitan() || !attacker.IsTitan() )
 		return
 
 	entity soul = attacker.GetTitanSoul()
