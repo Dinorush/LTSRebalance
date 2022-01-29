@@ -24,7 +24,7 @@ global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 
 global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.1
 global const float PAS_SCORCH_FLAMECORE_MOD = 1.2
-const float PAS_SCORCH_SELFDMG_SHIELD_MOD = 0.2
+const float PAS_SCORCH_SELFDMG_SHIELD_MOD = 0.15
 
 global struct MeteorRadiusDamage
 {
