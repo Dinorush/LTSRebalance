@@ -350,8 +350,10 @@ void function PasVanguardDoom_HealOnCore ( entity owner, entity soul  )
             int maxHealth = owner.GetMaxHealth()
             if ( trgtHealth > maxHealth )
             {
+				int shields = soul.GetShieldHealth()
                 UndoomTitan( owner, 1 )
                 owner.SetHealth( trgtHealth - maxHealth )
+				soul.SetShieldHealth( shields )
             }
             else
                 owner.SetHealth( trgtHealth )
@@ -373,7 +375,7 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 	EmitSoundOnEntityOnlyToPlayer( owner, owner, "Titan_Monarch_Smart_Core_ActiveLoop_1P" )
 	EmitSoundOnEntityExceptToPlayer( owner, owner, "Titan_Monarch_Smart_Core_Activated_3P" )
 	entity soul = owner.GetTitanSoul()
-    
+
     int shieldAmount = ( weapon.HasMod( "superior_chassis" ) ? SUPERIOR_CHASSIS_SHIELD_AMOUNT : soul.GetShieldHealthMax() / 2 )
     StunLaser_HandleTempShieldChange( soul, shieldAmount )
     int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
@@ -382,7 +384,6 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 	OnThreadEnd(
 	function() : ( weapon, owner, soul )
 		{
-            print( soul )
 			if ( IsValid( owner ) )
 			{
 				StopSoundOnEntity( owner, "Titan_Monarch_Smart_Core_ActiveLoop_1P" )
