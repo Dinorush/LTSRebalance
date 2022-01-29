@@ -6,8 +6,8 @@ WeaponData
 	"ammo_default_total"							"800"
 	"ammo_per_shot"                                 "800"
 	"ammo_min_to_fire"								"0"
-    "regen_ammo_refill_rate"                        "150"
-    "regen_ammo_refill_start_delay"                 "0.5"
+    "regen_ammo_refill_rate"                        "120"
+    "regen_ammo_refill_start_delay"                 "0.65"
     "ammo_display"									"bar"
     "cooldown_type"                                 "ammo_instant"
 
