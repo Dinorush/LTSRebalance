@@ -245,7 +245,9 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 
 			ShotgunBlast( weapon, attackParams.pos, attackParams.dir, 16, damageType, 1.0, 10.0 )
 
+			#if SERVER
 			PowerShotCleanup( owner, weapon, ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"], [] )
+			#endif
 
 			return 1
 		}
@@ -269,9 +271,11 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 				#endif
 			}
 		}
-
+		
+		#if SERVER
 		PowerShotCleanup( owner, weapon, ["LongRangePowerShot","fd_LongRangePowerShot","pas_LongRangePowerShot"], [ "LongRangeAmmo" ] )
-
+		#endif
+		
 		return 1
 	}
 	else
