@@ -1,0 +1,14 @@
+"titan_atlas_vanguard"
+{
+	"global"
+	{
+		ClassMods
+		{
+			core_health_upgrade
+			{
+				health			2500++	[$mp]
+			}
+		}
+	}
+}
+

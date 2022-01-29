@@ -1,0 +1,46 @@
+WeaponData
+{
+	"OnWeaponAttemptOffhandSwitch"						"OnWeaponAttemptOffhandSwitch_titanweapon_salvo_rockets"
+
+	MP_BASE
+	{
+		"damage_near_value_titanarmor"   				"325"
+		"damage_far_value_titanarmor"   				"325"
+		"explosion_damage_heavy_armor"					"325"
+		"ammo_per_shot"									"18"
+	}
+
+	"ammo_display"									"bar"
+	"ammo_stockpile_max"							"108"
+	"ammo_clip_size"   								"108"
+	"ammo_default_total"							"108"
+	"ammo_min_to_fire"								"108"
+
+	"regen_ammo_refill_rate"						"18.0"
+	
+	"deploy_time" 									"0.2"
+	
+	Mods
+	{
+		missile_racks
+		{
+			"ammo_per_shot"									"12"
+			"burst_fire_count"								"9"
+			"regen_ammo_refill_rate"						"12.0"
+			"hud_icon"										"rui/titan_loadout/passive/monarch_core_missile_racks"
+		}
+		burn_mod_titan_salvo_rockets
+		{
+			"explosion_damage"							"*1"
+			"explosion_damage_heavy_armor"				"*1"
+		}
+		scripted_no_damage
+		{
+			"explosion_damage_heavy_armor"					"*0.0"
+		}
+		northstar_prime_execution
+		{
+			"explosion_damage_heavy_armor"					"*0.0"
+		}
+	}
+}

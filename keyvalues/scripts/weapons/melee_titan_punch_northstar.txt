@@ -1,0 +1,7 @@
+WeaponData
+{
+	MP_BASE
+	{
+        "melee_raise_recovery_animtime_normal"			"0.75"
+	}
+}

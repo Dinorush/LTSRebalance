@@ -1,0 +1,24 @@
+WeaponData
+{
+	"OnWeaponAttemptOffhandSwitch"				  	"OnWeaponAttemptOffhandSwitch_titanweapon_flame_wall"
+	
+	"deploy_time"									"0.25"
+	
+	"charge_time" 									"0.01"
+
+	// Using large ammo supply for smaller regen amounts
+	"ammo_stockpile_max"							"500"
+	"ammo_clip_size"   								"500"
+	"ammo_default_total"							"500"
+	"ammo_per_shot"								 	"500"
+	"ammo_min_to_fire"								"500"
+	"regen_ammo_refill_rate"						"50"
+
+	Mods
+	{
+		pas_scorch_firewall
+		{
+			"regen_ammo_refill_rate"				"50"
+		}
+	}
+}

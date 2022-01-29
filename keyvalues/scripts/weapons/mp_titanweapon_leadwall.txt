@@ -1,0 +1,30 @@
+WeaponData
+{
+	MP_BASE
+	{
+		"damage_near_distance"							"720"
+		"damage_far_distance" 							"1200"
+	}
+
+	"lower_time"  									"0.01"
+	"raise_time"  									"0.5"
+
+	"projectile_damage_reduction_per_bounce"		"-25"
+	"projectile_damages_owner"						"0"
+	"projectile_speed_reduction_factor"				"0.0"
+
+	Mods 
+	{
+		burn_mod_titan_leadwall
+		{
+			"damage_near_value"   							"*1"
+			"damage_far_value"								"*1"
+			"damage_near_value_titanarmor"					"*1"
+			"damage_far_value_titanarmor" 					"*1"
+		}
+		pas_ronin_weapon
+		{
+			"projectile_ricochet_max_count"					"2"
+		}
+	}
+}

@@ -1,0 +1,102 @@
+WeaponData
+{
+	"OnWeaponPrimaryAttack"							"OnWeaponPrimaryAttack_GenericBoltWithDrop_Player"
+	"OnWeaponNpcPrimaryAttack"						"OnWeaponPrimaryAttack_GenericBoltWithDrop_NPC"
+
+	"ads_move_speed_scale"							"0.50"
+
+	"projectilemodel" 								"models/weapons/bullets/projectile_arl.mdl"
+	"projectile_trail_effect_0" 					"P_mastiff_proj"
+	
+	"bolt_gravity_enabled"							"0"
+	"projectile_launch_speed"						"12000"
+	"projectile_gravity_scale"						"0.0001"
+
+	"spread_max_kick_stand_hip"						"1.5"
+	"spread_max_kick_stand_ads"						"0.75"
+	"spread_max_kick_crouch_hip"  					"1.5"
+	"spread_max_kick_crouch_ads"  					"0.75"
+	"spread_max_kick_air_hip" 						"1.5"
+	"spread_max_kick_air_ads" 						"0.75"
+
+	"lower_time"  									".01" //.1
+	
+	"spread_stand_ads"								"0.75"
+	"spread_crouch_ads"   							"0.75"
+	"spread_air_ads"  								"0.75"
+
+	"spread_kick_on_fire_stand_hip"					"0.15"
+	"spread_kick_on_fire_stand_ads"					"0.075"
+	"spread_kick_on_fire_crouch_hip"  				"0.15"
+	"spread_kick_on_fire_crouch_ads"  				"0.075"
+	"spread_kick_on_fire_air_hip" 					"0.15"
+	"spread_kick_on_fire_air_ads" 					"0.075"
+
+	Mods
+	{
+		arc_rounds
+		{
+			"ammo_clip_size"   								"40"
+			"projectile_trail_effect_0"					 	"P_leadwall_proj"
+			"vortex_drain"									"0.025"
+		}
+
+		arc_rounds_with_battle_rifle
+		{
+			"ammo_clip_size"   								"40"
+			"projectile_trail_effect_0"					 	"P_leadwall_proj"
+			"vortex_drain"									"0.025"
+
+			"fire_rate"										"9"
+			"fire_rate_max"									"18"
+			"fire_rate_max_time_speedup"					"2.0"
+			"fire_rate_max_time_cooldown"					"1.4"
+
+			"damage_near_value"   							"*1.1"
+			"damage_far_value"								"*1.1"
+			"damage_near_value_titanarmor"					"*1.1"
+			"damage_far_value_titanarmor" 					"*1.1"
+
+			"spread_stand_hip"								"2.0"
+			"spread_stand_hip_run"							"2.0"
+			"spread_stand_hip_sprint"					   	"2.0"
+			"spread_crouch_hip"   							"2.0"
+			"spread_air_hip"  								"2.0"
+			"spread_stand_ads"								"0.75"
+			"spread_crouch_ads"   							"0.75"
+			"spread_air_ads"  								"0.75"
+		}
+		battle_rifle
+		{
+			"fire_rate"										"9"
+			"fire_rate_max"									"18"
+			"fire_rate_max_time_speedup"					"2.0"
+			"fire_rate_max_time_cooldown"					"1.4"
+
+			"damage_near_value"   							"*1.1"
+			"damage_far_value"								"*1.1"
+			"damage_near_value_titanarmor"					"*1.1"
+			"damage_far_value_titanarmor" 					"*1.1"
+
+			"spread_stand_hip"								"2.0"
+			"spread_stand_hip_run"							"2.0"
+			"spread_stand_hip_sprint"					   	"2.0"
+			"spread_crouch_hip"   							"2.0"
+			"spread_air_hip"  								"2.0"
+			"spread_stand_ads"								"0.75"
+			"spread_crouch_ads"   							"0.75"
+			"spread_air_ads"  								"0.75"
+		}
+
+		rapid_reload
+		{
+			"reload_time" 									"*0.67"
+			"reload_time_late1"								"*0.67"
+			"reload_time_late2"								"*0.67"
+			"reload_time_late3"								"*0.67"
+			"reloadempty_time"								"*0.67"
+			"reloadempty_time_late1"						"*0.67"
+			"reloadempty_time_late2"						"*0.67"
+		}
+	}
+}

@@ -1,0 +1,76 @@
+WeaponData
+{
+    "OnWeaponReload"                                "OnWeaponReload_titanweapon_40mm"
+
+	MP_BASE
+	{
+		"damage_near_value"   						"300"
+		"damage_far_value"							"300"
+		"damage_near_value_titanarmor"				"450"
+		"damage_far_value_titanarmor" 				"450"
+		"explosion_damage_heavy_armor"				"350"
+	}
+
+	"ammo_clip_size"   								"9"
+	"ammo_default_total"							"1500"
+
+    "lower_time"  									".01" //.1
+
+	"spread_stand_hip_sprint"                       "2.5"
+	"spread_stand_hip_run"							"2.5"
+	"spread_air_hip"  								"2.5"
+
+    Mods
+    {
+		pas_tone_burst
+		{
+			"charge_time" 									"2.5" // functionally 2/3 of this, so it matches reticle
+			"charge_cooldown_time"							"0.01"
+			"charge_cooldown_delay"   						"0.05"
+
+			"burst_fire_count"								"1"
+			"burst_fire_delay"								"0.572" // = 1 / normal fire_rate
+			"fire_rate"   									"7.5"
+		}
+        pas_tone_weapon_on
+        {
+            "impact_effect_table"               "predator_bullet_ps_alt"
+            rui_crosshair_index					"2"
+        }
+	}
+
+    RUI_CrosshairData
+	{
+        Crosshair_1
+		{
+			"ui"						"ui/crosshair_40mm"
+			"base_spread"				"0.5"
+			Args
+			{
+				isFiring				weapon_is_firing
+			}
+		}
+
+		Crosshair_2
+		{
+			"ui"						"ui/crosshair_40mm_burst"
+			"base_spread"				"0.5"
+			Args
+			{
+				isFiring				weapon_is_firing
+				//chargeLevel			player_chargeLevel
+			}
+		}
+        
+        Crosshair_3
+		{
+			"ui"						"ui/crosshair_40mm"
+			"base_spread"				"0.5"
+			Args
+			{
+				isAmped						weapon_is_active
+                isFiring				    weapon_is_firing
+			}
+		}
+	}
+}

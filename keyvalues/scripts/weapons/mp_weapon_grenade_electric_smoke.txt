@@ -1,0 +1,9 @@
+WeaponData
+{
+	MP_BASE
+	{
+		"ammo_min_to_fire"								"50"
+		"ammo_per_shot"									"50"
+		"regen_ammo_refill_rate"						"2.75"
+	}
+}

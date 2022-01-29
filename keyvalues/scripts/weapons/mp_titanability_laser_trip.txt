@@ -1,0 +1,8 @@
+WeaponData
+{
+	MP_BASE
+	{
+        "regen_ammo_refill_rate"						"25"
+		"shared_energy_cost"							"150"
+	}
+}

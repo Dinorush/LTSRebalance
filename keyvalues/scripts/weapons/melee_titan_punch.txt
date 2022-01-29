@@ -1,0 +1,12 @@
+WeaponData
+{
+	Mods
+	{
+		big_punch
+		{
+			"melee_attack_animtime"								"0.94"
+			"melee_damage"										"++250"
+			"melee_damage_heavyarmor"							"++250"
+		}
+	}
+}

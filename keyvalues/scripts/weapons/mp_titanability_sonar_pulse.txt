@@ -1,0 +1,5 @@
+WeaponData
+{
+	"charge_cooldown_time"							"0.0"
+    "deploy_time" 									"0.4"
+}

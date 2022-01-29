@@ -1,0 +1,8 @@
+"titan_atlas_stickybomb"
+{
+	"global"
+	{
+		sharedEnergyRegenDelay 0.5
+	}
+}
+

@@ -1,0 +1,4 @@
+WeaponData
+{
+	"deploy_time" 									"0.3"
+}

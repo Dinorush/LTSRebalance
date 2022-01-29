@@ -1,0 +1,20 @@
+{
+	"Name": "Dinorush's LTS Rebalance",
+	"Description": "Implements a number of changes to balance titans, mainly for LTS.",
+	"LoadPriority": 2,
+	"RequiredOnClient": true,
+	"Version": "0.9",
+
+	"Scripts": [
+		{
+			"Path": "LTSRebalance_utility.nut",
+			"RunOn": "(CLIENT || SERVER) && MP",
+			"ServerCallback": {
+				"After": "LTSRebalance_TitanPassivesInit"
+			}
+		}
+	],
+	"Localisation": [
+		"resource/r1_%language%.txt"
+	]
+}

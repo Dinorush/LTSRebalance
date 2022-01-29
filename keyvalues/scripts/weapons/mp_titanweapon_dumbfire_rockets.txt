@@ -1,0 +1,22 @@
+WeaponData
+{
+	"explosion_damage_heavy_armor"					"175"
+	"npc_explosion_damage_heavy_armor"				"175"
+
+	"regen_ammo_refill_rate"						"18.0"
+	"regen_ammo_refill_start_delay"					"0.0"
+
+	"fire_rate"   									"2"
+	"holster_time"									"0.5"
+	"deploy_time" 									"0.35"
+	
+	Mods
+	{
+		pas_northstar_cluster
+		{
+            "explosion_inner_radius"                        "200"
+            "explosionradius"                               "290"
+            "impact_effect_table" 							"40mm_splasher_rounds"
+		}
+	}
+}

@@ -1,0 +1,4 @@
+WeaponData
+{
+	"minimap_reveal_distance"						"10"
+}

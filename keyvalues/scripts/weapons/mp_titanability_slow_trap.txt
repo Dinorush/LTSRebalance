@@ -1,0 +1,17 @@
+WeaponData
+{
+	"projectile_inherit_owner_velocity_scale"		"0.0"
+    "projectile_gravity_scale"						"3"
+
+    // Using large ammo supply for smaller regen amounts
+	"ammo_stockpile_max"							"1000"
+	"ammo_clip_size"   								"1000"
+	"ammo_default_total"							"1000"
+	"ammo_per_shot"									"500"
+	"ammo_min_to_fire"								"500"
+
+	//Regen Ammo
+	"regen_ammo_refill_rate"						"41.66"
+
+    "wave_pass_vortex"                              "pass"
+}

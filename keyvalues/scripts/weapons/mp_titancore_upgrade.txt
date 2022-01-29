@@ -1,0 +1,11 @@
+WeaponData
+{
+	Mods
+	{
+        superior_chassis
+        {
+
+        }
+	}
+}
+
