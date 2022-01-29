@@ -12,6 +12,14 @@ WeaponData
 	"projectile_launch_speed"						"12000"
 	"projectile_gravity_scale"						"0.0001"
 
+	"bolt_hitsize"									"0.0"
+	"bolt_hitsize_grow1_time"						"0.075"
+	"bolt_hitsize_grow1_size"						"1.0"
+	"bolt_hitsize_grow2_time"						"0.18"
+	"bolt_hitsize_grow2_size"						"2.0"
+	"bolt_hitsize_growfinal_lerptime"				"0.18"
+	"bolt_hitsize_growfinal_size"					"2.0"
+
 	"spread_max_kick_stand_hip"						"1.5"
 	"spread_max_kick_stand_ads"						"0.75"
 	"spread_max_kick_crouch_hip"  					"1.5"
