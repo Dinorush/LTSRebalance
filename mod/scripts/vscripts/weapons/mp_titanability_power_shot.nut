@@ -47,6 +47,10 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 		#endif
 	}
 
+	#if CLIENT
+	print( "LTS Rebalance: Is Power Shot client predicted: " + primaryWeapon.ShouldPredictProjectiles() )
+	#endif
+	
     // #if SERVER
     if ( primaryWeapon.HasMod( "Smart_Core_Spread" ) )
         primaryWeapon.RemoveMod( "Smart_Core_Spread" )
