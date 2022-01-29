@@ -1,7 +1,7 @@
 global function OnWeaponPrimaryAttack_power_shot
 global function MpTitanAbilityPowerShot_Init
-global function PowerShotCleanup
 #if SERVER
+global function PowerShotCleanup
 global function OnWeaponNpcPrimaryAttack_power_shot
 #endif
 
@@ -9,8 +9,8 @@ void function MpTitanAbilityPowerShot_Init()
 {
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_predator_cannon, PowerShot_DamagedEntity )
+	RegisterSignal( "PowerShotCleanup" )
 	#endif
-    RegisterSignal( "PowerShotCleanup" )
 }
 
 var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -47,11 +47,7 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 		#endif
 	}
 
-	#if CLIENT
-	print( "LTS Rebalance: Is Power Shot client predicted: " + primaryWeapon.ShouldPredictProjectiles() )
-	#endif
-	
-    // #if SERVER
+    #if SERVER
     if ( primaryWeapon.HasMod( "Smart_Core_Spread" ) )
         primaryWeapon.RemoveMod( "Smart_Core_Spread" )
         
@@ -78,12 +74,24 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 			mods.append( "pas_CloseRangePowerShot" )
 		primaryWeapon.SetMods( mods )
 	}
-    // #endif
+    
     thread StopRegenDuringPowerShot( weapon, weaponOwner )
+	#endif
 	print( "LTS Rebalance: Forced ADS after Power Shot start: " + primaryWeapon.GetForcedADS() )
 	return weapon.GetAmmoPerShot()
 }
 
+void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
+{
+    do {
+        weaponOwner.SetTitanDisembarkEnabled( false )
+        primaryWeapon.SetForcedADS()
+        weaponOwner.SetMeleeDisabled()
+        WaitFrame()
+    } while( !primaryWeapon.GetForcedADS() )
+}
+
+#if SERVER
 void function StopRegenDuringPowerShot( entity weapon, entity weaponOwner )
 {
     weapon.AddMod( "stop_regen" )
@@ -105,17 +113,6 @@ void function StopRegenDuringPowerShot( entity weapon, entity weaponOwner )
     wait 3.0 
 }
 
-void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
-{
-    do {
-        weaponOwner.SetTitanDisembarkEnabled( false )
-        primaryWeapon.SetForcedADS()
-        weaponOwner.SetMeleeDisabled()
-        WaitFrame()
-    } while( !primaryWeapon.GetForcedADS() )
-}
-
-#if SERVER
 void function ClearPowerShotLimits( entity weaponOwner, entity weapon )
 {
     OnThreadEnd(
@@ -132,14 +129,13 @@ void function ClearPowerShotLimits( entity weaponOwner, entity weapon )
     weaponOwner.EndSignal( "OnDeath" )
 	weaponOwner.WaitSignal( "TitanEjectionStarted" )
 }
-#endif
 
 void function PowerShotCleanup( entity owner, entity weapon, array<string> modNames, array<string> modsToAdd )
 {
 	print( "LTS Rebalance: Forced ADS before Power Shot end: " + weapon.GetForcedADS() )
 	if ( IsValid( owner ) && owner.IsPlayer() )
 		owner.Signal( "PowerShotCleanup")
-    #if SERVER
+
 	if ( IsValid( weapon ) )
 	{
 		if ( weapon.HasMod( "pas_legion_spinup" ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
@@ -158,11 +154,9 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
             mods.append( "Smart_Core_Spread" )
 		weapon.SetMods( mods )
 	}
-    #endif
 	print( "LTS Rebalance: Forced ADS after Power Shot end: " + weapon.GetForcedADS() )
 }
 
-#if SERVER
 var function OnWeaponNpcPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
 	OnWeaponPrimaryAttack_power_shot( weapon, attackParams )
