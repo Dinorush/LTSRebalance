@@ -77,9 +77,11 @@ void function OnMeleePin_PhaseReflex( entity owner, var damageInfo )
 #if SERVER
 void function WaitForMeleeAttack( entity weapon, entity titan )
 {
-    weapon.EndSignal("WeaponDeactivateEvent")
-    titan.EndSignal("CoreEnd")
+    weapon.EndSignal( "WeaponDeactivateEvent" )
+    titan.EndSignal( "CoreEnd" )
     titan.EndSignal( "OnDestroy" )
+	titan.EndSignal( "OnDeath" )
+	titan.EndSignal( "DisembarkingTitan" )
     titan.EndSignal( "TitanEjectionStarted" )
 
     weapon.s.lastMeleeTime <- 0
@@ -95,7 +97,8 @@ void function WaitForMeleeAttack( entity weapon, entity titan )
         }
         
         weapon.s.lastMeleeTime = Time()
-        OnMeleeAttackCreateWave( weapon, titan )
+		if ( !titan.IsPhaseShifted() )
+        	OnMeleeAttackCreateWave( weapon, titan )
     }
 }
 
@@ -109,8 +112,6 @@ void function OnMeleeAttackCreateWave( entity weapon, entity titan )
 
     for( int count = 0; count < offsets.len(); count++ )
     {
-        if ( !IsValid( titan ) )
-			return
         vector right = Normalize( CrossProduct( attackParams.dir, <0,0,1> ) )
         vector offset = offsets[count] * right * WAVE_SEPARATION
         const float FUSE_TIME = 99.0
