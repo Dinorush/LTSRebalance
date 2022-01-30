@@ -1526,7 +1526,7 @@ bool function ValidateVortexImpact( entity vortexSphere, entity projectile = nul
 }
 
 // Only for mobile shields (would not work for Particle)
-bool function ValidateVortexDirection( entity vortexWeapon, entity inflictor )
+bool function ValidateVortexDirection( entity vortexWeapon, entity attacker, entity inflictor )
 {
     if ( !IsValid( vortexWeapon ) )
 		return false
@@ -1540,8 +1540,10 @@ bool function ValidateVortexDirection( entity vortexWeapon, entity inflictor )
         else
             enemyDir = Normalize( inflictor.GetVelocity() )
     }
-    else
-        enemyDir = inflictor.GetWeaponOwner().GetPlayerOrNPCViewVector()
+    else if ( IsValid( attacker ) && ( attacker.IsPlayer() || attacker.IsNPC() ) )
+        enemyDir = attacker.GetPlayerOrNPCViewVector()
+	else
+		return true
 
     // Reject all bullets caught moving in the direction of the shield
     if ( DotProduct( ownerDir, enemyDir ) > 0 )
