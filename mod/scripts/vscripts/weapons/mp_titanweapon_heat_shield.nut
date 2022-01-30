@@ -187,7 +187,7 @@ bool function OnWeaponVortexHitBullet_titanweapon_heat_shield( entity weapon, en
 		if ( !ValidateVortexImpact( vortexSphere ) )
 			return false
 
-        if ( !ValidateVortexDirection( weapon, DamageInfo_GetInflictor( damageInfo ) ) )
+        if ( !ValidateVortexDirection( weapon, DamageInfo_GetAttacker( damageInfo ), DamageInfo_GetInflictor( damageInfo ) ) )
             return false
 
 		entity attacker				= DamageInfo_GetAttacker( damageInfo )
@@ -214,7 +214,7 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
 		if ( !ValidateVortexImpact( vortexSphere, projectile ) )
 			return false
 
-        if ( !ValidateVortexDirection( weapon, projectile ) )
+        if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
             return false
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
