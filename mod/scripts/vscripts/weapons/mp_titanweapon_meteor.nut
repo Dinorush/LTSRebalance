@@ -143,7 +143,7 @@ void function Scorch_SelfDamageReduction( entity target, var damageInfo )
 		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
 		{
             int shieldRestoreAmount = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_SELFDMG_SHIELD_MOD )
-		    soul.SetShieldHealth( min( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
+		    soul.SetShieldHealth( minint( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
         }
         DamageInfo_ScaleDamage( damageInfo, 0.0 )
 	}
