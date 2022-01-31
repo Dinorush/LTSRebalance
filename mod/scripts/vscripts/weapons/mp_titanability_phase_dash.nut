@@ -25,13 +25,16 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 				#if SERVER
                     if ( SoulHasPassive( player.GetTitanSoul(), ePassives.PAS_RONIN_AUTOSHIFT ) )
                     {
-                        entity weapon = player.GetMainWeapons()[0]
-                        if( weapon.IsReloading() )
-                        {
-                            player.HolsterWeapon()
-                            player.DeployWeapon()
-                        }
-                        weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() ) 
+                        array<entity> weapons = player.GetMainWeapons()
+						if( weapons.len() > 0 ) // During Sword Core, Leadwall doesn't exist
+						{
+							if( weapons[0].IsReloading() )
+							{
+								player.HolsterWeapon()
+								player.DeployWeapon()
+							}
+							weapons[0].SetWeaponPrimaryClipCount( weapons[0].GetWeaponPrimaryClipCountMax() )
+						}
                     }
 					EmitSoundOnEntityExceptToPlayer( player, player, "Stryder.Dash" )
 					thread PhaseDash( weapon, player )

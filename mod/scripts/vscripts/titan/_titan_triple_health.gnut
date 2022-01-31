@@ -461,7 +461,19 @@ void function OnTitanDoomed( entity titan, var damageInfo )
 	if ( titan.IsPlayer() )
 	{
 		if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+		{
 			PhaseShift( titan, 0, 3.0 )
+			array<entity> weapons = titan.GetMainWeapons()
+			if( weapons.len() > 0 ) // During Sword Core, Leadwall doesn't exist
+			{
+				if( weapons[0].IsReloading() )
+				{
+					titan.HolsterWeapon()
+					titan.DeployWeapon()
+				}
+				weapons[0].SetWeaponPrimaryClipCount( weapons[0].GetWeaponPrimaryClipCountMax() )
+			}
+		}
 
  		// if ( SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
 		// 	return
