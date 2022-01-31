@@ -140,7 +140,8 @@ void function TrackSmartArrayMultiplier( entity weapon )
     {
         if( !weapon.SmartAmmo_IsEnabled() )
         {
-			weapon.s.smartArrayTargets.clear()
+			if( weapon.s.smartArrayTargets.len() > 0 )
+				weapon.s.smartArrayTargets.clear()
             WaitFrame()
             continue
         }
