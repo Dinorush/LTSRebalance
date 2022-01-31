@@ -84,19 +84,19 @@ void function WaitForMeleeAttack( entity weapon, entity titan )
 	titan.EndSignal( "DisembarkingTitan" )
     titan.EndSignal( "TitanEjectionStarted" )
 
-    weapon.s.lastMeleeTime <- 0
+    float lastMeleeTime = 0
     while(1)
     {
         titan.WaitSignal( "OnMelee" )
 
         // Still inside the same melee
-        if(Time() - weapon.s.lastMeleeTime < 0.2)
+        if(Time() - lastMeleeTime < 0.2)
         {
-            weapon.s.lastMeleeTime = Time()
+            lastMeleeTime = Time()
             continue
         }
         
-        weapon.s.lastMeleeTime = Time()
+        lastMeleeTime = Time()
 		if ( !titan.IsPhaseShifted() )
         	OnMeleeAttackCreateWave( weapon, titan )
     }
