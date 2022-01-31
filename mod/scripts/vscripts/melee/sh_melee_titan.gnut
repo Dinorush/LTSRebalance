@@ -150,8 +150,6 @@ void function TitanMeleeAttack( entity titan )
 		}
 		else if ( targetEnt.IsTitan() )
 		{
-			TitanAttackTitan( titan, meleeWeapon, targetEnt, damageOrigin )
-
 			bool meleeButtonHeldCheck
 			#if HOLD_BUTTON_FOR_TITAN_EXECUTION
 				meleeButtonHeldCheck = titan.IsInputCommandHeld( IN_MELEE )
@@ -166,6 +164,9 @@ void function TitanMeleeAttack( entity titan )
 				#endif
 				return
 			}
+
+			TitanAttackTitan( titan, meleeWeapon, targetEnt, damageOrigin )
+			
 			didHitAnEnemyTitan = true
 		}
 		else if ( ShouldMeleeDamage( targetEnt ) ) // Catches cases for dropships, turrets, etc
