@@ -7,6 +7,7 @@ global function Shift_Core_UseMeter
 struct OldWeaponData {
     string name = ""
     int ammo = -1
+	int maxAmmo = -1
     array< string > mods
 }
 #endif
@@ -174,8 +175,12 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 		entity mainWeapon = titan.GetMainWeapons()[0]
         prevWeaponData.name = mainWeapon.GetWeaponClassName()
         prevWeaponData.ammo = mainWeapon.GetWeaponPrimaryClipCount()
+		prevWeaponData.maxAmmo = mainWeapon.GetWeaponPrimaryClipCountMax()
         prevWeaponData.mods = mainWeapon.GetMods()
 		titan.TakeWeapon( prevWeaponData.name )
+		// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
+		if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+			thread WatchForPhaseReflex( titan, prevWeaponData )
 	}
 
 	float delay = weapon.GetWeaponSettingFloat( eWeaponVar.charge_cooldown_delay )
@@ -186,6 +191,25 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 }
 
 #if SERVER
+void function WatchForPhaseReflex( entity titan, OldWeaponData prevWeaponData )
+{
+    titan.EndSignal( "CoreEnd" )
+    titan.EndSignal( "OnDestroy" )
+	titan.EndSignal( "OnDeath" )
+	titan.EndSignal( "DisembarkingTitan" )
+    titan.EndSignal( "TitanEjectionStarted" )
+
+	while(1)
+	{
+		if ( titan.IsPhaseShifted() )
+		{
+			prevWeaponData.ammo = prevWeaponData.maxAmmo
+			return
+		}
+		WaitFrame()
+	}
+}
+
 void function Shift_Core_End( entity weapon, entity player, float delay, OldWeaponData prevWeaponData )
 {
 	weapon.EndSignal( "OnDestroy" )
