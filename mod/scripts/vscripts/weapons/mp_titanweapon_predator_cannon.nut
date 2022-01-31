@@ -21,10 +21,6 @@ const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 const float PAS_LEGION_SMARTCORE_MAX_MOD = 0.5 // added to 1
 const float PAS_LEGION_SMARTCORE_MAX_TIME = 3.0
 
-struct {
-    table<entity, float> smartArrayTargets
-} file
-
 void function MpTitanWeaponpredatorcannon_Init()
 {
 	PrecacheParticleSystem( SPIN_EFFECT_1P )
@@ -35,8 +31,6 @@ void function MpTitanWeaponpredatorcannon_Init()
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_predator_cannon, PredatorCannon_DamagedTarget )
 	#endif
 }
-
-
 
 void function OnWeaponStartZoomIn_titanweapon_predator_cannon( entity weapon )
 {
@@ -113,9 +107,8 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 		#if SERVER
 			weapon.s.lockStartTime <- Time()
 			weapon.s.locking <- true
+			weapon.s.smartArrayTargets <- {}
 		#endif
-        
-        thread WatchPSCD ( weapon )
 	}
 
 	#if SERVER
@@ -127,24 +120,6 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 	#endif
 }
 
-void function WatchPSCD ( entity weapon )
-{
-    weapon.EndSignal("OnDestroy")
-    entity owner
-    do {
-        owner = weapon.GetWeaponOwner()
-        WaitFrame()
-    } 
-    while ( !IsValid( owner ) )
-
-    entity offhand
-    do {
-        offhand = owner.GetOffhandWeapon( OFFHAND_RIGHT )
-        WaitFrame()
-    } 
-    while ( !IsValid( offhand ) )
-}
-
 void function TrackSmartArrayMultiplier( entity weapon )
 {
     entity player = weapon.GetOwner()
@@ -152,10 +127,20 @@ void function TrackSmartArrayMultiplier( entity weapon )
 	player.EndSignal( "TitanEjectionStarted" )
     player.EndSignal( "OnDeath" )
     weapon.EndSignal( "WeaponDeactivateEvent" )
+
+	OnThreadEnd(
+		function() : ( weapon )
+		{
+			if ( IsValid( weapon ) )
+				weapon.s.smartArrayTargets.clear()
+		}
+	)
+
     while( 1 )
     {
         if( !weapon.SmartAmmo_IsEnabled() )
         {
+			weapon.s.smartArrayTargets.clear()
             WaitFrame()
             continue
         }
@@ -163,16 +148,19 @@ void function TrackSmartArrayMultiplier( entity weapon )
         array<entity> trackedList = SmartAmmo_GetWeaponTargets( weapon )
         array<entity> untrackedList = []
 
-        foreach( key, value in file.smartArrayTargets )
-            if ( !trackedList.contains( key ) )
-                untrackedList.append( key )
+        foreach( key, value in weapon.s.smartArrayTargets )
+		{
+			entity eKey = expect entity( key )
+            if ( !trackedList.contains( eKey ) )
+                untrackedList.append( eKey )
+		}
 
         foreach( ent in untrackedList )
-            delete file.smartArrayTargets[ent]
+            delete weapon.s.smartArrayTargets[ent]
 
         foreach( ent in trackedList )
-            if ( !( ent in file.smartArrayTargets ) )
-                file.smartArrayTargets[ent] <- Time()
+            if ( !( ent in weapon.s.smartArrayTargets ) )
+                weapon.s.smartArrayTargets[ent] <- Time()
 
         WaitFrame()
     }
@@ -396,21 +384,22 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 	if ( !IsValid( target ) )
 		return
 
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+    entity weapon = attacker.GetMainWeapons()[0]
+
     // Smart array bonus damage for normal shots
-    if ( !( flags & DF_KNOCK_BACK || DamageInfo_GetInflictor( damageInfo ).IsProjectile() ) && file.smartArrayTargets.len() > 0 )
+    if ( !( flags & DF_KNOCK_BACK || DamageInfo_GetInflictor( damageInfo ).IsProjectile() ) && weapon.s.smartArrayTargets.len() > 0 )
     {
-        if ( target in file.smartArrayTargets )
+        if ( target in weapon.s.smartArrayTargets )
         {
-            float percent = min( 1, ( Time() - file.smartArrayTargets[ target ] ) / PAS_LEGION_SMARTCORE_MAX_TIME )
+            float percent = min( 1, ( Time() - weapon.s.smartArrayTargets[ target ] ) / PAS_LEGION_SMARTCORE_MAX_TIME )
             DamageInfo_ScaleDamage( damageInfo, 1 + percent * PAS_LEGION_SMARTCORE_MAX_MOD )
         }
     }
 
 	if ( !target.IsTitan() )
 		return
-
-    entity attacker = DamageInfo_GetAttacker( damageInfo )
-    entity weapon = attacker.GetMainWeapons()[0]
+    
     bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
     if ( weapon.HasMod( "pas_legion_weapon" ) )
     {
