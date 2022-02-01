@@ -15,7 +15,12 @@ const float FD_SONAR_PULSE_DURATION = 10.0
 
 bool function OnWeaponAttemptOffhandSwitch_titanability_sonar_pulse( entity weapon )
 {
-	return WeaponHasAmmoToUse( weapon )
+	if ( LTSRebalance_Enabled() )
+		return WeaponHasAmmoToUse( weapon )
+
+	bool allowSwitch
+	allowSwitch = weapon.GetWeaponChargeFraction() == 0.0
+	return allowSwitch
 }
 
 var function OnWeaponPrimaryAttack_titanability_sonar_pulse( entity weapon, WeaponPrimaryAttackParams attackParams )

@@ -22,22 +22,38 @@ WeaponData
 		}
 		LTSRebalance_missile_racks
 		{
-			"ammo_per_shot"									"12"
+			"ammo_per_shot"									"--6" //12
 			"burst_fire_count"								"9"
-			"regen_ammo_refill_rate"						"12.0"
+			"regen_ammo_refill_rate"						"--6.0" //12
 			"hud_icon"										"rui/titan_loadout/passive/monarch_core_missile_racks"
-		}
-		LTSRebalance_burn_mod_titan_salvo_rockets
-		{
-
 		}
 		LTSRebalance_scripted_no_damage
 		{
+			"explosion_damage"								"*0.0"
 			"explosion_damage_heavy_armor"					"*0.0"
+			"damage_near_value"   							"*0.0"
+			"damage_far_value"								"*0.0"
+
+			"projectile_straight_time_min"					"0.0"
+			"projectile_straight_time_max"					"0.0"
+
+			"projectile_lifetime"							"1.0"
 		}
 		LTSRebalance_northstar_prime_execution
 		{
+			"explosion_damage"								"*0.0"
 			"explosion_damage_heavy_armor"					"*0.0"
+			"damage_near_value"   							"*0.0"
+			"damage_far_value"								"*0.0"
+
+			"fx_muzzle_flash_view"							"wpn_muzzleflash_xo"
+			"fx_muzzle_flash_world"							"wpn_muzzleflash_xo"
+
+			"projectile_straight_time_min"					"0.0"
+			"projectile_straight_time_max"					"0.0"
+			"projectile_trail_effect_0" 					"P_FlightCore_trail"
+			"impact_effect_table" 							"none"
+			"projectile_lifetime"							"1.0"
 		}
 	}
 }

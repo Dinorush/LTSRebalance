@@ -453,6 +453,9 @@ void function DummyGoalEarnedCallback( entity player )
 
 float function PlayerEarnMeter_GetSmokeFrac( entity titan )
 {
+	if ( !LTSRebalance_Enabled() )
+		return CORE_SMOKE_FRAC
+
 	return ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_HYPER_CORE ) ? 0.4 : CORE_SMOKE_FRAC )
 }
 
@@ -477,15 +480,23 @@ void function JFS_PlayerEarnMeter_CoreRewardUpdate( entity titan, float starting
 void function GiveOffhandElectricSmoke( entity titan )
 {
 	entity soul = titan.GetTitanSoul()
+	bool hasAntiRodeoKit = !LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO )
 	if ( titan.GetOffhandWeapon( OFFHAND_INVENTORY ) != null )
 	{
 		entity weapon = titan.GetOffhandWeapon( OFFHAND_INVENTORY )
-		weapon.SetWeaponPrimaryAmmoCount( weapon.GetWeaponPrimaryAmmoCount() + 1 )
+		if ( hasAntiRodeoKit )
+			weapon.SetWeaponPrimaryAmmoCount( weapon.GetWeaponPrimaryAmmoCount() + 2 )
+		else
+			weapon.SetWeaponPrimaryAmmoCount( weapon.GetWeaponPrimaryAmmoCount() + 1 )
 	}
 	else
 	{
 		titan.GiveOffhandWeapon( CORE_SMOKE_WEAPON, OFFHAND_INVENTORY )
 		entity weapon = titan.GetOffhandWeapon( OFFHAND_INVENTORY )
+		if ( hasAntiRodeoKit )
+		{
+			weapon.SetWeaponPrimaryAmmoCount( weapon.GetWeaponPrimaryAmmoCount() + 1 )
+		}
 		if ( soul.GetTitanSoulNetInt( "upgradeCount" ) >= 2 && SoulHasPassive( soul, ePassives.PAS_VANGUARD_CORE5 ) )
 		{
 			entity weapon = titan.GetOffhandWeapon( OFFHAND_INVENTORY )

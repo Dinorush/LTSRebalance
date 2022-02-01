@@ -147,6 +147,9 @@ void function TrackerRockets_OnPlayerClassChanged( entity player )
 	#if CLIENT
 	HidePlayerHint( "#WPN_TITAN_TRACKER_ROCKETS_ERROR_HINT" )
 	#else
+		if( !LTSRebalance_Enabled() )
+			return
+			
 		entity trackerRockets = player.GetOffhandWeapon( OFFHAND_ORDNANCE )
 		if ( IsValid( trackerRockets ) && player.IsTitan() )
 			trackerRockets.SmartAmmo_Clear(true, true)

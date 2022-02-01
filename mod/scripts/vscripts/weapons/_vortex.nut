@@ -1217,7 +1217,7 @@ bool function DoVortexAttackForImpactData( entity vortexWeapon, attackParams, im
 	bool didFire = false
 
     //Projectiles don't actually preserve the mod, so store it in impactData
-    impactData.ampedVortex <- vortexWeapon.HasMod( "pas_ion_vortex" )
+    impactData.ampedVortex <- vortexWeapon.HasMod( "LTSRebalance_pas_ion_vortex" )
 	switch ( impactData.refireBehavior )
 	{
 		case VORTEX_REFIRE_EXPLOSIVE_ROUND:
@@ -1419,7 +1419,7 @@ function VortexSphereColorUpdate( entity weapon, sphereClientFXHandle = null )
 		if ( isIonVortex )
 		{
 			float energyFrac = 1.0 - float( weaponOwner.GetSharedEnergyCount() ) / energyTotal
-			if ( weapon.HasMod( "pas_ion_vortex" ) )
+			if ( weapon.HasMod( "pas_ion_vortex" ) || weapon.HasMod( "LTSRebalance_pas_ion_vortex" ) )
 				colorVec = GetVortexSphereCurrentColor( energyFrac, VORTEX_SPHERE_COLOR_PAS_ION_VORTEX )
 			else
 				colorVec = GetVortexSphereCurrentColor( energyFrac )
@@ -1528,6 +1528,9 @@ bool function ValidateVortexImpact( entity vortexSphere, entity projectile = nul
 // Only for mobile shields (would not work for Particle)
 bool function ValidateVortexDirection( entity vortexWeapon, entity attacker, entity inflictor )
 {
+	if ( !LTSRebalance_Enabled() )
+		return true
+
     if ( !IsValid( vortexWeapon ) )
 		return false
 
@@ -1878,7 +1881,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 
             case eDamageSourceId.mp_titanweapon_xo16_vanguard:
                 if ( TEMP_GetDamageFlagsFromProjectile( projectile ) & DF_ELECTRICAL )
-                    VortexSphereDrainHealthForDamage( vortexSphere, damage * 0.25 )
+                    VortexSphereDrainHealthForDamage( vortexSphere, damage * ( LTSRebalance_Enabled() ? 0.25 : 0.5 ) )
                 break
 
 			case eDamageSourceId.mp_weapon_grenade_emp:

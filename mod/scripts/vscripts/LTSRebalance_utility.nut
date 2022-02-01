@@ -2,24 +2,38 @@ untyped
 global function WeaponHasAmmoToUse
 global function LTSRebalance_Init
 global function LTSRebalance_Enabled
+global function LTSRebalance_EnabledOnInit
+
+struct {
+	bool ltsrebalance_enabled = false
+} file
 
 void function LTSRebalance_Init()
 {
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	
+	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
 	#if SERVER
 		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
 		AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
 		AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
 		AddCallback_OnNPCKilled( UnstableReactor_OnDeath )
 		AddCallback_OnPlayerRespawned( GiveLTSRebalanceWeaponMod )
+		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
 	#endif
 }
 
-bool function LTSRebalance_Enabled()
+// For use in inits, when the file variable may not have been set yet
+bool function LTSRebalance_EnabledOnInit()
 {
 	return GetCurrentPlaylistVarInt( "ltsrebalance_enable", 0 ) == 1
+}
+
+// For general use, since I dunno if getting the playlist varas many times as I need to is performant
+bool function LTSRebalance_Enabled() 
+{
+	return file.ltsrebalance_enabled
 }
 
 #if SERVER
@@ -35,7 +49,6 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 		return
 
 	LTSRebalance_HandleAttachments( titan )
-	LTSRebalance_HandleSetfiles( titan )
 
 	entity soul = titan.GetTitanSoul()
 	if( !IsValid( soul ) ) // Should only occur on eject
@@ -59,7 +72,7 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 	{
 		entity melee = titan.GetMeleeWeapon()
 		if ( IsValid( melee ) )
-			melee.AddMod( "big_punch" )
+			melee.AddMod( "LTSRebalance_big_punch" )
 		TakePassive( soul, ePassives.PAS_ENHANCED_TITAN_AI )
 		UpdateNPCForAILethality( titan ) // JFS - I don't know if AI lethality would get updated anyway
 	}
@@ -103,19 +116,18 @@ void function LTSRebalance_HandleAttachments( entity titan )
 	}
 }
 
-void function LTSRebalance_HandleSetfiles( entity titan )
+void function LTSRebalance_HandleSetfiles( entity player, entity titan )
 {
-	array<string> settingsMods = titan.GetPlayerSettingsMods()
-	
-	switch( GetTitanCharacterName( titan ) )
+	switch( GetTitanCharacterName( player ) )
 	{
 		case "scorch":
 		case "legion":
+			array<string> settingsMods = player.GetPlayerSettingsMods()
+
 			if ( settingsMods.contains( "pas_mobility_dash_capacity" ) )
 				return
-		case "ion":
 			settingsMods.append( "LTSRebalance" )
-			titan.SetPlayerSettingsWithMods( titan.GetPlayerSettings(), settingsMods )
+			player.SetPlayerSettingsWithMods( player.GetPlayerSettings(), settingsMods )
 	}
 }
 

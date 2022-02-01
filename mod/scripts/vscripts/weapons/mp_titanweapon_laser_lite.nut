@@ -32,7 +32,7 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_lite( entity weapon, Weapon
 {
     entity weaponOwner = weapon.GetWeaponOwner()
     // Prevent from firing without required energy
-    if ( !weaponOwner.ContextAction_IsBusy() && !OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( weapon ) )
+    if ( LTSRebalance_Enabled() && !weaponOwner.ContextAction_IsBusy() && !OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( weapon ) )
         return 0
 
     weapon.s.entitiesHit <- []
@@ -67,10 +67,13 @@ void function LaserLite_DamagedTarget( entity target, var damageInfo )
 		return
 	}
 
-    if ( !(target in weapon.s.entitiesHit) )
-        weapon.s.entitiesHit.append( target )
-    else
-        DamageInfo_SetDamage( damageInfo, 0 )
+	if ( LTSRebalance_Enabled() )
+	{
+		if ( !(target in weapon.s.entitiesHit) )
+			weapon.s.entitiesHit.append( target )
+		else
+			DamageInfo_SetDamage( damageInfo, 0 )
+	}
 }
 
 #endif

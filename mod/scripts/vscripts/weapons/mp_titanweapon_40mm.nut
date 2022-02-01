@@ -68,7 +68,7 @@ var function OnWeaponNpcPrimaryAttack_titanweapon_40mm( entity weapon, WeaponPri
 int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool playerFired, entity weapon )
 {
 	entity owner = weapon.GetWeaponOwner()
-	if ( weapon.HasMod( "pas_tone_burst" ) )
+	if ( weapon.HasMod( "pas_tone_burst" ) || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
 	{
 		if ( attackParams.burstIndex == 0 )
 		{
@@ -111,15 +111,15 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 				bolt.kv.gravity = 0.05
 			}
 		}
-        if ( weapon.HasMod( "pas_tone_weapon" ) )
+        if ( LTSRebalance_Enabled() && weapon.HasMod( "pas_tone_weapon" ) )
         {
-            if( weapon.HasMod( "pas_tone_weapon_on" ) )
+            if( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
             {
-                weapon.RemoveMod( "pas_tone_weapon_on" )
+                weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
                 weapon.EmitWeaponSound_1p3p( "Weapon_40mm_Fire_Amped_1P", "Weapon_40mm_Fire_Amped_3P" )
             }
             else
-                weapon.AddMod( "pas_tone_weapon_on" )
+                weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
         }
 	}
 
@@ -129,8 +129,8 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 
 void function OnWeaponReload_titanweapon_40mm( entity weapon, int milestone )
 {
-    if( weapon.HasMod( "pas_tone_weapon_on" ) )
-        weapon.RemoveMod( "pas_tone_weapon_on" )
+    if( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
+        weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
 }
 
 #if CLIENT
@@ -198,16 +198,17 @@ void function OnWeaponOwnerChanged_titanweapon_40mm( entity weapon, WeaponOwnerC
 
 void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, vector pos, vector normal, entity hitEnt, int hitbox, bool isCrit )
 {
-    if (projectile.ProjectileGetMods().contains( "pas_tone_weapon_on" ) )
+	array<string> mods = projectile.ProjectileGetMods()
+
+    if (mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
         EmitSoundAtPosition( TEAM_UNASSIGNED, projectile.GetOrigin(), "explo_40mm_splashed_impact_3p")
 	#if SERVER
-	// entity owner = projectile.GetOwner()
-	// if ( !IsAlive( owner ) )
-	// 	return
+	entity owner = projectile.GetOwner()
+	if ( !IsAlive( owner ) )
+		return
 
-	// array<string> mods = projectile.ProjectileGetMods()
-	// if ( mods.contains( "pas_tone_weapon" ) && isCrit )
- 	// 	ApplyTrackerMark( owner, hitEnt )
+	if ( !LTSRebalance_Enabled() && mods.contains( "pas_tone_weapon" ) && isCrit )
+ 		ApplyTrackerMark( owner, hitEnt )
 	#endif
 }
 
@@ -236,7 +237,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 //		if ( hitEnt.IsPlayer() )
 //			EmitSoundOnEntityOnlyToPlayer( hitEnt, hitEnt, "HUD_40mm_TrackerBeep_Locked" )
         entity sonar = owner.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-        if ( IsValid( sonar ) && sonar.HasMod( "pas_tone_sonar" ) )
+        if ( LTSRebalance_Enabled() && IsValid( sonar ) && sonar.HasMod( "pas_tone_sonar" ) )
         {
             int maxAmmo = sonar.GetWeaponPrimaryClipCountMax()
             int newAmmo = minint( maxAmmo, sonar.GetWeaponPrimaryClipCount() + int( maxAmmo * PAS_TONE_SONAR_COOLDOWN ) )
@@ -250,29 +251,23 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 
 		if (hitEnt.IsPlayer())
 		{
-            entity soul = hitEnt.GetTitanSoul()
+			int statusEffectID = StatusEffect_AddTimed( hitEnt, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
+			if (hitEnt in trackerRockets.w.targetLockEntityStatusEffectID)
+				trackerRockets.w.targetLockEntityStatusEffectID[hitEnt] = statusEffectID
+			else
+				trackerRockets.w.targetLockEntityStatusEffectID[hitEnt] <- statusEffectID
 
-			if (soul == null)
-			{
-                int statusEffectID = StatusEffect_AddTimed( hitEnt, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
-                if (hitEnt in trackerRockets.w.targetLockEntityStatusEffectID)
-                    trackerRockets.w.targetLockEntityStatusEffectID[hitEnt] = statusEffectID
-                else
-                    trackerRockets.w.targetLockEntityStatusEffectID[hitEnt] <- statusEffectID
+			thread OnOwnerDeathOrDisembark( owner, hitEnt, trackerRockets, statusEffectID )
 
-                thread OnOwnerDeathOrDisembark( owner, hitEnt, trackerRockets, statusEffectID )
-            }
-            else
-            {
-                int statusEffectIDSoul = StatusEffect_AddTimed( soul, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
-                if (soul in trackerRockets.w.targetLockEntityStatusEffectID)
-                    trackerRockets.w.targetLockEntityStatusEffectID[soul] = statusEffectIDSoul
-                else
-                    trackerRockets.w.targetLockEntityStatusEffectID[soul] <- statusEffectIDSoul
+			entity soul = hitEnt.GetTitanSoul()
+			int statusEffectIDSoul = StatusEffect_AddTimed( soul, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
+			if (soul in trackerRockets.w.targetLockEntityStatusEffectID)
+				trackerRockets.w.targetLockEntityStatusEffectID[soul] = statusEffectIDSoul
+			else
+				trackerRockets.w.targetLockEntityStatusEffectID[soul] <- statusEffectIDSoul
 
 
-                thread OnOwnerDeathOrDisembark(owner, soul, trackerRockets, statusEffectIDSoul )
-            }
+			thread OnOwnerDeathOrDisembark(owner, soul, trackerRockets, statusEffectIDSoul )
 		}
 		else if (hitEnt.IsNPC())
 		{
@@ -338,8 +333,34 @@ void function OnOwnerDeathOrDisembark(entity owner, entity hitEnt, entity tracke
 
 	float timeWaitedWhileLocked = 0
 
-	while( IsAlive(hitEnt) && SmartAmmo_EntHasEnoughTrackedMarks ( trackerRockets, hitEnt ) )
-        wait 0.1
+	if( LTSRebalance_Enabled() )
+	{
+		while( IsAlive( owner ) && IsAlive( hitEnt ) && SmartAmmo_EntHasEnoughTrackedMarks ( trackerRockets, hitEnt ) )
+        	wait 0.1
+	}
+	else
+	{
+		bool trackedEntIsAlive = IsAlive(hitEnt)
+		while(trackedEntIsAlive)
+		{
+			if(IsAlive(owner))
+			{
+				wait 0.1
+				timeWaitedWhileLocked = timeWaitedWhileLocked + 0.1
+
+				trackedEntIsAlive = IsAlive(hitEnt)
+
+				if (timeWaitedWhileLocked >= TRACKER_LIFETIME)
+					return
+			}
+			else
+			{
+				if(hitEnt != null && IsAlive(hitEnt))
+					StatusEffect_Stop( hitEnt, statusEffectID )
+				return
+			}
+		}
+	}
 }
 
 void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
@@ -353,10 +374,12 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 
  	ApplyTrackerMark( attacker, ent )
 
+	if ( !LTSRebalance_Enabled() )
+		return
     entity projectile = DamageInfo_GetInflictor( damageInfo )
     int flags = DamageInfo_GetCustomDamageType( damageInfo )
-    print("40mm Damage Flag: " + flags + ", is Impact: " + (flags & DF_IMPACT))
-    if( projectile.ProjectileGetMods().contains( "pas_tone_weapon_on" ) && flags & DF_IMPACT )
+
+    if( projectile.ProjectileGetMods().contains( "LTSRebalance_pas_tone_weapon_on" ) && flags & DF_IMPACT )
         ApplyTrackerMark( attacker, ent )
 }
 #endif
@@ -371,7 +394,7 @@ bool function OnWeaponChargeLevelIncreased_titanweapon_sticky_40mm( entity weapo
 	int level = weapon.GetWeaponChargeLevel()
 	int ammo = weapon.GetWeaponPrimaryClipCount()
 
-	if ( ammo > level )
+	if ( ammo >= level )
 	{
 		if ( level == 2 )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_2" ) //Middle Sound
@@ -385,19 +408,29 @@ bool function OnWeaponChargeLevelIncreased_titanweapon_sticky_40mm( entity weapo
 //First sound
 void function OnWeaponStartZoomIn_titanweapon_sticky_40mm( entity weapon )
 {
-	if ( weapon.HasMod( "pas_tone_burst") && weapon.IsReadyToFire() )
-    {
-        weapon.SetWeaponChargeFractionForced(0.33) // Doing this instead of using 2 charge levels to get the reticle to cooperate
-		weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
-    }
+	if ( weapon.IsReadyToFire() )
+	{
+		if ( weapon.HasMod( "pas_tone_burst") )
+			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
+		{
+			weapon.SetWeaponChargeFractionForced(0.33) // Doing this instead of using 2 charge levels to get the reticle to cooperate
+			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		}
+	}
 }
 
 //First Sound
 void function OnWeaponReadyToFire_titanweapon_sticky_40mm( entity weapon )
 {
-	if ( weapon.HasMod( "pas_tone_burst") && weapon.IsWeaponInAds() && weapon.GetWeaponPrimaryClipCount() > 0 )
+	if ( weapon.IsWeaponInAds() && weapon.GetWeaponPrimaryClipCount() > 0 )
     {
-        weapon.SetWeaponChargeFractionForced(0.33) // Doing this instead of using 2 charge levels to get the reticle to cooperate
-		weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		if ( weapon.HasMod( "pas_tone_burst") )
+			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" )  )
+		{
+			weapon.SetWeaponChargeFractionForced(0.33) // Doing this instead of using 2 charge levels to get the reticle to cooperate
+			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		}
     }
 }

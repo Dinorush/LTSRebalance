@@ -540,28 +540,31 @@ bool function PlayerTriesSyncedMelee( entity player, entity target )
 				RemoveCinematicFlag( player, CE_FLAG_TITAN_3P_CAM )
 				RemoveCinematicFlag( player, CE_FLAG_EXECUTION )
 
-                // Band-aid fix to fix Tone Prime ammo refill bug
-                if( IsValid( startTable.startWeapon ) )
-                {
-                    float ammoRegenRate = expect float( startTable.startWeapon.GetWeaponSettingFloat( eWeaponVar.regen_ammo_refill_rate ) )
-                    int expectedAmmo = int( startTable.startAmmo + ammoRegenRate * ( Time() - startTable.startTime ) )
-                    int newAmmo = minint( startTable.startWeapon.GetWeaponPrimaryClipCountMax(), expectedAmmo )
-                    startTable.startWeapon.SetWeaponPrimaryClipCount( newAmmo )
-                }
+				if ( LTSRebalance_Enabled() )
+				{
+					// Band-aid fix to fix Tone Prime ammo refill bug
+					if( IsValid( startTable.startWeapon ) )
+					{
+						float ammoRegenRate = expect float( startTable.startWeapon.GetWeaponSettingFloat( eWeaponVar.regen_ammo_refill_rate ) )
+						int expectedAmmo = int( startTable.startAmmo + ammoRegenRate * ( Time() - startTable.startTime ) )
+						int newAmmo = minint( startTable.startWeapon.GetWeaponPrimaryClipCountMax(), expectedAmmo )
+						startTable.startWeapon.SetWeaponPrimaryClipCount( newAmmo )
+					}
 
-                // Additional band-aid fix for Ion using energy for Laser Shot in terminations
-                float energyRegenRate = player.GetSharedEnergyRegenRate()
-                int expectedEnergy = int ( startTable.startEnergy + energyRegenRate * ( Time() - startTable.startTime ) )
-                int newEnergy = minint( player.GetSharedEnergyTotal(), expectedEnergy )
-                player.TakeSharedEnergy( player.GetSharedEnergyCount() )
-                player.AddSharedEnergy( newEnergy )
+					// Additional band-aid fix for Ion using energy for Laser Shot in terminations
+					float energyRegenRate = player.GetSharedEnergyRegenRate()
+					int expectedEnergy = int ( startTable.startEnergy + energyRegenRate * ( Time() - startTable.startTime ) )
+					int newEnergy = minint( player.GetSharedEnergyTotal(), expectedEnergy )
+					player.TakeSharedEnergy( player.GetSharedEnergyCount() )
+					player.AddSharedEnergy( newEnergy )
+				}
 			}
 			if ( IsValid( target ) && target.IsPlayer() )
 			{
 				RemoveCinematicFlag( target, CE_FLAG_TITAN_3P_CAM )
 				RemoveCinematicFlag( target, CE_FLAG_EXECUTION )
 			}
-            else // Fix case where enemy leaves game during Ion prime termination
+            else if ( LTSRebalance_Enabled() ) // Fix case where enemy leaves game during Ion prime termination
             {
                 entity weapon = player.GetMainWeapons()[0]
                 if( IsValid( weapon ) )

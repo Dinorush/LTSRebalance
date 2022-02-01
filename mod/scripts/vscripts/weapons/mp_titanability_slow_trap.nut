@@ -13,8 +13,10 @@ global function OnWeaponNPCPrimaryAttack_titanweapon_slow_trap
 const asset DAMAGE_AREA_MODEL = $"models/fx/xo_shield.mdl"
 const asset SLOW_TRAP_MODEL = $"models/weapons/titan_incendiary_trap/w_titan_incendiary_trap.mdl"
 const asset SLOW_TRAP_FX_ALL = $"P_meteor_Trap_start"
-const float SLOW_TRAP_LIFETIME = 8.0
-const float SLOW_TRAP_BUILD_TIME = 0.5
+const float LTSREBALANCE_SLOW_TRAP_LIFETIME = 8.0
+const float LTSREBALANCE_SLOW_TRAP_BUILD_TIME = 0.5
+const float SLOW_TRAP_LIFETIME = 12.0
+const float SLOW_TRAP_BUILD_TIME = 1.0
 const float SLOW_TRAP_RADIUS = 240
 const asset TOXIC_FUMES_FX 	= $"P_meteor_trap_gas"
 const asset TOXIC_FUMES_S2S_FX 	= $"P_meteor_trap_gas_s2s"
@@ -62,7 +64,7 @@ var function OnWeaponPrimaryAttack_titanweapon_slow_trap( entity weapon, WeaponP
 	if ( weaponOwner.IsPlayer() )
 		PlayerUsedOffhand( weaponOwner, weapon )
 
-	ThrowDeployable( weapon, attackParams, 2000, OnSlowTrapPlanted, <0,0,0> )
+	ThrowDeployable( weapon, attackParams, LTSRebalance_Enabled() ? 2000.0 : 1500.0, OnSlowTrapPlanted, <0,0,0> )
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
 
@@ -257,7 +259,7 @@ function IgniteTrap( entity damageArea, var damageInfo, bool isExplosiveBarrel =
 
 	}
 
-	float duration = FIRE_TRAP_LIFETIME * GetThermiteDurationBonus( owner )
+	float duration = LTSRebalance_Enabled() ? FIRE_TRAP_LIFETIME * GetThermiteDurationBonus( owner ) : FLAME_WALL_THERMITE_DURATION
 	if ( GAMETYPE == GAMEMODE_SP )
 		duration *= SP_FLAME_WALL_DURATION_SCALE
 
@@ -337,6 +339,8 @@ void function FlameOn( float duration, entity inflictor )
 	float intialWaitTime = 0.3
 	wait intialWaitTime
 
+	if ( GAMETYPE == GAMEMODE_SP )
+		duration *= SP_FLAME_WALL_DURATION_SCALE
 	foreach( key, pos in inflictor.e.fireTrapEndPositions )
 	{
 		entity fireLine = StartParticleEffectInWorld_ReturnEntity( GetParticleSystemIndex( FIRE_LINES_FX ), pos, inflictor.GetAngles() )
@@ -352,6 +356,8 @@ void function FlameOnMovingGeo( float duration, entity inflictor )
 	float intialWaitTime = 0.3
 	wait intialWaitTime
 
+	if ( GAMETYPE == GAMEMODE_SP )
+		duration *= SP_FLAME_WALL_DURATION_SCALE
 	vector angles = inflictor.GetAngles()
 	int fxID = GetParticleSystemIndex( FIRE_LINES_FX )
 	if ( GetMapName() == "sp_s2s" )
@@ -452,7 +458,7 @@ bool function CreateSlowTrapSegment( entity projectile, int projectileCount, ent
 
 	if ( projectile.proj.savedOrigin != < -999999.0, -999999.0, -999999.0 > )
 	{
-		float duration = FIRE_TRAP_LIFETIME * GetThermiteDurationBonus( owner )
+		float duration = LTSRebalance_Enabled() ? FIRE_TRAP_LIFETIME * GetThermiteDurationBonus( owner ) : FLAME_WALL_THERMITE_DURATION
 
 		if ( GAMETYPE == GAMEMODE_SP )
 			duration *= SP_FLAME_WALL_DURATION_SCALE
@@ -493,13 +499,17 @@ void function FireTrap_DamageAreaOverTime( entity owner, entity inflictor, vecto
 {
 	Assert( IsValid( owner ) )
 	owner.EndSignal( "OnDestroy" )
-    inflictor.EndSignal( "OnDestroy" )
+	if ( LTSRebalance_Enabled() )
+    	inflictor.EndSignal( "OnDestroy" )
 
 	float endTime = Time() + duration
 	while ( Time() < endTime )
 	{
 		FireTrap_RadiusDamage( pos, owner, inflictor )
-		WaitFrame()
+		if ( LTSRebalance_Enabled() )
+			WaitFrame()
+		else
+			wait 0.2
 	}
 }
 
@@ -515,19 +525,23 @@ void function FireTrap_DamageAreaOverTimeOnMovingGeo( entity owner, entity infli
 	{
 		vector pos = GetWorldOriginFromRelativeDelta( relativeDelta, movingGeo )
 		FireTrap_RadiusDamage( pos, owner, inflictor )
-		WaitFrame()
+		if ( LTSRebalance_Enabled() )
+			WaitFrame()
+		else
+			wait 0.2
 	}
 }
 
 void function FireTrap_RadiusDamage( vector pos, entity owner, entity inflictor )
 {
-
+	var pilotDamage = LTSRebalance_Enabled() ? SLOWTRAP_DAMAGE_TICK_PILOT : PLAYER_METEOR_DAMAGE_TICK_PILOT
+	var titanDamage = LTSRebalance_Enabled() ? SLOWTRAP_DAMAGE_TICK : PLAYER_METEOR_DAMAGE_TICK
 	RadiusDamage(
 		pos,												// origin
 		owner,												// owner
 		inflictor,		 									// inflictor
-		SLOWTRAP_DAMAGE_TICK_PILOT,							// pilot damage
-		SLOWTRAP_DAMAGE_TICK,									// heavy armor damage
+		pilotDamage,							// pilot damage
+		titanDamage,									// heavy armor damage
 		FIRE_TRAP_MINI_EXPLOSION_RADIUS,					// inner radius
 		FIRE_TRAP_MINI_EXPLOSION_RADIUS,					// outer radius
 		SF_ENVEXPLOSION_NO_NPC_SOUND_EVENT,					// explosion flags
@@ -573,7 +587,7 @@ void function FireTrap_DamagedPlayerOrNPC( entity ent, var damageInfo )
 
     entity firewall = attacker.GetOffhandWeapon( OFFHAND_RIGHT )
     entity canister = attacker.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-    if ( IsValid( firewall ) && firewall.HasMod( "pas_scorch_firewall" ) && IsValid( canister ) )
+    if ( LTSRebalance_Enabled() && IsValid( firewall ) && firewall.HasMod( "LTSRebalance_pas_scorch_firewall" ) && IsValid( canister ) )
     {
         int bonusAmmo = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE )
         int newAmmo = minint( firewall.GetWeaponPrimaryClipCountMax(), firewall.GetWeaponPrimaryClipCount() + bonusAmmo )

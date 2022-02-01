@@ -24,6 +24,8 @@ void function UpgradeCore_Init()
 	PrecacheParticleSystem( LASER_CHAGE_FX_3P )
 
     #if SERVER
+	if ( !LTSRebalance_EnabledOnInit() )
+		return
     AddCallback_OnTitanDoomed( EnergyThief_OnPlayerDoom )
     AddCallback_OnPlayerAssist( EnergyThief_OnPlayerAssist )
     AddCallback_OnPlayerKilled( EnergyThief_OnPlayerOrNPCKilled )
@@ -95,8 +97,18 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					if ( IsValid( primaryWeapon ) )
 					{
 						array<string> mods = primaryWeapon.GetMods()
-						mods.append( "arc_rounds" )
-						primaryWeapon.SetMods( mods )
+						if ( !LTSRebalance_Enabled() )
+						{
+							mods.append( "arc_rounds" )
+							primaryWeapon.SetMods( mods )
+							primaryWeapon.SetWeaponPrimaryClipCount( primaryWeapon.GetWeaponPrimaryClipCount() + 10 )
+						}
+						else
+						{
+							mods.append( "LTSRebalance_base_arc_rounds" )
+							mods.append( "LTSRebalance_arc_rounds" )
+							primaryWeapon.SetMods( mods )
+						}
 					}
 				}
 				if ( owner.IsPlayer() )
@@ -112,7 +124,10 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 				if ( IsValid( offhandWeapon ) )
 				{
 					array<string> mods = offhandWeapon.GetMods()
-					mods.append( "missile_racks" )
+					if ( LTSRebalance_Enabled() )
+						mods.append( "LTSRebalance_missile_racks" )
+					else
+						mods.append( "missile_racks" )
 					offhandWeapon.SetMods( mods )
 				}
 				if ( owner.IsPlayer() )
@@ -150,17 +165,17 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					mods.append( "rapid_rearm" )
 					offhandWeapon.SetMods( mods )
 				}
-				// array<entity> weapons = GetPrimaryWeapons( owner )
-				// if ( weapons.len() > 0 )
-				// {
-				// 	entity primaryWeapon = weapons[0]
-				// 	if ( IsValid( primaryWeapon ) )
-				// 	{
-				// 		array<string> mods = primaryWeapon.GetMods()
-				// 		mods.append( "rapid_reload" )
-				// 		primaryWeapon.SetMods( mods )
-				// 	}
-				// }
+				array<entity> weapons = GetPrimaryWeapons( owner )
+				if ( !LTSRebalance_Enabled() && weapons.len() > 0 )
+				{
+					entity primaryWeapon = weapons[0]
+					if ( IsValid( primaryWeapon ) )
+					{
+						array<string> mods = primaryWeapon.GetMods()
+						mods.append( "rapid_reload" )
+						primaryWeapon.SetMods( mods )
+					}
+				}
 				if ( owner.IsPlayer() )
 				{
 					int conversationID = GetConversationIndex( "upgradeTo2" )
@@ -194,13 +209,19 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					{
 						array<string> mods = offhandWeapon.GetMods()
 						mods.fastremovebyvalue( "energy_transfer" )
-						mods.append( "energy_field_energy_transfer" )
+						if ( LTSRebalance_Enabled() )
+							mods.append( "LTSRebalance_energy_field" )
+						else
+							mods.append( "energy_field_energy_transfer" )
 						offhandWeapon.SetMods( mods )
 					}
 					else
 					{
 						array<string> mods = offhandWeapon.GetMods()
-						mods.append( "energy_field" )
+						if ( LTSRebalance_Enabled() )
+							mods.append( "LTSRebalance_energy_field" )
+						else
+							mods.append( "energy_field" )
 						offhandWeapon.SetMods( mods )
 					}
 				}
@@ -226,10 +247,20 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 
 				entity ordnance = owner.GetOffhandWeapon( OFFHAND_RIGHT )
 				array<string> mods
-				if ( ordnance.HasMod( "missile_racks") )
-					mods = [ "upgradeCore_MissileRack_Vanguard" ]
+				if ( LTSRebalance_Enabled() )
+				{
+					if ( ordnance.HasMod( "LTSRebalance_missile_racks") )
+						mods = [ "LTSRebalance_upgradeCore_MissileRack_Vanguard" ]
+					else
+						mods = [ "LTSRebalance_upgradeCore_Vanguard" ]
+				}
 				else
-					mods = [ "upgradeCore_Vanguard" ]
+				{
+					if ( ordnance.HasMod( "missile_racks") )
+						mods = [ "upgradeCore_MissileRack_Vanguard" ]
+					else
+						mods = [ "upgradeCore_Vanguard" ]
+				}
 
 				if ( ordnance.HasMod( "fd_balance" ) )
 					mods.append( "fd_balance" )
@@ -242,6 +273,7 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 			}
 			else if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_CORE8 ) ) //Superior Chassis
 			{
+				int HEALTH_AMOUNT = LTSRebalance_Enabled() ? SUPERIOR_CHASSIS_HEALTH_AMOUNT : VANGUARD_CORE8_HEALTH_AMOUNT
 				if ( owner.IsPlayer() )
 				{
 					array<string> conversations = [ "upgradeTo3", "upgradeToFin" ]
@@ -253,12 +285,18 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					{
 						int missingHealth = owner.GetMaxHealth() - owner.GetHealth()
 						array<string> settingMods = owner.GetPlayerSettingsMods()
-						settingMods.append( "core_health_upgrade" )
+						if ( LTSRebalance_Enabled() )
+							settingMods.append( "LTSRebalance_core_health_upgrade" )
+						else
+							settingMods.append( "core_health_upgrade" )
 						owner.SetPlayerSettingsWithMods( owner.GetPlayerSettings(), settingMods )
-						owner.SetHealth( max( owner.GetMaxHealth() - missingHealth, SUPERIOR_CHASSIS_HEALTH_AMOUNT ) )
+						owner.SetHealth( max( owner.GetMaxHealth() - missingHealth, HEALTH_AMOUNT ) )
 
 						//Hacky Hack - Append core_health_upgrade to setFileMods so that we have a way to check that this upgrade is active.
-						soul.soul.titanLoadout.setFileMods.append( "core_health_upgrade" )
+						if ( LTSRebalance_Enabled() )
+							soul.soul.titanLoadout.setFileMods.append( "LTSRebalance_core_health_upgrade" )
+						else
+							soul.soul.titanLoadout.setFileMods.append( "core_health_upgrade" )
 					}
 					else
 					{
@@ -267,11 +305,11 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 				}
 				else
 				{
-				  if ( !GetDoomedState( owner ) )
-				  {
-					  owner.SetMaxHealth( owner.GetMaxHealth() + SUPERIOR_CHASSIS_HEALTH_AMOUNT )
-					  owner.SetHealth( owner.GetHealth() + SUPERIOR_CHASSIS_HEALTH_AMOUNT )
-				  }
+					if ( !GetDoomedState( owner ) )
+					{
+						owner.SetMaxHealth( owner.GetMaxHealth() + HEALTH_AMOUNT )
+						owner.SetHealth( owner.GetHealth() + HEALTH_AMOUNT )
+					}
 				}
 				entity soul = owner.GetTitanSoul()
 				soul.SetPreventCrits( true )
@@ -284,18 +322,34 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					entity primaryWeapon = weapons[0]
 					if ( IsValid( primaryWeapon ) )
 					{
-						if ( primaryWeapon.HasMod( "arc_rounds" ) )
+						if ( !LTSRebalance_Enabled() )
 						{
-							primaryWeapon.RemoveMod( "arc_rounds" )
-							array<string> mods = primaryWeapon.GetMods()
-							mods.append( "arc_rounds_with_battle_rifle" )
-							primaryWeapon.SetMods( mods )
+							if ( primaryWeapon.HasMod( "arc_rounds" ) )
+							{
+								primaryWeapon.RemoveMod( "arc_rounds" )
+								array<string> mods = primaryWeapon.GetMods()
+								mods.append( "arc_rounds_with_battle_rifle" )
+								primaryWeapon.SetMods( mods )
+							}
+							else
+							{
+								array<string> mods = primaryWeapon.GetMods()
+								mods.append( "battle_rifle" )
+								mods.append( "battle_rifle_icon" )
+								primaryWeapon.SetMods( mods )
+							}
 						}
 						else
 						{
 							array<string> mods = primaryWeapon.GetMods()
-							mods.append( "battle_rifle" )
-							mods.append( "battle_rifle_icon" )
+							mods.append( "LTSRebalance_base_battle_rifle" )
+							if ( mods.contains( "LTSRebalance_arc_rounds" ) )
+							{
+								mods.fastremovebyvalue( "LTSRebalance_arc_rounds" )
+								mods.append( "LTSRebalance_arc_rounds_with_battle_rifle" )
+							}
+							else
+								mods.append( "LTSRebalance_battle_rifle")
 							primaryWeapon.SetMods( mods )
 						}
 					}
@@ -342,7 +396,7 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 #if SERVER
 void function PasVanguardDoom_HealOnCore ( entity owner, entity soul  )
 {
-    if( SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) )
+    if( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) )
     {
         if( soul.IsDoomed() )
         {
@@ -375,8 +429,9 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 	EmitSoundOnEntityOnlyToPlayer( owner, owner, "Titan_Monarch_Smart_Core_ActiveLoop_1P" )
 	EmitSoundOnEntityExceptToPlayer( owner, owner, "Titan_Monarch_Smart_Core_Activated_3P" )
 	entity soul = owner.GetTitanSoul()
-
-    int shieldAmount = ( weapon.HasMod( "superior_chassis" ) ? SUPERIOR_CHASSIS_SHIELD_AMOUNT : soul.GetShieldHealthMax() / 2 )
+	int shieldAmount = soul.GetShieldHealthMax()
+    if ( LTSRebalance_Enabled() )
+		shieldAmount = ( weapon.HasMod( "LTSRebalance_superior_chassis" ) ? SUPERIOR_CHASSIS_SHIELD_AMOUNT : soul.GetShieldHealthMax() / 2 )
     StunLaser_HandleTempShieldChange( soul, shieldAmount )
     int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
 	soul.SetShieldHealth( newShield )

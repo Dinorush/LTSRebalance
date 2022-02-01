@@ -218,7 +218,8 @@ function WeaponUtility_Init()
 		AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_flak_rifle, PROTO_Flak_Rifle_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_stun_laser, VanguardEnergySiphon_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_grenade_emp, EMP_DamagedPlayerOrNPC )
-		AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_arc_blast, ArcBlast_DamagedPlayerOrNPC )
+		if ( LTSRebalance_EnabledOnInit() )
+			AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_arc_blast, ArcBlast_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_proximity_mine, EMP_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId[ CHARGE_TOOL ], EMP_DamagedPlayerOrNPC )
 		if ( IsMultiplayer() )
@@ -1563,6 +1564,12 @@ function ClusterRocket_Detonate( entity rocket, vector normal )
 	array mods = rocket.ProjectileGetMods()
 	if ( mods.contains( "pas_northstar_cluster" ) )
 	{
+		count = CLUSTER_ROCKET_BURST_COUNT_BURN
+		duration = PAS_NORTHSTAR_CLUSTER_ROCKET_DURATION
+		range = CLUSTER_ROCKET_BURST_RANGE * 1.5
+	}
+	else if ( mods.contains( "LTSRebalance_pas_northstar_cluster" ) )
+	{
 		count = 30
 		duration = 7.5
 		range = CLUSTER_ROCKET_BURST_RANGE * 1.25
@@ -1710,7 +1717,7 @@ function ClusterRocketBursts( vector origin, int damage, int damageHeavyArmor, f
 		WaitFrame()
 	}
 
-	wait popcornInfo.duration
+	wait ( LTSRebalance_Enabled() ? popcornInfo.duration : CLUSTER_ROCKET_DURATION )
 }
 
 function ClusterRocketBurst( entity clusterExplosionEnt, vector origin, damage, damageHeavyArmor, innerRadius, outerRadius, entity owner, PopcornInfo popcornInfo, customFxTable = null )
@@ -2869,7 +2876,8 @@ array<entity> function GetPlayerWeapons( entity player, array<string> excludeNam
 }
 
 void function WeaponAttackWave( entity ent, int projectileCount, entity inflictor, vector pos, vector dir, bool functionref( entity, int, entity, entity, vector, vector, int ) waveFunc )
-{ent.EndSignal( "OnDestroy" )
+{
+	ent.EndSignal( "OnDestroy" )
 
 	entity weapon
 	entity projectile
@@ -2898,6 +2906,8 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
             passVortex = string( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
 		maxCount = expect int( ent.ProjectileGetWeaponInfoFileKeyField( chargedPrefix + "wave_max_count" ) )
 		step = expect float( ent.ProjectileGetWeaponInfoFileKeyField( chargedPrefix + "wave_step_dist" ) )
+		if ( LTSRebalance_Enabled() && ent.ProjectileGetWeaponClassName() == "mp_titancore_flame_wave" ) // Hardcoded here since can't be changed via attachment
+			step = 130.0
 		owner = ent.GetOwner()
 		damageNearValueTitanArmor = projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value_titanarmor )
 	}
@@ -2930,10 +2940,13 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			traceEndOver = <newPos.x, newPos.y, traceStart.z + step * 0.57735056839> // The over height is to cover the case of a sheer surface that then continues gradually upwards (like mp_box)
 		}
 
+		if ( !LTSRebalance_Enabled() )
+			firstTrace = false
+
 		VortexBulletHit ornull vortexHit = VortexBulletHitCheck( owner, traceStart, traceEndOver )
 
         // "pass" behavior ignores Vortex; "damage" hits it, but doesn't stop.
-		if ( passVortex != "pass" && vortexHit )
+		if ( ( !LTSRebalance_Enabled() || passVortex != "pass" ) && vortexHit )
 		{
 			expect VortexBulletHit( vortexHit )
 			entity vortexWeapon = vortexHit.vortex.GetOwnerWeapon()
@@ -2944,7 +2957,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 				VortexSphereDrainHealthForDamage( vortexHit.vortex, damageNearValueTitanArmor )
 
             // If passVortex has nothing, stop on Vortex (normal behavior)
-            if(passVortex == "")
+            if( !LTSRebalance_Enabled() || passVortex == "" )
             {
                 WaitFrame()
                 continue
@@ -2990,7 +3003,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 		{
 			if ( IsValid( upwardTrace.hitEnt ) )
 			{
-				if ( upwardTrace.hitEnt.IsWorld() || upwardTrace.hitEnt.IsPlayer() || ( passVortex == "" && upwardTrace.hitEnt.IsNPC() ) )
+				if ( upwardTrace.hitEnt.IsWorld() || upwardTrace.hitEnt.IsPlayer() || ( ( !LTSRebalance_Enabled() ||  passVortex == "" ) && upwardTrace.hitEnt.IsNPC() ) )
 					break
 			}
 		}
@@ -3041,7 +3054,7 @@ void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInf
 	if ( IsValid( attacker ) && attacker.GetTeam() == ent.GetTeam() )
 		return
 
-	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, 0, LASER_STUN_SEVERITY_SLOWMOVE )
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LTSRebalance_Enabled() ? 0.0 : LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE )
 }
 
 void function Elecriticy_DamagedPlayerOrNPC( entity ent, var damageInfo, asset humanFx, asset titanFx, float slowTurn, float slowMove )

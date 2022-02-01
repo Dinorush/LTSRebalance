@@ -78,10 +78,13 @@ var function OnWeaponPrimaryAttack_ability_swordblock( entity weapon, WeaponPrim
 bool function OnChargeBegin( entity weapon, int blockType )
 {
 	weapon.EmitWeaponSound_1p3p( "", "ronin_sword_draw_3p" )
-    entity weaponOwner = weapon.GetWeaponOwner()
-	if ( weaponOwner.IsPlayer() )
-		PlayerUsedOffhand( weaponOwner, weapon )
-	StartShield( weapon )
+	if ( LTSRebalance_Enabled() )
+	{
+		entity weaponOwner = weapon.GetWeaponOwner()
+		if ( weaponOwner.IsPlayer() )
+			PlayerUsedOffhand( weaponOwner, weapon )
+		StartShield( weapon )
+	}
 
 	return true
 }
@@ -89,6 +92,12 @@ bool function OnChargeBegin( entity weapon, int blockType )
 void function OnActivate( entity weapon, int blockType )
 {
     entity weaponOwner = weapon.GetWeaponOwner()
+	if ( !LTSRebalance_Enabled() )
+	{
+		if ( weaponOwner.IsPlayer() )
+			PlayerUsedOffhand( weaponOwner, weapon )
+		StartShield( weapon )
+	}
     entity offhandWeapon = weaponOwner.GetOffhandWeapon( OFFHAND_MELEE )
     if ( IsValid( offhandWeapon ) && offhandWeapon.HasMod( "super_charged" ) )
 		thread BlockSwordCoreFXThink( weapon, weaponOwner )
@@ -168,7 +177,8 @@ void function StartShield( entity weapon )
 	entity weaponOwner = weapon.GetWeaponOwner()
 	weaponOwner.e.blockActive = true
 
-    weapon.AddMod( "stop_regen" )
+	if ( LTSRebalance_Enabled() )
+    	weapon.AddMod( "LTSRebalance_stop_regen" )
 #endif
 }
 
@@ -179,8 +189,11 @@ void function EndShield( entity weapon )
 	entity weaponOwner = weapon.GetWeaponOwner()
 	weaponOwner.e.blockActive = false
 
-    weapon.RemoveMod( "stop_regen" )
-    weapon.RegenerateAmmoReset()
+	if ( LTSRebalance_Enabled() )
+	{
+		weapon.RemoveMod( "LTSRebalance_stop_regen" )
+		weapon.RegenerateAmmoReset()
+	}
 #endif
 }
 
@@ -202,11 +215,13 @@ void function IncrementChargeBlockAnim( entity blockingEnt, var damageInfo )
 	weapon.SetChargeAnimIndex( newIdx )
 }
 
-const float TITAN_BLOCK_DAMAGE_REDUCTION = 0.22
-const float TITAN_BLOCK_DAMAGE_EXPONENT = 1.15
-const float SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.11
-const float SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.254
-const float TITAN_BLOCK_DAMAGE_PER_INCREMENT = 1000.0
+const float TITAN_BLOCK_DAMAGE_REDUCTION = 0.3
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION = 0.22
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT = 1.15
+const float SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.15
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.11
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.254
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT = 1000.0
 
 float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var damageInfo )
 {
@@ -223,18 +238,23 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
 		if ( shouldPassThroughDamage )
 			return 1.0
 
-        float initial = TITAN_BLOCK_DAMAGE_REDUCTION
-        float exponent = TITAN_BLOCK_DAMAGE_EXPONENT
+        float initial = LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION
+        float exponent = LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT
 		if ( blockingEnt.IsPlayer() && PlayerHasPassive( blockingEnt, ePassives.PAS_SHIFT_CORE ) )
         {
-            initial = SWORD_CORE_BLOCK_DAMAGE_REDUCTION
-            exponent = SWORD_CORE_BLOCK_DAMAGE_EXPONENT
+			if ( !LTSRebalance_Enabled() )
+				return SWORD_CORE_BLOCK_DAMAGE_REDUCTION
+            initial = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION
+            exponent = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT
         }
+
+		if ( !LTSRebalance_Enabled() )
+			return TITAN_BLOCK_DAMAGE_REDUCTION
 
         int damageTaken = int( DamageInfo_GetDamage( damageInfo ) + 0.5 ) / 10  //Divide by 10 since ammo must be < 1000 for display
         int newAmmo = int( max ( 1, weapon.GetWeaponPrimaryClipCount() - damageTaken ) )
         weapon.SetWeaponPrimaryClipCount( newAmmo )
-        float power = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / (TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0)
+        float power = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / (LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0)
 
 		return initial * pow( exponent, power )
 	}
@@ -339,15 +359,18 @@ void function BasicBlock_OnDamage( entity blockingEnt, var damageInfo )
 	int attachId = blockingEnt.LookupAttachment( "PROPGUN" )
 	vector origin = GetDamageOrigin( damageInfo, blockingEnt )
 	vector eyePos = blockingEnt.GetAttachmentOrigin( attachId )
-	// vector blockAngles = blockingEnt.GetAttachmentAngles( attachId )
-	// vector fwd = AnglesToForward( blockAngles )
-
-	 vector vec1 = Normalize( origin - eyePos )
-	// float dot = DotProduct( vec1, fwd )
-	// float angleRange = GetAngleForBlock( blockingEnt )
-	// float minDot = AngleToDot( angleRange )
-	// if ( dot < minDot )
-	// 	return
+	vector vec1 = Normalize( origin - eyePos )
+	if ( !LTSRebalance_Enabled() )
+	{
+		vector blockAngles = blockingEnt.GetAttachmentAngles( attachId )
+		vector fwd = AnglesToForward( blockAngles )
+		
+		float dot = DotProduct( vec1, fwd )
+		float angleRange = GetAngleForBlock( blockingEnt )
+		float minDot = AngleToDot( angleRange )
+		if ( dot < minDot )
+			return
+	}
 
 	IncrementChargeBlockAnim( blockingEnt, damageInfo )
 	EmitSoundOnEntity( blockingEnt, "ronin_sword_bullet_impacts" )

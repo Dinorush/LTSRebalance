@@ -370,10 +370,12 @@ function TitanEjectPlayer( entity ejectTitan, bool instant = false ) //TODO: Thi
 	e.overrideAttacker <- soul.soul.nukeAttacker
 
 	local nuclearPayload = 0
-	// if ( IsValid( e.player ) )
-	// 	nuclearPayload = GetNuclearPayload( ejectTitan )
-	// else
-	// 	nuclearPayload = NPC_GetNuclearPayload( ejectTitan )
+	if ( IsValid( e.player ) )
+		nuclearPayload = GetNuclearPayload( ejectTitan )
+	else
+		nuclearPayload = NPC_GetNuclearPayload( ejectTitan )
+	if ( LTSRebalance_Enabled() && nuclearPayload == 1 )
+		nuclearPayload = 0
 
 	e.nuclearPayload <- nuclearPayload
 
@@ -602,7 +604,7 @@ function TitanEjectPlayer( entity ejectTitan, bool instant = false ) //TODO: Thi
 		DeployAndEnableWeapons( player )//Undo Holster
 		player.UnfreezeControlsOnServer()
 
-		if ( SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
+		if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
 		{
 			Rodeo_GiveBatteryToPlayer( player )
 			EnableCloak( player, 7.0 )

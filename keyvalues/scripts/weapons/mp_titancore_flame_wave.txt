@@ -12,9 +12,6 @@ WeaponData
 			"damage_far_value_titanarmor"					"5000"
 
 			"charge_time" 									"0.75"
-			
-			//"wave_step_dist"								"130.0"
-			//"charge_wave_step_dist"						"130.0"
 
 			"deploy_time" 									".3"
 		}

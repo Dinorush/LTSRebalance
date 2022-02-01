@@ -6,7 +6,6 @@ global function OnWeaponPrimaryAttack_Meteor
 global function OnWeaponActivate_Meteor
 global function OnWeaponDeactivate_Meteor
 
-
 #if SERVER
 global function CreateThermiteTrail
 global function CreateThermiteTrailOnMovingGeo
@@ -140,12 +139,19 @@ void function Scorch_SelfDamageReduction( entity target, var damageInfo )
 	if ( IsMultiplayer() )
 	{
 		entity soul = attacker.GetTitanSoul()
+		
 		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
 		{
-            int shieldRestoreAmount = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_SELFDMG_SHIELD_MOD )
-		    soul.SetShieldHealth( minint( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
-        }
-        DamageInfo_ScaleDamage( damageInfo, 0.0 )
+			if( LTSRebalance_Enabled() )
+			{
+				int shieldRestoreAmount = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_SELFDMG_SHIELD_MOD )
+				soul.SetShieldHealth( minint( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
+			}
+			else
+				DamageInfo_SetDamage( damageInfo, 0.0 )
+		}
+		if( LTSRebalance_Enabled() )
+        	DamageInfo_SetDamage( damageInfo, 0.0 )
 	}
 	else
 	{
@@ -224,7 +230,7 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	else
 	{
 		fireCount = 4
-		fireSpeed = 100
+		fireSpeed = LTSRebalance_Enabled() ? 100.0 : 50.0
 	}
 	for ( int i = 0; i < fireCount; i++ )
 	{
@@ -257,7 +263,7 @@ MeteorRadiusDamage function GetMeteorRadiusDamage( entity owner )
 }
 
 float function GetThermiteDurationBonus ( entity owner ) {
-    if ( !IsValid( owner ) )
+    if ( !LTSRebalance_Enabled() || !IsValid( owner ) )
         return 1
 
     entity ordnance = owner.GetOffhandWeapon( OFFHAND_EQUIPMENT )
@@ -323,7 +329,10 @@ void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor,
 
 		originLastFrame = trail.GetOrigin()
 
-		WaitFrame()
+		if( LTSRebalance_Enabled() )
+			WaitFrame()
+		else
+			wait 0.1
 	}
 }
 
