@@ -1,12 +1,14 @@
 WeaponData
 {
-	"fire_rate"   									"2.5"
-
-	"deploy_time" 									".25"
-
 	Mods
 	{
-		pas_ion_vortex
+		LTSRebalance
+		{
+			"fire_rate"   									"2.5"
+
+			"deploy_time" 									".25"
+		}
+		LTSRebalance_pas_ion_vortex
 		{
 			"shared_energy_charge_cost"					 	"3"
 			"damage_near_value"   							"*1.5"

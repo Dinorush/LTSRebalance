@@ -1,15 +1,14 @@
 WeaponData
 {
-	MP_BASE
-	{
-		"core_duration"								"8.0" //Needs to match charge_cooldown_delay
-		"charge_cooldown_delay"   					"8.0"
-		"charge_cooldown_time"						"9.0"
-	}
-
 	Mods
 	{
-		fd_duration
+		LTSRebalance
+		{
+			"core_duration"								"8.0" //Needs to match charge_cooldown_delay
+			"charge_cooldown_delay"   					"8.0"
+			"charge_cooldown_time"						"9.0"
+		}
+		LTSRebalance_fd_duration
 		{
 			"core_duration"								"16" //Needs to match charge_cooldown_delay
 			"charge_cooldown_delay"   					"16"

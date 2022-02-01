@@ -1,8 +1,11 @@
 WeaponData
 {
-	MP_BASE
+	Mods
 	{
-        "regen_ammo_refill_rate"						"25"
-		"shared_energy_cost"							"150"
+		LTSRebalance
+		{
+			"regen_ammo_refill_rate"						"25"
+			"shared_energy_cost"							"150"
+		}
 	}
 }

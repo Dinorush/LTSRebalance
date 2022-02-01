@@ -1,19 +1,16 @@
 WeaponData
 {
-	"explosionradius" 								"175"
-	
-	MP_BASE
-	{
-		"charge_time" 									"4.0"
-		"charge_cooldown_time"							"7.0"
-		"charge_cooldown_delay"   						"0.5"
-	}
-
-	"deploy_time" 									".25"
-
 	Mods
 	{
-		pas_scorch_shield
+		LTSRebalance
+		{
+			"charge_time" 									"4.0"
+			"charge_cooldown_time"							"7.0"
+			"charge_cooldown_delay"   						"0.5"
+			
+			"deploy_time" 									".25"
+		}
+		LTSRebalance_pas_scorch_shield
 		{
 			"charge_cooldown_time"							"*1.3"
 		}

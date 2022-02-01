@@ -1,17 +1,15 @@
 WeaponData
 {
 	"OnWeaponActivate"							  	"OnWeaponActivate_titanweapon_stun_laser"
-	"deploy_time" 									"0.4"
-
+	
 	Mods
 	{
-		burn_mod_titan_laser_lite
+		LTSRebalance
 		{
-			"damage_near_value_titanarmor"					"*1"
-			"damage_far_value_titanarmor" 					"*1"
+			"deploy_time" 									"0.4"
 		}
 
-		energy_field
+		LTSRebalance_energy_field
 		{
 			"explosionradius" 								"400"
 			"explosion_inner_radius"  						"400"

@@ -2,7 +2,7 @@ WeaponData
 {
 	Mods
 	{
-		big_punch
+		LTSRebalance_big_punch
 		{
 			"melee_attack_animtime"								"0.94"
 			"melee_damage"										"++250"
