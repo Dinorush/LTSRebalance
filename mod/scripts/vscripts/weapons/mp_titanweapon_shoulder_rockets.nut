@@ -37,7 +37,11 @@ void function MpTitanWeaponShoulderRockets_Init()
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_shoulder_rockets( entity weapon )
 {
-	return weapon.GetWeaponChargeFraction() <= 0.8
+	if ( !LTSRebalance_Enabled() )
+		return weapon.GetWeaponChargeFraction() <= 0.8
+	int maxTargetedBurst = weapon.GetWeaponSettingInt( eWeaponVar.smart_ammo_max_targeted_burst )
+	float shotFrac = 1.0 / maxTargetedBurst.tofloat()
+	return weapon.GetWeaponChargeFraction() <= 1.0 - shotFrac
 }
 
 void function OnWeaponOwnerChanged_titanweapon_shoulder_rockets( entity weapon, WeaponOwnerChangedParams changeParams )
