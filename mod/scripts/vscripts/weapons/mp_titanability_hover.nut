@@ -12,7 +12,7 @@ void function MpTitanAbilityHover_Init()
 	PrecacheParticleSystem( $"P_xo_jet_fly_large" )
 	PrecacheParticleSystem( $"P_xo_jet_fly_small" )
 
-    RegisterSignal( "VTOLHoverBegin" )
+	RegisterSignal( "VTOLHoverBegin" )
 }
 
 var function OnWeaponPrimaryAttack_TitanHover( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -35,8 +35,11 @@ var function OnWeaponPrimaryAttack_TitanHover( entity weapon, WeaponPrimaryAttac
 		soundInfo.landing_1p = "core_ability_land_1p"
 		soundInfo.landing_3p = "core_ability_land_3p"
 		float horizontalVelocity
-		
-		horizontalVelocity = 350.0
+		entity soul = flyer.GetTitanSoul()
+		if ( LTSRebalance_Enabled() || ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) ) )
+			horizontalVelocity = 350.0
+		else
+			horizontalVelocity = 250.0
 
 		thread FlyerHovers( flyer, soundInfo, 3.0, horizontalVelocity )
 	#endif
@@ -56,26 +59,28 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
     float RISE_VEL = 450
     // HACK: use friction and velocity to detect if the user was in hover and rising
     // Going to use this to make limiting Core height feasible, while fixing jammed thrusters
-    bool stallHover = player.GetGroundFrictionScale() == 0 && player.GetVelocity().z >= RISE_VEL * 0.5
+    bool stallHover = LTSRebalance_Enabled() && player.GetGroundFrictionScale() == 0 && player.GetVelocity().z >= RISE_VEL * 0.5
     player.Signal( "VTOLHoverBegin" )
     
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "TitanEjectionStarted" )
-    player.EndSignal( "VTOLHoverBegin" )
+	if ( LTSRebalance_Enabled() )
+    	player.EndSignal( "VTOLHoverBegin" )
     
     entity soul = player.GetTitanSoul()
-	if ( soul == null )
-		soul = player
-
+	
 	thread AirborneThink( player, soundInfo )
 	if ( player.IsPlayer() )
 	{
-        if ( !SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
+        if ( !LTSRebalance_Enabled() || !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
 		    player.Server_TurnDodgeDisabledOn()
 	    player.kv.airSpeed = horizVel
-	    player.kv.airAcceleration = 600
+	    player.kv.airAcceleration = LTSRebalance_Enabled() ? 600 : 540
 	    player.kv.gravity = 0.0
 	}
+
+	if ( soul == null )
+		soul = player
 
 	CreateShake( player.GetOrigin(), 16, 150, 1.00, 400 )
 	PlayFX( FLIGHT_CORE_IMPACT_FX, player.GetOrigin() )
@@ -83,7 +88,6 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 	float startTime = Time()
 
 	array<entity> activeFX
-
 
 	player.SetGroundFrictionScale( 0 )
 
@@ -97,8 +101,11 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 				player.SetGroundFrictionScale( 1 )
 				if ( player.IsPlayer() )
 				{
-                    float fadeTime = 0.75
-                    StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.5, fadeTime, fadeTime )
+					if ( LTSRebalance_Enabled() )
+					{
+						float fadeTime = 0.75
+						StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.5, fadeTime, fadeTime )
+					}
 					player.Server_TurnDodgeDisabledOff()
 					player.kv.airSpeed = player.GetPlayerSettingsField( "airSpeed" )
 					player.kv.airAcceleration = player.GetPlayerSettingsField( "airAcceleration" )
@@ -138,6 +145,12 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 	EmitSoundOnEntityExceptToPlayer( player, player, soundInfo.hover_3p )
 
 	float movestunEffect = 1.0 - StatusEffect_Get( player, eStatusEffect.dodge_speed_slow )
+
+	if ( !LTSRebalance_Enabled() )
+	{
+		float fadeTime = 0.75
+		StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.65, flightTime + fadeTime, fadeTime )
+	}
 
 	vector startOrigin = player.GetOrigin()
 	for ( ;; )

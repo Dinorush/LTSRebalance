@@ -1,5 +1,11 @@
 WeaponData
 {
-	"sustained_discharge_duration"					"4.35" // core duration
-	"core_duration"									"4.35"
+	Mods
+	{
+		LTSRebalance
+		{
+			"sustained_discharge_duration"					"4.35" // core duration
+			"core_duration"									"4.35"
+		}
+	}
 }

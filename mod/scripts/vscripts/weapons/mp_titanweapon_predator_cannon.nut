@@ -114,9 +114,12 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 	#if SERVER
 	weapon.s.locking = true
 	weapon.s.lockStartTime = Time()
-    entity core = weapon.GetOwner().GetOffhandWeapon( OFFHAND_EQUIPMENT )
-    if( IsValid( core ) && core.HasMod( "pas_legion_smartcore" ) )
-        thread TrackSmartArrayMultiplier( weapon )
+	if ( LTSRebalance_Enabled() )
+	{
+		entity core = weapon.GetOwner().GetOffhandWeapon( OFFHAND_EQUIPMENT )
+		if( IsValid( core ) && core.HasMod( "pas_legion_smartcore" ) )
+			thread TrackSmartArrayMultiplier( weapon )
+	}
 	#endif
 }
 
@@ -169,12 +172,16 @@ void function TrackSmartArrayMultiplier( entity weapon )
 
 void function OnWeaponDeactivate_titanweapon_predator_cannon( entity weapon )
 {
-    weapon.Signal( "WeaponDeactivateEvent" )
+	if ( LTSRebalance_Enabled() )
+   		weapon.Signal( "WeaponDeactivateEvent" )
 	StopSpinSounds( weapon )
 }
 
 bool function OnWeaponChargeBegin_titanweapon_predator_cannon ( entity weapon )
 {
+	if( !LTSRebalance_Enabled() )
+		return true
+
     entity owner = weapon.GetWeaponOwner()
 	var needsZoom = weapon.GetWeaponInfoFileKeyField( "attack_button_presses_ads" )
 
@@ -234,8 +241,14 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 
 			ShotgunBlast( weapon, attackParams.pos, attackParams.dir, 16, damageType, 1.0, 10.0 )
 
-			#if SERVER
-			PowerShotCleanup( owner, weapon, ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"], [] )
+			#if CLIENT
+			if( !LTSRebalance_Enabled() )
+				PowerShotCleanup( owner, weapon, ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"] , [] )
+			#else
+			array<string> modsToClean = ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"]
+			if ( LTSRebalance_Enabled() )
+				modsToClean.append( "LTSRebalance_CloseRangePowerShot" )
+			PowerShotCleanup( owner, weapon, modsToClean, [] )
 			#endif
 
 			return 1
@@ -261,7 +274,10 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 			}
 		}
 		
-		#if SERVER
+		#if CLIENT
+		if( !LTSRebalance_Enabled() )
+			PowerShotCleanup( owner, weapon, ["LongRangePowerShot","fd_LongRangePowerShot","pas_LongRangePowerShot"], [ "LongRangeAmmo" ] )
+		#else
 		PowerShotCleanup( owner, weapon, ["LongRangePowerShot","fd_LongRangePowerShot","pas_LongRangePowerShot"], [ "LongRangeAmmo" ] )
 		#endif
 		
@@ -334,7 +350,7 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
 	if ( weapon.HasMod( "Smart_Core" ) )
 	{
         entity owner = weapon.GetOwner()
-        if( owner.IsNPC() )
+        if( !LTSRebalance_Enabled() || owner.IsNPC() )
             return SmartAmmo_FireWeapon( weapon, attackParams, damageType, damageTypes.largeCaliber | DF_STOPS_TITAN_REGEN )
 
         TraceResults result = TraceLine( owner.EyePosition(), owner.EyePosition() + attackParams.dir*10000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
@@ -384,32 +400,38 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
     int flags = DamageInfo_GetCustomDamageType( damageInfo )
 	if ( !IsValid( target ) )
 		return
+	
+	if ( LTSRebalance_Enabled() )
+	{
+		entity attacker = DamageInfo_GetAttacker( damageInfo )
+		entity weapon = attacker.GetMainWeapons()[0]
 
-	entity attacker = DamageInfo_GetAttacker( damageInfo )
-    entity weapon = attacker.GetMainWeapons()[0]
+		// Smart array bonus damage for normal shots
+		if ( !( flags & DF_KNOCK_BACK || DamageInfo_GetInflictor( damageInfo ).IsProjectile() ) && weapon.s.smartArrayTargets.len() > 0 )
+		{
+			if ( target in weapon.s.smartArrayTargets )
+			{
+				float percent = min( 1, ( Time() - weapon.s.smartArrayTargets[ target ] ) / PAS_LEGION_SMARTCORE_MAX_TIME )
+				DamageInfo_ScaleDamage( damageInfo, 1 + percent * PAS_LEGION_SMARTCORE_MAX_MOD )
+			}
+		}
 
-    // Smart array bonus damage for normal shots
-    if ( !( flags & DF_KNOCK_BACK || DamageInfo_GetInflictor( damageInfo ).IsProjectile() ) && weapon.s.smartArrayTargets.len() > 0 )
-    {
-        if ( target in weapon.s.smartArrayTargets )
-        {
-            float percent = min( 1, ( Time() - weapon.s.smartArrayTargets[ target ] ) / PAS_LEGION_SMARTCORE_MAX_TIME )
-            DamageInfo_ScaleDamage( damageInfo, 1 + percent * PAS_LEGION_SMARTCORE_MAX_MOD )
-        }
-    }
+		if ( !target.IsTitan() )
+			return
+		
+		if ( weapon.HasMod( "LTSRebalance_pas_legion_weapon" ) )
+		{
+			bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
+			if( isCritical )
+			{
+				int newAmmo = int( min ( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + 1 ) )
+				weapon.SetWeaponPrimaryClipCount( newAmmo ) 
+			}
+		}
+	}
 
 	if ( !target.IsTitan() )
-		return
-    
-    bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
-    if ( weapon.HasMod( "pas_legion_weapon" ) )
-    {
-        if( isCritical )
-        {
-            int newAmmo = int( min ( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + 1 ) )
-            weapon.SetWeaponPrimaryClipCount( newAmmo ) 
-        }
-    }
+			return
 
 	if ( !( flags & DF_SKIPS_DOOMED_STATE ) )
 		return

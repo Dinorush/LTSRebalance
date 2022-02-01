@@ -47,8 +47,17 @@ bool function OnAbilityCharge_FlameWave( entity weapon )
 		if ( soul == null )
 			soul = owner
 
-        float deployTime = weapon.GetWeaponSettingFloat( eWeaponVar.deploy_time )
-		thread DelayedChargeSlow( soul, (chargeTime - deployTime)/2, chargeTime )
+		if ( LTSRebalance_Enabled() )
+		{
+			float deployTime = weapon.GetWeaponSettingFloat( eWeaponVar.deploy_time )
+			thread DelayedChargeSlow( soul, (chargeTime - deployTime)/2, chargeTime )
+		}
+		else
+		{
+			StatusEffect_AddTimed( soul, eStatusEffect.move_slow, 0.6, chargeTime, 0 )
+			StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.6, chargeTime, 0 )
+			StatusEffect_AddTimed( soul, eStatusEffect.damageAmpFXOnly, 1.0, chargeTime, 0 )
+		}
 
 		if ( owner.IsPlayer() )
 			owner.SetTitanDisembarkEnabled( false )
@@ -108,7 +117,9 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
 		if ( !IsValid( weapon.GetWeaponOwner() ) )
 			return
 
-		vector right = Normalize( CrossProduct( attackParams.dir, <0,0,1> ) )
+		vector right = CrossProduct( attackParams.dir, <0,0,1> )
+		if ( LTSRebalance_Enabled() )
+			right = Normalize( right )
 		vector offset = offsets[count] * right * PROJECTILE_SEPARATION
 
 		const float FUSE_TIME = 99.0
@@ -226,7 +237,7 @@ void function FlameWave_DamagedPlayerOrNPC( entity ent, var damageInfo )
 		return
 
     // Bug fix: can hit both player titan and the auto titan if hitting as disembark/embark ends
-    if( ent.IsTitan() )
+    if( LTSRebalance_Enabled() && ent.IsTitan() )
     {
         entity soul = ent.GetTitanSoul()
         entity projectile = DamageInfo_GetInflictor( damageInfo )

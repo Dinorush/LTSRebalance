@@ -9,7 +9,8 @@ global function OnWeaponNpcPrimaryAttack_particle_wall
 #endif // #if SERVER
 
 global const SP_PARTICLE_WALL_DURATION = 8.0
-global const MP_PARTICLE_WALL_DURATION = 4.0
+global const MP_PARTICLE_WALL_DURATION = 6.0
+global const LTSREBALANCE_MP_PARTICLE_WALL_DURATION = 4.0
 
 function MpTitanabilityBubbleShield_Init()
 {
@@ -32,12 +33,15 @@ var function OnWeaponPrimaryAttack_particle_wall( entity weapon, WeaponPrimaryAt
 	float duration
 	if ( IsSingleplayer() )
 		duration = SP_PARTICLE_WALL_DURATION
+	else if ( LTSRebalance_Enabled() )
+		duration = LTSREBALANCE_MP_PARTICLE_WALL_DURATION
 	else
 		duration = MP_PARTICLE_WALL_DURATION
+
 	entity particleWall = CreateParticleWallFromOwner( weapon.GetWeaponOwner(), duration, attackParams )
     entity soul = weaponOwner.GetTitanSoul()
 
-    if ( IsValid( particleWall ) && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
+    if ( LTSRebalance_Enabled() && IsValid( particleWall ) && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
         thread PasToneWallWatchForEnd( weapon, particleWall )
 #endif
 	return weapon.GetWeaponInfoFileKeyField( "ammo_per_shot" )

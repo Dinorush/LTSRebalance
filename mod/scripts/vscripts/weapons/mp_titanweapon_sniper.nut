@@ -78,8 +78,8 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 		DamageInfo_SetDamage( damageInfo, damage )
 	}
 
-	float nearRange = 1250
-	float farRange = 2000
+	float nearRange = LTSRebalance_Enabled() ? 1250.0 : 1000.0
+	float farRange = LTSRebalance_Enabled() ? 2000.0 : 1500.0
 	float nearScale = 0.5
 	float farScale = 0
 
@@ -87,7 +87,7 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
     {
 		PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
 
-        if ( projectileMods.contains( "pas_northstar_optics" ) && "bulletsToFire" in inflictor.s )
+        if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_optics" ) && "bulletsToFire" in inflictor.s )
         {
             thread OnHit_ThreatOpticsSonarThink ( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), expect int( inflictor.s.bulletsToFire ) )
         }
@@ -207,7 +207,7 @@ function FireSniper( entity weapon, WeaponPrimaryAttackParams attackParams, bool
 		return 1
 
     int damageFlags = ( DF_GIB | DF_BULLET | DF_ELECTRICAL )
-    if( weapon.HasMod( "pas_northstar_weapon" ) )
+    if ( LTSRebalance_Enabled() && weapon.HasMod( "pas_northstar_weapon" ) )
         damageFlags = ( damageFlags | DF_SKIP_DAMAGE_PROT )
 
 	entity bolt = weapon.FireWeaponBolt( attackParams.pos, attackParams.dir, SNIPER_PROJECTILE_SPEED, damageFlags, damageFlags, playerFired, 0 )

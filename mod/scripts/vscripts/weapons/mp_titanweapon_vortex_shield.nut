@@ -246,7 +246,7 @@ bool function OnWeaponVortexHitBullet_titanweapon_vortex_shield( entity weapon, 
 		int damageType				= DamageInfo_GetCustomDamageType( damageInfo )
 
 		entity owner = weapon.GetWeaponOwner()
-		if ( attacker.GetTeam() == owner.GetTeam() )
+		if ( LTSRebalance_Enabled() && attacker.GetTeam() == owner.GetTeam() )
 			return false
 
 		return TryVortexAbsorb( vortexSphere, attacker, origin, damageSourceID, attackerWeapon, attackerWeaponName, "hitscan", null, damageType, weapon.HasMod( "burn_mod_titan_vortex_shield" ) )
@@ -277,11 +277,11 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 // Dumb method to determine if it's from Northstar Prime/Tone Prime termination because we can't set refire behavior to absorb in attachments
 bool function IsTerminationRocket ( entity projectile )
 {
-	if( !IsValid( projectile ) )
+	if( !LTSRebalance_Enabled() || !IsValid( projectile ) )
 		return false
 	
 	array<string> mods = projectile.ProjectileGetMods()
-	if ( mods.contains( "scripted_no_damage" ) || mods.contains( "northstar_prime_execution" ) )
+	if ( mods.contains( "LTSRebalance_scripted_no_damage" ) || mods.contains( "LTSRebalance_northstar_prime_execution" ) )
 		return true
 	return false
 }
@@ -384,7 +384,7 @@ bool function OnWeaponChargeBegin_titanweapon_vortex_shield( entity weapon )
 	// just for players
 	if ( weaponOwner.IsPlayer() )
 	{
-		if ( weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
+		if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
 		{
 			weaponOwner.TakeSharedEnergy( ION_ACTIVATION_ENERGY_COST )
 		}
@@ -411,7 +411,7 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_vortex_shield( entity wea
 	entity soul = weaponOwner.GetTitanSoul()
 	Assert( IsValid( soul ) )
 	entity activeWeapon = weaponOwner.GetActiveWeapon()
-	int minEnergyCost = 150
+	int minEnergyCost = LTSRebalance_Enabled() ? 150 : 100
 	if ( IsValid( activeWeapon ) && activeWeapon.IsChargeWeapon() && activeWeapon.IsWeaponCharging() )
 	{
 		allowSwitch = false

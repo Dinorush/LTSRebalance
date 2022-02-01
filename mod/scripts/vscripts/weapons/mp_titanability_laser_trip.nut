@@ -22,14 +22,18 @@ const asset LASER_TRIP_FX_ALL = $"P_wpn_lasertrip_base"
 const asset LASER_TRIP_FX_FRIENDLY = $"wpn_grenade_frag_blue_icon"
 const asset LASER_TRIP_EXPLODE_FX = $"P_impact_exp_XLG_metal"
 const float LASER_TRIP_HEALTH = 300.0
-const float LASER_TRIP_INNER_RADIUS = 240.0
-const float LASER_TRIP_OUTER_RADIUS = 240.0
+const float LTSREBALANCE_LASER_TRIP_INNER_RADIUS = 240.0
+const float LTSREBALANCE_LASER_TRIP_OUTER_RADIUS = 240.0
+const float LASER_TRIP_INNER_RADIUS = 400.0
+const float LASER_TRIP_OUTER_RADIUS = 400.0
 const float LASER_TRIP_DAMAGE = 200.0
-const float LASER_TRIP_DAMAGE_HEAVY_ARMOR = 1100.0
+const float LTSREBALANCE_LASER_TRIP_DAMAGE_HEAVY_ARMOR = 1100.0
+const float LASER_TRIP_DAMAGE_HEAVY_ARMOR = 1500.0
 const float LASER_TRIP_MIN_ANGLE = 180.0
-const float LASER_TRIP_BIGZAP_RANGE = 1100.0
+const float LASER_TRIP_BIGZAP_RANGE = 1500.0
 
-const float LASER_TRIP_LIFETIME = 6.0
+const float LTSREBALANCE_LASER_TRIP_LIFETIME = 6.0
+const float LASER_TRIP_LIFETIME = 12.0
 const float LASER_TRIP_BUILD_TIME = 1.0
 const int LASER_TRIP_MAX = 9
 
@@ -142,7 +146,7 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_trip( entity weapon, Weapon
 	attackParams.dir = dir - right
 	deployables.append( ThrowDeployable( weapon, attackParams, sidePower, OnLaserPylonPlanted ) )
 
-    if ( !weapon.HasMod( "pas_ion_tripwire" ) )
+    if ( !LTSRebalance_Enabled() || !weapon.HasMod( "pas_ion_tripwire" ) )
     {
         attackParams.dir = dir
         deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_POWER, OnLaserPylonPlanted ) )
@@ -225,8 +229,9 @@ function DeployLaserPylon( entity projectile )
 	if ( attachparent != null )
 		tower.SetParent( attachparent )
 
+	float lifetime = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_LIFETIME : LASER_TRIP_LIFETIME
 	// hijacking this int so we don't create a new one
-	string noSpawnIdx = CreateNoSpawnArea( TEAM_INVALID, team, origin, LASER_TRIP_BUILD_TIME + LASER_TRIP_LIFETIME, LASER_TRIP_OUTER_RADIUS )
+	string noSpawnIdx = CreateNoSpawnArea( TEAM_INVALID, team, origin, LASER_TRIP_BUILD_TIME + lifetime, LASER_TRIP_OUTER_RADIUS )
 
 	SetTeam( tower, team )
 	SetObjectCanBeMeleed( tower, true )
@@ -291,6 +296,10 @@ function DeployLaserPylon( entity projectile )
 			if ( IsValid( soul ) )
 			{
 				entity titan = soul.GetTitan()
+				float titanDamage = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_DAMAGE_HEAVY_ARMOR : LASER_TRIP_DAMAGE_HEAVY_ARMOR
+				float innerRadius = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_INNER_RADIUS : LASER_TRIP_INNER_RADIUS
+				float outerRadius = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_OUTER_RADIUS : LASER_TRIP_OUTER_RADIUS
+
 				if ( IsValid( titan ) )
 				{
 					RadiusDamage(
@@ -298,9 +307,9 @@ function DeployLaserPylon( entity projectile )
 						titan,											// attacker
 						inflictor,										// inflictor
 						LASER_TRIP_DAMAGE,								// damage
-						LASER_TRIP_DAMAGE_HEAVY_ARMOR,					// damageHeavyArmor
-						LASER_TRIP_INNER_RADIUS,						// innerRadius
-						LASER_TRIP_OUTER_RADIUS,						// outerRadius
+						titanDamage,					// damageHeavyArmor
+						innerRadius,						// innerRadius
+						outerRadius,						// outerRadius
 						SF_ENVEXPLOSION_NO_DAMAGEOWNER,					// flags
 						0,												// distanceFromAttacker
 						0,												// explosionForce
@@ -404,7 +413,7 @@ function DeployLaserPylon( entity projectile )
 	if ( !IsNPCTitan( owner ) )
 		owner.EndSignal( "OnDeath" )
 
-	wait LASER_TRIP_LIFETIME
+	wait lifetime
 }
 
 void function StopLaserSoundAtPosition( entity pylon, vector position )

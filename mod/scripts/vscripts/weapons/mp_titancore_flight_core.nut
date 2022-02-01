@@ -103,8 +103,8 @@ void function PROTO_FlightCore( entity titan, float flightTime )
 
 	if ( titan.IsPlayer() )
 	{
-		const float takeoffTime = 0.6
-		const float landingTime = 0.6
+		float takeoffTime = LTSRebalance_Enabled() ? 0.6 : 1.0
+		float landingTime = LTSRebalance_Enabled() ? 0.6 : 1.0
 
 		e.shouldDeployWeapon = true
 		HolsterAndDisableWeapons( titan )
@@ -115,7 +115,10 @@ void function PROTO_FlightCore( entity titan, float flightTime )
 
 		float horizontalVelocity
 		entity soul = titan.GetTitanSoul()
-		horizontalVelocity = 350.0
+		if ( LTSRebalance_Enabled() || ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) ) )
+			horizontalVelocity = 350.0
+		else
+			horizontalVelocity = 200.0
 		
 		HoverSounds soundInfo
 		soundInfo.liftoff_1p = "titan_core_flight_liftoff_1p"

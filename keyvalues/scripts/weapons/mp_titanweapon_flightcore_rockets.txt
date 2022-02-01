@@ -1,15 +1,15 @@
 WeaponData
 {
-	"vortex_drain"									".085"
-	"projectile_adjust_to_gun_barrel"				"1"
-
-	MP_BASE
+	Mods
 	{
-		"damage_near_value"   							"380"
-		"damage_far_value"								"380"
-		
-		"projectile_launch_speed"						"2750"
-	}
+		LTSRebalance
+		{
+			"damage_near_value"   							"380"
+			"damage_far_value"								"380"
+			"vortex_drain"									".085"
 
-	"deploy_time" 									".4"
+			"projectile_launch_speed"						"2750"
+			"deploy_time" 									".4"
+		}
+	}
 }

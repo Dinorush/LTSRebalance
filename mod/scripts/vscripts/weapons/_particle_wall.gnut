@@ -19,14 +19,16 @@ global const TURRET_SHIELD_WALL_FX = $"P_turret_shield_wall"
 
 global const AMPED_WALL_FX = $"P_xo_amped_wall"
 #if MP
-global const SHIELD_WALL_HEALTH = 1250
+global const LTSREBALANCE_SHIELD_WALL_HEALTH = 1250
+global const SHIELD_WALL_HEALTH = 2000
 global const TURRET_SHIELD_WALL_HEALTH = 3500//1750
 #else
-global const SHIELD_WALL_HEALTH = 1875
+global const SHIELD_WALL_HEALTH = 1750
 global const TURRET_SHIELD_WALL_HEALTH = 1750
 #endif
-global const PAS_TONE_WALL_HEALTH = 1500
-//global const PAS_TONE_WALL_DURATION_MULTIPLIER = 1.5
+global const LTSREBALANCE_PAS_TONE_WALL_HEALTH = 1875
+global const PAS_TONE_WALL_HEALTH = 3000
+global const PAS_TONE_WALL_DURATION_MULTIPLIER = 1.5
 global const SHIELD_WALL_DURATION = 8.0
 global const SHIELD_WALL_RADIUS = 180
 global const SHIELD_WALL_FOV = 120
@@ -96,11 +98,12 @@ entity function CreateParticleWallForOwnerFromDirection( entity weaponOwner, flo
 	int health
     if ( SoulHasPassive( titanSoul, ePassives.PAS_TONE_WALL )  )
 	{
-		health = PAS_TONE_WALL_HEALTH
+		health = LTSRebalance_Enabled() ? LTSREBALANCE_PAS_TONE_WALL_HEALTH : PAS_TONE_WALL_HEALTH
+		duration *= LTSRebalance_Enabled() ? 1.0 : PAS_TONE_WALL_DURATION_MULTIPLIER
 	}
 	else
 	{
-		health = SHIELD_WALL_HEALTH
+		health = LTSRebalance_Enabled() ? LTSREBALANCE_SHIELD_WALL_HEALTH : SHIELD_WALL_HEALTH
 	}
 	
 	entity vortexSphere = CreateShieldWithSettings( origin + < 0, 0, -64 >, angles, SHIELD_WALL_RADIUS, SHIELD_WALL_RADIUS * 2, SHIELD_WALL_FOV, duration, health, SHIELD_WALL_FX )

@@ -13,18 +13,26 @@ WeaponData
     "explosionradius"                               "100"
     "projectilemodel" 								"models/dev/empty_model.mdl"
 
-	MP_BASE
-	{
-        "deploy_time"                                   "0.01"
-	}
-
 	Mods
 	{
-		super_charged
+		LTSRebalance
 		{
-			"melee_damage_heavyarmor"							"++400" //++1400
+			"deploy_time"                                   "0.01"
+		}
+		LTSRebalance_super_charged
+		{
+			"fire_mode"											"offhand_melee_hybrid"
+			"melee_damage"										"++1400"
+			"melee_damage_heavyarmor"							"++400"
+			"attack_button_presses_melee"						"1"
+			"impact_effect_table"								"titan_sword"
+			"melee_rumble_on_hit"								"titan_melee_hit_swordcore"
+			"offhand_transition_has_attach_detach_anim_events"	"0"
+			"activitymodifier"									"melee_titan_sword_super_charged"
+			"melee_angle"										"45"
+			"clear_fx_on_new_view_model"						"0"
         }
-		big_punch
+		LTSRebalance_big_punch
 		{
 			"melee_attack_animtime"								"1.026"
 			"melee_damage"										"++200"

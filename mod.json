@@ -9,8 +9,11 @@
 		{
 			"Path": "LTSRebalance_utility.nut",
 			"RunOn": "(CLIENT || SERVER) && MP",
+			"ClientCallback": {
+				"After": "LTSRebalance_Init"
+			},
 			"ServerCallback": {
-				"After": "LTSRebalance_TitanPassivesInit"
+				"After": "LTSRebalance_Init"
 			}
 		}
 	],
