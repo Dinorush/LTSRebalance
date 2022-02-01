@@ -7,5 +7,9 @@ WeaponData
 			"regen_ammo_refill_rate"						"25"
 			"shared_energy_cost"							"150"
 		}
+		LTSRebalance_pas_ion_tripwire
+		{
+			"shared_energy_cost"							"--150"
+		}
 	}
 }
