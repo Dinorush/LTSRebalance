@@ -327,9 +327,11 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 			projectile.proj.tetherAttached = true
 
 			AddTitanTether( owner, projectile, titan, tetherEnts, projectile, tetherEndEntForPlayer, tetherEndEntForOthers, isExplosiveTether )
-
-			StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.5, 0.5 )
-			StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.5, 0.5 )
+			if ( LTSRebalance_Enabled() )
+			{
+				StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.5, 0.5 )
+				StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.5, 0.5 )
+			}
 			if ( titan.IsPlayer() )
 				thread TetherFlyIn( projectile, tetherEndEntForPlayer, tetherRopeForPlayer, owner )
 			thread TetherFlyIn( projectile, tetherEndEntForOthers, tetherRopeForOthers, owner )

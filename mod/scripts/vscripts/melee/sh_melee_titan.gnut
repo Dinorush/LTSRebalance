@@ -87,12 +87,15 @@ void function TitanMeleeAttack( entity titan )
 			return
     entity meleeWeapon = titan.GetMeleeWeapon()
 
-	// if ( titan.PlayerMelee_GetAttackHitEntity() )	// won't do any more melee hits if we hit something on a previous frame
-	// 	return
-    if ( !("didHit" in meleeWeapon.s) )
-		meleeWeapon.s.didHit <- false
-    else if ( meleeWeapon.s.didHit ) // Fix for case where the attack hit entity has been destroyed
-        return
+	if ( LTSRebalance_Enabled() )
+	{
+		if ( !("didHit" in meleeWeapon.s) )
+			meleeWeapon.s.didHit <- false
+		else if ( meleeWeapon.s.didHit ) // Fix for case where the attack hit entity has been destroyed
+			return
+	}
+	else if ( titan.PlayerMelee_GetAttackHitEntity() )	// won't do any more melee hits if we hit something on a previous frame
+		return
 
 	if ( IsInExecutionMeleeState( titan ) )
 		return
@@ -223,7 +226,8 @@ void function TitanMeleeAttack( entity titan )
 
 		meleeWeapon.DoMeleeHitConfirmation( severityScale )
 
-        meleeWeapon.s.didHit = true
+		if ( LTSRebalance_Enabled() )
+        	meleeWeapon.s.didHit = true
 	}
 }
 
@@ -300,7 +304,7 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 			}
 			else
 			{
-				if ( meleeWeapon.HasMod( "super_charged" ) )
+				if ( meleeWeapon.HasMod( "super_charged" ) || meleeWeapon.HasMod( "LTSRebalance_super_charged" ) )
 					pushBackScale = TITAN_SWORD_KNOCKBACK_SCALE_MP_SWORD_CORE
 				else
 					pushBackScale = TITAN_SWORD_KNOCKBACK_SCALE_MP
@@ -311,11 +315,17 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 			pushBackScale = TITAN_PUNCH_KNOCKBACK_SCALE
 		}
 		
-		if ( meleeWeapon.HasMod( "big_punch" ) )
+		if ( meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
 			pushBackScale *= TITAN_BIG_PUNCH_KNOCKBACK_MOD
 
 		vector pushBackDir = Normalize( enemyTitan.GetOrigin() - titan.GetOrigin() )
 		vector pushBackVelocity = pushBackDir * pushBackScale
+
+		if ( !LTSRebalance_Enabled() )
+		{
+			vector angles = titan.EyeAngles()
+		 	pushBackVelocity = AnglesToForward( angles ) * pushBackScale
+		}
 
 		if ( hasDashPunch )
 			pushBackVelocity = pushBackVelocity * 1.25

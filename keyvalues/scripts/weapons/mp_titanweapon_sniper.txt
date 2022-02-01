@@ -1,27 +1,28 @@
 WeaponData
 {
-	"damage_additional_bullets"						"240"
-	"damage_additional_bullets_titanarmor"			"240"
-	
-	MP_BASE
+	Mods
 	{
-		"damage_near_value"   							"260"
-		"damage_far_value"								"260"
-		"damage_near_value_titanarmor"					"260"
-		"damage_far_value_titanarmor" 					"260"
-	}
+		LTSRebalance
+		{
+			"damage_additional_bullets"						"240"
+			"damage_additional_bullets_titanarmor"			"240"
 
-	"fire_rate"   									"1.2"
+			"damage_near_value"   							"260"
+			"damage_far_value"								"260"
+			"damage_near_value_titanarmor"					"260"
+			"damage_far_value_titanarmor" 					"260"
+
+			"fire_rate"   									"1.2"
 	
-	"reload_time" 									"1.8"
-	"reload_time_late1" 							"1.28"
-	"reload_time_late2" 							"0.69"
-	"reloadempty_time"								"1.8"
-	"reloadempty_time_late1"						"1.28"
-	"reloadempty_time_late2"						"0.69"
-	
-	"lower_time"  									".01"
-	"raise_time"  									".2"
-	
-	"charge_time" 									"2.25"
+			"reload_time" 									"1.8"
+			"reload_time_late1" 							"1.28"
+			"reload_time_late2" 							"0.69"
+			"reloadempty_time"								"1.8"
+			"reloadempty_time_late1"						"1.28"
+			"reloadempty_time_late2"						"0.69"
+			
+			"lower_time"  									".01"
+			"raise_time"  									".2"
+		}
+	}
 }

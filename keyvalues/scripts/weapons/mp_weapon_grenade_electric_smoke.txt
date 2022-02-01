@@ -1,9 +1,12 @@
 WeaponData
 {
-	MP_BASE
+	Mods
 	{
-		"ammo_min_to_fire"								"50"
-		"ammo_per_shot"									"50"
-		"regen_ammo_refill_rate"						"2.75"
+		LTSRebalance
+		{
+			"ammo_min_to_fire"								"50"
+			"ammo_per_shot"									"50"
+			"regen_ammo_refill_rate"						"2.75"
+		}	
 	}
 }

@@ -1,7 +1,10 @@
 WeaponData
 {
-	MP_BASE
+	Mods
 	{
-        "melee_raise_recovery_animtime_normal"			"0.75"
+		LTSRebalance
+		{
+			"melee_raise_recovery_animtime_normal"			"0.75"
+		}
 	}
 }

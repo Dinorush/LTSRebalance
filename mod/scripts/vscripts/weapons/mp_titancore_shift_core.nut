@@ -20,9 +20,11 @@ void function Shift_Core_Init()
 {
 	RegisterSignal( "RestoreWeapon" )
 	#if SERVER
-    // In LTS rebalance, Highlander's bonus duration is removed.
-	//AddCallback_OnPlayerKilled( SwordCore_OnPlayedOrNPCKilled )
-	//AddCallback_OnNPCKilled( SwordCore_OnPlayedOrNPCKilled )
+	if ( !LTSRebalance_EnabledOnInit() )
+	{
+		AddCallback_OnPlayerKilled( SwordCore_OnPlayedOrNPCKilled )
+		AddCallback_OnNPCKilled( SwordCore_OnPlayedOrNPCKilled )
+	}
 	#endif
 }
 
@@ -68,7 +70,7 @@ bool function OnCoreCharge_Shift_Core( entity weapon )
 	entity owner = weapon.GetWeaponOwner()
 	string swordCoreSound_1p
 	string swordCoreSound_3p
-	if ( weapon.HasMod( "fd_duration" ) )
+	if ( weapon.HasMod( "fd_duration" ) || weapon.HasMod( "LTSRebalance_fd_duration" ) )
 	{
 		swordCoreSound_1p = "Titan_Ronin_Sword_Core_Activated_Upgraded_1P"
 		swordCoreSound_3p = "Titan_Ronin_Sword_Core_Activated_Upgraded_3P"
@@ -144,7 +146,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( owner.IsPlayer() )
 	{
 		owner.Server_SetDodgePower( 100.0 )
-		owner.SetPowerRegenRateScale( 3.5 )
+		owner.SetPowerRegenRateScale( LTSRebalance_Enabled() ? 3.5 : 6.5 )
 		GivePassive( owner, ePassives.PAS_FUSION_CORE )
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
 	}
@@ -163,7 +165,10 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 			AddAnimEvent( titan, "shift_core_use_meter", Shift_Core_UseMeter_NPC )
 		}
 
-		titan.GetOffhandWeapon( OFFHAND_MELEE ).AddMod( "super_charged" )
+		if ( LTSRebalance_Enabled() )
+			titan.GetOffhandWeapon( OFFHAND_MELEE ).AddMod( "LTSRebalance_super_charged" )
+		else
+			titan.GetOffhandWeapon( OFFHAND_MELEE ).AddMod( "super_charged" )
 
 		if ( IsSingleplayer() )
 		{
@@ -172,15 +177,24 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 
 		titan.SetActiveWeaponByName( "melee_titan_sword" )
 
+		entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
+		if ( LTSRebalance_Enabled() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+			block.AddMod( "LTSRebalance_core_regen" )
+
 		entity mainWeapon = titan.GetMainWeapons()[0]
-        prevWeaponData.name = mainWeapon.GetWeaponClassName()
-        prevWeaponData.ammo = mainWeapon.GetWeaponPrimaryClipCount()
-		prevWeaponData.maxAmmo = mainWeapon.GetWeaponPrimaryClipCountMax()
-        prevWeaponData.mods = mainWeapon.GetMods()
-		titan.TakeWeapon( prevWeaponData.name )
-		// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
-		if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-			thread WatchForPhaseReflex( titan, prevWeaponData )
+		if ( !LTSRebalance_Enabled() )
+			mainWeapon.AllowUse( false )
+		else
+		{
+			prevWeaponData.name = mainWeapon.GetWeaponClassName()
+			prevWeaponData.ammo = mainWeapon.GetWeaponPrimaryClipCount()
+			prevWeaponData.maxAmmo = mainWeapon.GetWeaponPrimaryClipCountMax()
+			prevWeaponData.mods = mainWeapon.GetMods()
+			titan.TakeWeapon( prevWeaponData.name )
+			// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
+			if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+				thread WatchForPhaseReflex( titan, prevWeaponData )
+		}
 	}
 
 	float delay = weapon.GetWeaponSettingFloat( eWeaponVar.charge_cooldown_delay )
@@ -297,12 +311,20 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 		entity meleeWeapon = titan.GetOffhandWeapon( OFFHAND_MELEE )
 		if ( IsValid( meleeWeapon ) )
 		{
-			meleeWeapon.RemoveMod( "super_charged" )
+			if( LTSRebalance_Enabled() )
+				meleeWeapon.RemoveMod( "LTSRebalance_super_charged" )
+			else
+				meleeWeapon.RemoveMod( "super_charged" )
+				
 			if ( IsSingleplayer() )
 			{
 				meleeWeapon.RemoveMod( "super_charged_SP" )
 			}
 		}
+
+		entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
+		if ( LTSRebalance_Enabled() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+			block.RemoveMod( "LTSRebalance_core_regen" )
 
 		if( prevWeaponData.name != "" )
         {
@@ -310,6 +332,13 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
             titan.GetMainWeapons()[0].SetWeaponPrimaryClipCount( prevWeaponData.ammo )
             //titan.SetActiveWeaponByName( prevWeaponData.name )
         }
+
+		array<entity> mainWeapons = titan.GetMainWeapons()
+		if ( !LTSRebalance_Enabled() && mainWeapons.len() > 0 )
+		{
+			entity mainWeapon = titan.GetMainWeapons()[0]
+			mainWeapon.AllowUse( true )
+		}
 
 		if ( titan.IsNPC() )
 		{

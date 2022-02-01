@@ -169,7 +169,7 @@ const FX_EMP_BODY_TITAN			= $"P_emp_body_titan"
 void function ArcWaveOnDamage( entity ent, var damageInfo )
 {
     // Bug fix: can hit both player titan and the auto titan if hitting as disembark/embark ends
-    if( ent.IsTitan() )
+    if( LTSRebalance_Enabled() && ent.IsTitan() )
     {
         entity soul = ent.GetTitanSoul()
         entity projectile = DamageInfo_GetInflictor( damageInfo )
@@ -322,7 +322,7 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_arc_wave( entity weapon )
 	if ( weaponOwner.IsPhaseShifted() )
 		return false
 
-    if ( !WeaponHasAmmoToUse( weapon ) )
+    if ( LTSRebalance_Enabled() && !WeaponHasAmmoToUse( weapon ) )
         return false
         
 	return true

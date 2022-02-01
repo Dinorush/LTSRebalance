@@ -1,7 +1,7 @@
 global function OnWeaponPrimaryAttack_power_shot
 global function MpTitanAbilityPowerShot_Init
-#if SERVER
 global function PowerShotCleanup
+#if SERVER
 global function OnWeaponNpcPrimaryAttack_power_shot
 #endif
 
@@ -36,20 +36,28 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 	if ( milestone != 0 )
 		return 0
 
-	print( "LTS Rebalance: Forced ADS before Power Shot start: " + primaryWeapon.GetForcedADS() )
-
 	if ( weaponOwner.IsPlayer() )
 	{
-		thread SetPowershotLimits( weaponOwner, primaryWeapon )
+		if ( LTSRebalance_Enabled() )
+			thread SetPowershotLimits( weaponOwner, primaryWeapon )
+		else
+		{
+			weaponOwner.SetTitanDisembarkEnabled( false )
+			primaryWeapon.SetForcedADS()
+			weaponOwner.SetMeleeDisabled()
+		}
 		PlayerUsedOffhand( weaponOwner, weapon )
 		#if SERVER
-		thread ClearPowerShotLimits( weaponOwner, weapon )
+		if ( LTSRebalance_Enabled() )
+			thread ClearPowerShotLimits( weaponOwner, weapon )
+		else
+			thread MonitorEjectStatus( weaponOwner )
 		#endif
 	}
 
     #if SERVER
-    if ( primaryWeapon.HasMod( "Smart_Core_Spread" ) )
-        primaryWeapon.RemoveMod( "Smart_Core_Spread" )
+    if ( primaryWeapon.HasMod( "LTSRebalance_Smart_Core_Spread" ) )
+        primaryWeapon.RemoveMod( "LTSRebalance_Smart_Core_Spread" )
         
 	if ( primaryWeapon.HasMod( "LongRangeAmmo" ) )
 	{
@@ -72,12 +80,14 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 			mods.append( "fd_CloseRangePowerShot" )
 		if ( weapon.HasMod( "pas_legion_chargeshot" ) )
 			mods.append( "pas_CloseRangePowerShot" )
+		if ( LTSRebalance_Enabled() )
+			mods.append( "LTSRebalance_CloseRangePowerShot")
 		primaryWeapon.SetMods( mods )
 	}
     
-    thread StopRegenDuringPowerShot( weapon, weaponOwner )
+	if ( LTSRebalance_Enabled() )
+    	thread StopRegenDuringPowerShot( weapon, weaponOwner )
 	#endif
-	print( "LTS Rebalance: Forced ADS after Power Shot start: " + primaryWeapon.GetForcedADS() )
 	return weapon.GetAmmoPerShot()
 }
 
@@ -94,7 +104,7 @@ void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
 #if SERVER
 void function StopRegenDuringPowerShot( entity weapon, entity weaponOwner )
 {
-    weapon.AddMod( "stop_regen" )
+    weapon.AddMod( "LTSRebalance_stop_regen" )
 
     weaponOwner.EndSignal( "PowerShotCleanup" )
 
@@ -103,7 +113,7 @@ void function StopRegenDuringPowerShot( entity weapon, entity weaponOwner )
         {
             if ( IsValid( weapon ) )
             {
-                weapon.RemoveMod( "stop_regen" )
+                weapon.RemoveMod( "LTSRebalance_stop_regen" )
                 weapon.RegenerateAmmoReset()
             }
         }
@@ -130,33 +140,54 @@ void function ClearPowerShotLimits( entity weaponOwner, entity weapon )
 	weaponOwner.WaitSignal( "TitanEjectionStarted" )
 }
 
+void function MonitorEjectStatus( entity weaponOwner )
+{
+	weaponOwner.EndSignal( "PowerShotCleanup" )
+
+	weaponOwner.WaitSignal( "TitanEjectionStarted" )
+
+	if ( IsValid( weaponOwner ) )
+	{
+		weaponOwner.ClearMeleeDisabled()
+		weaponOwner.SetTitanDisembarkEnabled( true )
+	}
+}
+#endif
 void function PowerShotCleanup( entity owner, entity weapon, array<string> modNames, array<string> modsToAdd )
 {
-	print( "LTS Rebalance: Forced ADS before Power Shot end: " + weapon.GetForcedADS() )
+	#if SERVER
 	if ( IsValid( owner ) && owner.IsPlayer() )
+	{
+		if ( !LTSRebalance_Enabled() )
+		{
+			owner.ClearMeleeDisabled()
+			owner.SetTitanDisembarkEnabled( true )
+		}
 		owner.Signal( "PowerShotCleanup")
-
+	}
+	#endif
 	if ( IsValid( weapon ) )
 	{
-		if ( weapon.HasMod( "pas_legion_spinup" ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
+		if ( weapon.HasMod( "LTSRebalance_pas_legion_spinup" ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
 		{
 			while( weapon.GetForcedADS() )
 				weapon.ClearForcedADS()
 		}
-
+		#if SERVER
 		array<string> mods = weapon.GetMods()
         mods.fastremovebyvalue( "BasePowerShot" )
 		foreach( modName in modNames )
 			mods.fastremovebyvalue( modName )
 		foreach( mod in modsToAdd )
 			mods.append( mod )
-        if( weapon.HasMod( "Smart_Core" ) )
-            mods.append( "Smart_Core_Spread" )
+        if( LTSRebalance_Enabled() && weapon.HasMod( "Smart_Core" ) )
+            mods.append( "LTSRebalance_Smart_Core_Spread" )
 		weapon.SetMods( mods )
+		#endif
 	}
-	print( "LTS Rebalance: Forced ADS after Power Shot end: " + weapon.GetForcedADS() )
 }
 
+#if SERVER
 var function OnWeaponNpcPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
 	OnWeaponPrimaryAttack_power_shot( weapon, attackParams )

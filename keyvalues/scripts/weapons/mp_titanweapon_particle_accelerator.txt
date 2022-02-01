@@ -1,20 +1,19 @@
 WeaponData
 {
-	"damage_near_distance"							"1200"
-	"damage_far_distance" 							"2000"
-
-	MP_BASE
-	{
-		"shared_energy_cost"						"27"
-	}
-	
-	"lower_time"  									"0.01"
-
 	Mods
 	{
-		pas_ion_weapon_ads
+		LTSRebalance
 		{
-			"shared_energy_cost"							"*1" //Amped Shots
+			"damage_near_distance"							"1200"
+			"damage_far_distance" 							"2000"
+
+			"shared_energy_cost"						"27"
+
+			"lower_time"  									"0.01"
+		}
+		LTSRebalance_pas_ion_weapon_ads
+		{
+
 		}
 	}
 }

@@ -114,7 +114,7 @@ function StartHeatShield( entity weapon )
 		Rumble_Play( "rumble_titan_heatshield_start", {} )
 	#endif
 
-	int sphereRadius = 150
+	int sphereRadius = LTSRebalance_Enabled() ? 150 : 120
 	int bulletFOV = HEAT_SHIELD_FOV
 
 	ApplyActivationCost( weapon, ACTIVATION_COST_FRAC )
@@ -370,5 +370,5 @@ void function OnWeaponChargeEnd_titanweapon_heat_shield( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_heat_shield( entity weapon )
 {
-	return weapon.GetWeaponChargeFraction() < 0.85
+	return weapon.GetWeaponChargeFraction() < ( LTSRebalance_Enabled() ? 0.85 : 0.8 )
 }

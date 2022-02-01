@@ -11,7 +11,7 @@ const float REARM_AND_RELOAD_BUFF_TIME = 3.0
 
 var function OnWeaponPrimaryAttack_titanability_rearm( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
-    if ( weapon.GetWeaponChargeFraction() < 1 )
+    if ( LTSRebalance_Enabled() && weapon.GetWeaponChargeFraction() < 1 )
         return 0
         
 	entity weaponOwner = weapon.GetWeaponOwner()
@@ -31,7 +31,7 @@ var function OnWeaponPrimaryAttack_titanability_rearm( entity weapon, WeaponPrim
 	if ( IsValid( defensive ) )
 		defensive.SetWeaponPrimaryClipCount( defensive.GetWeaponPrimaryClipCountMax() )
 
-    if( weapon.HasMod( "rapid_rearm" ) && weaponOwner.GetMainWeapons().len() > 0)
+    if( LTSRebalance_Enabled() && weapon.HasMod( "rapid_rearm" ) && weaponOwner.GetMainWeapons().len() > 0)
     { 
 		thread GiveReloadBuffThink( weaponOwner.GetMainWeapons()[0], weaponOwner )
     }
@@ -50,7 +50,7 @@ void function GiveReloadBuffThink( entity weapon, entity weaponOwner )
     entity cockpit = weaponOwner.GetCockpit()
     int cockpitHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
     #else
-    weapon.AddMod( "rapid_reload" )
+    weapon.AddMod( "LTSRebalance_rapid_reload" )
 	#endif
 
     wait REARM_AND_RELOAD_BUFF_TIME
@@ -59,8 +59,8 @@ void function GiveReloadBuffThink( entity weapon, entity weaponOwner )
 	if ( EffectDoesExist( cockpitHandle ) )
         EffectStop( cockpitHandle, false, true )
 	#else
-	if ( IsValid( weapon ) && weapon.HasMod( "rapid_reload" ) )
-		weapon.RemoveMod( "rapid_reload" )
+	if ( IsValid( weapon ) && weapon.HasMod( "LTSRebalance_rapid_reload" ) )
+		weapon.RemoveMod( "LTSRebalance_rapid_reload" )
     #endif
 }
 

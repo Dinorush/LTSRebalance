@@ -1,13 +1,14 @@
 WeaponData
 {
-
-	"regen_ammo_refill_start_delay"					"0.0"
-
 	Mods
 	{
-        stop_regen
+		LTSRebalance
+		{
+			"regen_ammo_refill_start_delay"					"0.0"
+		}
+        LTSRebalance_stop_regen
         {
-            "regen_ammo_refill_start_delay"					"3.0" // more than zoom_time_in + charge_time
+           	"regen_ammo_refill_rate"						"0.0"
         }
 	}
 }

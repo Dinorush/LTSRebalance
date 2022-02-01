@@ -394,7 +394,8 @@ function TitanBecomesPilot( entity player, entity titan )
 	ForceTitanSustainedDischargeEnd( player )
 
 	TransferHealth( player, titan )
-    TransferEnergy( player, titan )
+	if ( LTSRebalance_Enabled() )
+    	TransferEnergy( player, titan )
 	//Transfer children before player becomes pilot model
 	player.TransferChildrenTo( titan )
 	player.TransferTethersToEntity( titan )
@@ -597,7 +598,8 @@ function PilotBecomesTitan( entity player, entity titan, bool fullCopy = true )
 	if ( IsAlive( player ) )
     {
 		TransferHealth( titan, player )
-        TransferEnergy( titan, player )
+		if ( LTSRebalance_Enabled() )
+        	TransferEnergy( titan, player )
     }
 
 	player.SetModel( model )

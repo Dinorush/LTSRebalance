@@ -1,4 +1,10 @@
 WeaponData
 {
-	"deploy_time" 									".2"
+	Mods
+	{
+		LTSRebalance
+		{
+			"deploy_time" 									".2"
+		}
+	}
 }

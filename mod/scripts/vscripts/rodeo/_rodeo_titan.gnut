@@ -1368,9 +1368,11 @@ void function Rodeo_ApplyBatteryDelayed( entity player, table<string,bool> e )
 
 void function Rodeo_GiveExecutingTitanABattery( entity attacker )
 {
-    // Removed for LTSRebalance
-	// Rodeo_ApplyBatteryToTitan( null, attacker )
-	// MessagePlayerGivingBatteryToTitan( attacker, attacker, eEventNotifications.Rodeo_TitanPickedUpBattery, -1, false )
+	if ( LTSRebalance_Enabled() )
+		return
+		
+	Rodeo_ApplyBatteryToTitan( null, attacker )
+	MessagePlayerGivingBatteryToTitan( attacker, attacker, eEventNotifications.Rodeo_TitanPickedUpBattery, -1, false )
 }
 
 void function Rodeo_GiveBatteryToPlayer( entity player )
@@ -1781,6 +1783,11 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 	}
 	else if ( IsMultiplayer() )
 	{
+		if ( !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() )
+		{
+			UndoomTitan( titan, 1 )
+			titan.SetHealth( 1 )
+		}
 		float coreFrac = GetCurrentPlaylistVarFloat( "battery_core_frac", 0.2 )
 		float shieldFrac = GetCurrentPlaylistVarFloat( "battery_shield_frac", 1.0 )
 		float ampedHealthSegmentFrac = GetCurrentPlaylistVarFloat( "amped_battery_health_frac", 2.0 )
@@ -1800,7 +1807,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		int addHealth = int( healingAmount * frac )
         int trgtHealth = addHealth + titan.GetHealth()
 		int totalHealth = minint( titan.GetMaxHealth(), trgtHealth )
-        if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() && trgtHealth > totalHealth )
+        if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() && trgtHealth > totalHealth )
 		{
 			UndoomTitan( titan, 1 )
 			titan.SetHealth( trgtHealth - totalHealth )

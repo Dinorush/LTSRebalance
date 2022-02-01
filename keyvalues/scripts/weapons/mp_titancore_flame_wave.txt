@@ -1,20 +1,19 @@
 WeaponData
 {
-	"chargeup_time"									"0.75"
-	
-	"charge_time" 									"0.75" // chargeup time
-	
-	"wave_step_dist"								"130.0"
-	"charge_wave_step_dist"							"130.0"
     "wave_pass_vortex"                              "damage"
 
-	MP_BASE
+	Mods
 	{
-		"damage_near_value"   							"500"
-		"damage_far_value"								"500"
-		"damage_near_value_titanarmor"					"5000"
-		"damage_far_value_titanarmor"					"5000"
-	}
+		LTSRebalance
+		{
+			"damage_near_value"   							"500"
+			"damage_far_value"								"500"
+			"damage_near_value_titanarmor"					"5000"
+			"damage_far_value_titanarmor"					"5000"
 
-    "deploy_time" 									".3"
+			"charge_time" 									"0.75"
+
+			"deploy_time" 									".3"
+		}
+	}
 }

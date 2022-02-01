@@ -1,34 +1,40 @@
 WeaponData
 {
-	MP_BASE
-	{
-        "explosion_inner_radius"                        "60"
-	}
-	
 	Mods
 	{
-		burn_mod_titan_shoulder_rockets
+		LTSRebalance_upgradeCore_Vanguard
 		{
-			"damage_near_value"   							"*1"
-			"damage_far_value"								"*1"
-		}
+			"explosion_inner_radius"                        "60"
 
-		upgradeCore_Vanguard
-		{
 			"deploy_time" 									"0.2"
 
             "charge_cooldown_time"							"6.0"
 	        "charge_cooldown_delay"   						"1.0"
 
-
+			"smart_ammo_max_targeted_burst"					"6"
+			"smart_ammo_target_max_locks_heavy"				"6"
+			"smart_ammo_search_angle" 						"30"
+			"smart_ammo_targeting_time_min"					"0.2"
+	        "smart_ammo_targeting_time_max"					"0.2"
 			"smart_ammo_unlock_debounce_time"				"0.8"
 			"smart_ammo_new_target_delay"					"0.25"
-            "smart_ammo_targeting_time_min"					"0.2"
-	        "smart_ammo_targeting_time_max"					"0.2"
+			"smart_ammo_apply_new_target_delay_to_first_target" "1"
+			"projectile_trail_effect_0"						"Rocket_Smoke_SMALL_Titan_mod"
+			"hud_icon"										"rui/titan_loadout/passive/monarch_core_multi_target"
+			"smart_ammo_lock_type"							"large"
+
+			"npc_min_burst"   								"3"
+			"npc_max_burst"   								"3"
+			"npc_rest_time_between_bursts_min"					"3"
+			"npc_rest_time_between_bursts_max"					"4"
+
+			"viewmodel"   									"models/weapons/titan_bt_rocket_pod/atpov_titan_bt_rocket_pod_right.mdl"
 		}
 
-		upgradeCore_MissileRack_Vanguard
+		LTSRebalance_upgradeCore_MissileRack_Vanguard
 		{
+			"explosion_inner_radius"                        "60"
+
 			"deploy_time" 									"0.2"
 
             "charge_cooldown_time"							"9.0"
@@ -40,6 +46,18 @@ WeaponData
 			"smart_ammo_new_target_delay"					"0.25"
             "smart_ammo_targeting_time_min"					"0.2"
 	        "smart_ammo_targeting_time_max"					"0.2"
+			"smart_ammo_search_angle" 						"30"
+			"smart_ammo_apply_new_target_delay_to_first_target" "1"
+			"projectile_trail_effect_0"						"Rocket_Smoke_SMALL_Titan_mod"
+			"hud_icon"										"rui/titan_loadout/passive/monarch_core_multi_target"
+			"smart_ammo_lock_type"							"large"
+
+			"npc_min_burst"   								"3"
+			"npc_max_burst"   								"3"
+			"npc_rest_time_between_bursts_min"					"3"
+			"npc_rest_time_between_bursts_max"					"4"
+
+			"viewmodel"   									"models/weapons/titan_bt_rocket_pod/atpov_titan_bt_rocket_pod_right.mdl"
 		}
 	}
 }

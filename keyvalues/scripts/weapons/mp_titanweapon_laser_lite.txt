@@ -1,22 +1,16 @@
 WeaponData
 {
-	MP_BASE
-	{
-		"damage_near_value_titanarmor"					"1250"
-		"damage_far_value_titanarmor" 					"1250"
-		"explosion_damage_heavy_armor"					"1250"
-	}
-
-	"fire_rate"   									"2"
-	"holster_time"									"0.5"
-	"deploy_time" 									"0.57"
-
     Mods
     {
-        burn_mod_titan_laser_lite
+		LTSRebalance
 		{
-			"damage_near_value_titanarmor"					"*1"
-			"damage_far_value_titanarmor" 					"*1"
+			"damage_near_value_titanarmor"					"1250"
+			"damage_far_value_titanarmor" 					"1250"
+			"explosion_damage_heavy_armor"					"1250"
+
+			"fire_rate"   									"2"
+			"holster_time"									"0.5"
+			"deploy_time" 									"0.57"
 		}
     }
 }
