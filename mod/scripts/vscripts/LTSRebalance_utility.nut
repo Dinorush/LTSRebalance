@@ -107,6 +107,9 @@ void function LTSRebalance_HandleAttachments( entity titan )
 			}
 		}
 
+		if ( weaponMods.contains( "LTSRebalance_arc_rounds" ) ) // Specific case for Aegis Monarch
+			weaponMods.append( "LTSRebalance_base_arc_rounds" )
+
 		if ( globalMods.contains( "LTSRebalance" ) ) // Adds base rebalancing to weapon
 			weaponMods.append( "LTSRebalance" )
 
