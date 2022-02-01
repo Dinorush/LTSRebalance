@@ -7,7 +7,7 @@ WeaponData
 	"projectile_trail_effect_0" 					"P_mastiff_proj"
 	
 	"bolt_gravity_enabled"							"0"
-	"projectile_launch_speed"						"12000"
+	"projectile_launch_speed"						"10000"
 	"projectile_gravity_scale"						"0.0001"
 
 	"bolt_hitsize"									"0.0"
