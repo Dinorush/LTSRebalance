@@ -1,6 +1,7 @@
 WeaponData
 {
-    "OnWeaponReload"                                "OnWeaponReload_titanweapon_40mm"
+	// Uses existing script with no base behavior to prevent crashes when joining non-modded server
+    "OnWeaponReload"                                "CodeCallback_PlayerDecoyRemove"
 
     Mods
     {
