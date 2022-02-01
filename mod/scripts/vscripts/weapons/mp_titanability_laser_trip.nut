@@ -137,7 +137,7 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_trip( entity weapon, Weapon
 
 	dir.z = min( dir.z, -0.2 )
 
-    if ( weapon.HasMod( "pas_ion_tripwire" ) )
+    if ( weapon.HasMod( "LTSRebalance_pas_ion_tripwire" ) )
     {
         right *= 0.788 // equal to tan(45 * 0.85), to achieve the desired 15% angle decrease
         sidePower = PAS_ION_LASER_TRIP_DEPLOY_POWER
@@ -146,7 +146,7 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_trip( entity weapon, Weapon
 	attackParams.dir = dir - right
 	deployables.append( ThrowDeployable( weapon, attackParams, sidePower, OnLaserPylonPlanted ) )
 
-    if ( !LTSRebalance_Enabled() || !weapon.HasMod( "pas_ion_tripwire" ) )
+    if ( !weapon.HasMod( "LTSRebalance_pas_ion_tripwire" ) )
     {
         attackParams.dir = dir
         deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_POWER, OnLaserPylonPlanted ) )
