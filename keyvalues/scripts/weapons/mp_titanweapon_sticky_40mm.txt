@@ -1,7 +1,7 @@
 WeaponData
 {
-	// Uses existing script with no base behavior to prevent crashes when joining non-modded server
-    "OnWeaponReload"                                "CodeCallback_PlayerDecoyRemove"
+	// Uses existing script to prevent crashes when joining non-modded server
+    "OnWeaponReload"                                "OnWeaponReload_weapon_lstar"
 
     Mods
     {
