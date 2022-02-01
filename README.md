@@ -6,7 +6,7 @@ Does a comprehensive rebalancing of titans and titan kits focused on LTS balance
 
 ### Activation
 
-Having the mod installed activates it.
+This mod enables a new setting, "LTS Rebalance", under the "Promode" category in private match settings. When turned on, LTS Rebalance changes will apply.
 
 ## Balance Changelog
 
