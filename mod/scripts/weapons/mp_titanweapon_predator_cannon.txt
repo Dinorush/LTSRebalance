@@ -29,7 +29,7 @@ WeaponData
 	"OnWeaponStartZoomOut"							"OnWeaponStartZoomOut_titanweapon_predator_cannon"
 	"OnWeaponOwnerChanged"							"OnWeaponOwnerChanged_titanweapon_predator_cannon"
 	"OnWeaponNpcPreAttack"							"OnWeaponNpcPreAttack_titanweapon_predator_cannon"
-    "OnWeaponChargeBegin"                           "OnWeaponChargeBegin_titanweapon_predator_cannon"
+    "OnWeaponChargeBegin"                           "OnWeaponChargeBegin_AmpCore" // Hijacking to prevent vanilla server crash
 
 	// Menu Stats
 	"stat_damage" 									"65"
