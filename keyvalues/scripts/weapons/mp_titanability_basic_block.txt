@@ -11,15 +11,17 @@ WeaponData
     "ammo_display"									"bar"
     "cooldown_type"                                 "ammo_instant"
 
-	"deploy_time" 									".25"
-        
 	Mods
 	{
-        core_regen
+		LTSRebalance
+		{
+			"deploy_time" 							".25"
+		}
+        LTSRebalance_core_regen
         {
             "regen_ammo_refill_rate"                "*2.5"
         }
-        stop_regen
+        LTSRebalance_stop_regen
         {
             "regen_ammo_refill_rate"                "0"
         }

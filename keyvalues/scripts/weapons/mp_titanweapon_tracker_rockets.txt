@@ -1,16 +1,15 @@
 WeaponData
 {
-	"projectile_lifetime"							"7.0"
-	"deploy_time"								   	"0.35"
+	"projectile_lifetime"							"30.0"
+
 	Mods
 	{
-		burn_mod_titan_tracker_rockets
+		LTSRebalance
 		{
-			"damage_near_value"   							"*1"
-			"damage_far_value"								"*1"
+			"deploy_time"								   	"0.35"
 		}
-
-		pas_tone_rockets
+		
+		LTSRebalance_pas_tone_rockets
 		{
 			"burst_fire_count"								"8"
 			"smart_ammo_max_targeted_burst"					"8"

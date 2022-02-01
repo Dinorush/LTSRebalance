@@ -1,9 +1,7 @@
 WeaponData
 {
-	"OnWeaponPrimaryAttack"							"OnWeaponPrimaryAttack_GenericBoltWithDrop_Player"
-	"OnWeaponNpcPrimaryAttack"						"OnWeaponPrimaryAttack_GenericBoltWithDrop_NPC"
-
-	"ads_move_speed_scale"							"0.50"
+	"OnWeaponPrimaryAttack"							"OnWeaponPrimaryAttack_titanweapon_xo16"
+	"OnWeaponNpcPrimaryAttack"						"OnWeaponNpcPrimaryAttack_titanweapon_xo16"
 
 	"projectilemodel" 								"models/weapons/bullets/projectile_arl.mdl"
 	"projectile_trail_effect_0" 					"P_mastiff_proj"
@@ -20,40 +18,164 @@ WeaponData
 	"bolt_hitsize_growfinal_lerptime"				"0.18"
 	"bolt_hitsize_growfinal_size"					"2.0"
 
-	"net_optimize"		                            "0" // I think this is responsible for projectiles making no sound/ping
-
-	"spread_max_kick_stand_hip"						"1.5"
-	"spread_max_kick_stand_ads"						"0.75"
-	"spread_max_kick_crouch_hip"  					"1.5"
-	"spread_max_kick_crouch_ads"  					"0.75"
-	"spread_max_kick_air_hip" 						"1.5"
-	"spread_max_kick_air_ads" 						"0.75"
-
-	"lower_time"  									".01" //.1
-	
-	"spread_stand_ads"								"0.75"
-	"spread_crouch_ads"   							"0.75"
-	"spread_air_ads"  								"0.75"
-
-	"spread_kick_on_fire_stand_hip"					"0.15"
-	"spread_kick_on_fire_stand_ads"					"0.075"
-	"spread_kick_on_fire_crouch_hip"  				"0.15"
-	"spread_kick_on_fire_crouch_ads"  				"0.075"
-	"spread_kick_on_fire_air_hip" 					"0.15"
-	"spread_kick_on_fire_air_ads" 					"0.075"
+	"net_optimize"		                            "0" // Need to disable for projectiles to function properly
 
 	Mods
 	{
-		arc_rounds
+		LTSRebalance
+		{
+			"ads_move_speed_scale"							"0.50"
+
+			"spread_max_kick_stand_hip"						"1.5"
+			"spread_max_kick_stand_ads"						"0.75"
+			"spread_max_kick_crouch_hip"  					"1.5"
+			"spread_max_kick_crouch_ads"  					"0.75"
+			"spread_max_kick_air_hip" 						"1.5"
+			"spread_max_kick_air_ads" 						"0.75"
+
+			"lower_time"  									".01" //.1
+			
+			"spread_stand_ads"								"0.75"
+			"spread_crouch_ads"   							"0.75"
+			"spread_air_ads"  								"0.75"
+
+			"spread_kick_on_fire_stand_hip"					"0.15"
+			"spread_kick_on_fire_stand_ads"					"0.075"
+			"spread_kick_on_fire_crouch_hip"  				"0.15"
+			"spread_kick_on_fire_crouch_ads"  				"0.075"
+			"spread_kick_on_fire_air_hip" 					"0.15"
+			"spread_kick_on_fire_air_ads" 					"0.075"
+		}
+
+		LTSRebalance_arc_rounds
 		{
 			"ammo_clip_size"   								"40"
 			"projectile_trail_effect_0"					 	"P_leadwall_proj"
 			"vortex_drain"									"0.025"
+		}
+		LTSRebalance_base_battle_rifle
+		{
+			"fire_rate"										"9"
+			"fire_rate_max"									"18"
+			"fire_rate_max_time_speedup"					"2.0"
+			"fire_rate_max_time_cooldown"					"1.4"
+
+			"damage_near_value"   							"*1.1"
+			"damage_far_value"								"*1.1"
+			"damage_near_value_titanarmor"					"*1.1"
+			"damage_far_value_titanarmor" 					"*1.1"
+
+			"viewkick_scale_min_hipfire"  					"1.5"//0.6
+			"viewkick_scale_max_hipfire"  					"2.0"//1.0
+			"viewkick_scale_min_ads"  						"0.6"//0.3
+			"viewkick_scale_max_ads"  						"1.6"//0.8
+			"viewkick_scale_valuePerShot" 					"1"
+			"viewkick_scale_valueLerpStart"   				"50"
+			"viewkick_scale_valueLerpEnd" 					"150"
+
+			"viewkick_pitch_base" 							"-0.05"
+			"viewkick_pitch_random"   						"0.65"
+			"viewkick_pitch_hardScale"						"*1.5"
+
+			"viewkick_yaw_base"   							"0.05"
+			"viewkick_yaw_random" 							"0.30"
+			"viewkick_yaw_hardScale"  						"*1.5"
+			
+			"burst_or_looping_fire_sound_start_1p"			""
+			"burst_or_looping_fire_sound_middle_1p"			""
+			"burst_or_looping_fire_sound_end_1p"			""
+
+			"burst_or_looping_fire_sound_start_3p"			""
+			"burst_or_looping_fire_sound_middle_3p"			""
+			"burst_or_looping_fire_sound_end_3p"			""
+
+			"burst_or_looping_fire_sound_start_npc"			""
+			"burst_or_looping_fire_sound_middle_npc"		""
+			"burst_or_looping_fire_sound_end_npc"			""
+		}
+
+		base_battle_rifle
+		{
+			"fire_rate"						"8"
+			"fire_rate_max"					"18"
+			"fire_rate_max_time_speedup"	"3.0"
+			"fire_rate_max_time_cooldown"	"2.15"
+
+			"damage_near_value"   							"*1.25"
+			"damage_far_value"								"*1.25"
+			"damage_near_value_titanarmor"					"*1.25"
+			"damage_far_value_titanarmor" 					"*1.25"
+
+			"viewkick_scale_min_hipfire"  					"1.5"//0.6
+			"viewkick_scale_max_hipfire"  					"2.0"//1.0
+			"viewkick_scale_min_ads"  						"0.6"//0.3
+			"viewkick_scale_max_ads"  						"1.6"//0.8
+			"viewkick_scale_valuePerShot" 					"1"
+			"viewkick_scale_valueLerpStart"   				"50"
+			"viewkick_scale_valueLerpEnd" 					"150"
+
+			"viewkick_pitch_base" 							"-0.05"
+			"viewkick_pitch_random"   						"0.65"
+			"viewkick_pitch_hardScale"						"*1.5"
+
+			"viewkick_yaw_base"   							"0.05"
+			"viewkick_yaw_random" 							"0.30"
+			"viewkick_yaw_hardScale"  						"*1.5"
+
+			// Spread
+			"spread_stand_hip"								"1.5"
+			"spread_stand_hip_run"							"1.5"
+			"spread_stand_hip_sprint"                       "1.5"
+			"spread_crouch_hip"   							"1.5"
+			"spread_air_hip"  								"1.5"
+			"spread_stand_ads"								"0.5"
+			"spread_crouch_ads"   							"0.5"
+			"spread_air_ads"  								"0.5"
+
+			"burst_or_looping_fire_sound_start_1p"			""
+			"burst_or_looping_fire_sound_middle_1p"			""
+			"burst_or_looping_fire_sound_end_1p"			""
+
+			"burst_or_looping_fire_sound_start_3p"			""
+			"burst_or_looping_fire_sound_middle_3p"			""
+			"burst_or_looping_fire_sound_end_3p"			""
+
+			"burst_or_looping_fire_sound_start_npc"			""
+			"burst_or_looping_fire_sound_middle_npc"		""
+			"burst_or_looping_fire_sound_end_npc"			""
+
+			"bodygroup1_set"								"1"
 		}
 
 		arc_rounds_with_battle_rifle
 		{
-			"ammo_clip_size"   								"40"
+			"fx_muzzle_flash_view"							"wpn_muzzleflash_xo_elec_FP"
+			"fx_muzzle_flash_world"							"wpn_muzzleflash_xo_elec"
+
+			"tracer_effect"   								"P_wpn_tracer_xo16_elec"
+			"tracer_effect_first_person"  					"P_wpn_tracer_xo16_elec"
+			"impact_effect_table"		 					"titan_bullet_elec"
+
+			"vortex_drain"									"0.033"
+
+			"ammo_clip_size"   								"50"
+
+			"damage_flags"									"DF_STOPS_TITAN_REGEN | DF_BULLET | DF_NO_SELF_DAMAGE | DF_ELECTRICAL"
+			"fire_sound_1_player_1p"						"weapon_xo16_singleaccel_amped_1p"
+			"fire_sound_1_player_3p"						"weapon_xo16_singleaccel_amped_3p"
+
+			"hud_icon"										"r2_ui/menus/loadout_icons/titan_weapon/titan_weapon_xo16_combo"
+		}
+
+		LTSRebalance_arc_rounds_with_battle_rifle
+		{
+			"fx_muzzle_flash_view"							"wpn_muzzleflash_xo_elec_FP"
+			"fx_muzzle_flash_world"							"wpn_muzzleflash_xo_elec"
+
+			"tracer_effect"   								"P_wpn_tracer_xo16_elec"
+			"tracer_effect_first_person"  					"P_wpn_tracer_xo16_elec"
+			"impact_effect_table"		 					"titan_bullet_elec"
+
 			"projectile_trail_effect_0"					 	"P_leadwall_proj"
 			"vortex_drain"									"0.025"
 
@@ -75,27 +197,17 @@ WeaponData
 			"spread_stand_ads"								"0.75"
 			"spread_crouch_ads"   							"0.75"
 			"spread_air_ads"  								"0.75"
+
+			"damage_flags"									"DF_STOPS_TITAN_REGEN | DF_BULLET | DF_NO_SELF_DAMAGE | DF_ELECTRICAL"
+			"fire_sound_1_player_1p"						"weapon_xo16_singleaccel_amped_1p"
+			"fire_sound_1_player_3p"						"weapon_xo16_singleaccel_amped_3p"
+
+			"hud_icon"										"r2_ui/menus/loadout_icons/titan_weapon/titan_weapon_xo16_combo"
 		}
 		battle_rifle
 		{
-			"fire_rate"										"9"
-			"fire_rate_max"									"18"
-			"fire_rate_max_time_speedup"					"2.0"
-			"fire_rate_max_time_cooldown"					"1.4"
-
-			"damage_near_value"   							"*1.1"
-			"damage_far_value"								"*1.1"
-			"damage_near_value_titanarmor"					"*1.1"
-			"damage_far_value_titanarmor" 					"*1.1"
-
-			"spread_stand_hip"								"2.0"
-			"spread_stand_hip_run"							"2.0"
-			"spread_stand_hip_sprint"					   	"2.0"
-			"spread_crouch_hip"   							"2.0"
-			"spread_air_hip"  								"2.0"
-			"spread_stand_ads"								"0.75"
-			"spread_crouch_ads"   							"0.75"
-			"spread_air_ads"  								"0.75"
+			"fire_sound_1_player_1p"						"Weapon_XO16_SingleAccel_1P"
+			"fire_sound_1_player_3p"						"Weapon_XO16_SingleAccel_3P"
 		}
 
 		rapid_reload

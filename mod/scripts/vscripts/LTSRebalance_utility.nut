@@ -1,18 +1,40 @@
 global function WeaponHasAmmoToUse
-#if SERVER
-global function LTSRebalance_TitanPassivesInit
+global function LTSRebalance_Init
+global function LTSRebalance_Enabled
 
-void function LTSRebalance_TitanPassivesInit()
+void function LTSRebalance_Init()
 {
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
-	AddSpawnCallback( "npc_titan", ApplyPassiveRebalance )
-	AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
-	AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
-	AddCallback_OnNPCKilled( UnstableReactor_OnDeath )
+	AddPrivateMatchModeSettingEnum( "#PM_LTSREBALANCE_SETTING", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
+	
+	#if SERVER
+		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
+		AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
+		AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
+		AddCallback_OnNPCKilled( UnstableReactor_OnDeath )
+		AddCallback_OnPlayerRespawned( GiveLTSRebalanceWeaponMod )
+	#endif
 }
 
-void function ApplyPassiveRebalance( entity titan )
+bool function LTSRebalance_Enabled()
 {
+	return GetCurrentPlaylistVarInt( "ltsrebalance_enable", 0 ) == 1
+}
+
+#if SERVER
+void function GiveLTSRebalanceWeaponMod( entity player )
+{
+	if ( LTSRebalance_Enabled() )
+		player.GiveExtraWeaponMod( "LTSRebalance" )
+}
+
+void function GiveLTSRebalanceTitanMod( entity titan )
+{
+	if ( !LTSRebalance_Enabled() )
+		return
+
+	titan.GiveExtraWeaponMod( "LTSRebalance" )
+
 	entity soul = titan.GetTitanSoul()
 	if( !IsValid( soul ) ) // Should only occur on eject
 		return

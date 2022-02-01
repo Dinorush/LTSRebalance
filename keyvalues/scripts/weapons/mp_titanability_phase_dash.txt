@@ -2,7 +2,7 @@ WeaponData
 {
 	Mods
 	{
-		pas_ronin_phase
+		LTSRebalance_pas_ronin_phase
 		{
 			"regen_ammo_refill_rate"						"*1.5"
 		}
