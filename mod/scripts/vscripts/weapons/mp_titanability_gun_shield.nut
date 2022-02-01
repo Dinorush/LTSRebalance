@@ -47,7 +47,7 @@ var function OnWeaponPrimaryAttack_gun_shield( entity weapon, WeaponPrimaryAttac
 	if ( weaponOwner.ContextAction_IsActive() )
 		return 0
 
-    if ( !CanUseGunShield( weaponOwner ) )
+    if ( LTSRebalance_Enabled() && !CanUseGunShield( weaponOwner ) )
         return 0
 
 	float duration = weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration )
@@ -66,18 +66,16 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	owner.EndSignal( "TitanEjectionStarted" )
 	//owner.EndSignal( "SettingsChanged")
 
-	print( "LTS Rebalance: Forced ADS before Gun Shield start: " + weapon.GetForcedADS() )
-
 	weapon.e.gunShieldActive = true
-    if( !weapon.HasMod( "pas_legion_spinup" ) )
+    if( !weapon.HasMod( "LTSRebalance_pas_legion_spinup" ) )
 	    weapon.SetForcedADS()
     #if SERVER
     entity soul = owner.GetTitanSoul()
-    if( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) )
-        weapon.AddMod( "pas_legion_gunshield" )
-    else if( owner.IsPlayer() )
-		owner.SetMeleeDisabled()
+    if( LTSRebalance_Enabled() && ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) ) )
+        weapon.AddMod( "LTSRebalance_pas_legion_gunshield" )
     #endif
+	if( !weapon.HasMod( "LTSRebalance_pas_legion_gunshield") && owner.IsPlayer() )
+		owner.SetMeleeDisabled()
 
 	OnThreadEnd(
 	function() : ( weapon, owner )
@@ -85,21 +83,36 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 			if ( IsValid( weapon ) )
 			{
                 #if SERVER
-                if( weapon.HasMod( "pas_legion_gunshield" ) )
-                    weapon.RemoveMod( "pas_legion_gunshield" )
+                if( weapon.HasMod( "LTSRebalance_pas_legion_gunshield" ) )
+                    weapon.RemoveMod( "LTSRebalance_pas_legion_gunshield" )
                 #endif
 
-                // Moved Shield debuff removal to when it breaks
+				if ( !LTSRebalance_Enabled() )
+				{
+					weapon.e.gunShieldActive = false
+					if ( !weapon.HasMod( "LongRangePowerShot" ) && !weapon.HasMod( "CloseRangePowerShot" ) && !weapon.HasMod( "SiegeMode" ) )
+					{
+						while( weapon.GetForcedADS() )
+							weapon.ClearForcedADS()
+					}
+					weapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
+				}
+			}
+			if ( !LTSRebalance_Enabled() && IsValid( owner ) )
+			{
+				if ( owner.IsPlayer() )
+					owner.ClearMeleeDisabled()
+				owner.Signal( "GunShieldEnd" )
 			}
 		}
 	)
 
     // Check on startup to fix bug where cooldown begins earlier than Gun Shield spawns, giving it a shorter cooldown
-	// while( !weapon.IsReloading() && !CanUseGunShield( owner, true ) )
-	// {
-	// 	wait 0.1
-	// }
-	print( "LTS Rebalance: Forced ADS after Gun Shield start: " + weapon.GetForcedADS() )
+	while( !weapon.IsReloading() && !CanUseGunShield( owner, true ) )
+	{
+		wait 0.1
+	}
+
 	#if SERVER
 		thread Sv_CreateGunShield( owner, weapon, shieldWeapon, duration )
 	#endif
@@ -163,31 +176,31 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 		EmitSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
 	}
 
-
-
 	OnThreadEnd(
 		function() : ( titan, vortexSphere, vortexWeapon, shieldWallFX )
 		{
-			print( "LTS Rebalance: Forced ADS before Gun Shield end: " + vortexWeapon.GetForcedADS() )
 			if ( IsValid( vortexWeapon ) )
 			{
                 // Remove Shield debuffs when it breaks
-                if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
+				if ( LTSRebalance_Enabled() )
 				{
-					while( vortexWeapon.GetForcedADS() )
-						vortexWeapon.ClearForcedADS()
+					if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
+					{
+						while( vortexWeapon.GetForcedADS() )
+							vortexWeapon.ClearForcedADS()
+					}
+
+					entity owner = vortexWeapon.GetWeaponOwner()
+					if ( IsValid( owner ) )
+					{
+						if ( owner.IsPlayer() )
+							owner.ClearMeleeDisabled()
+						owner.Signal( "GunShieldEnd" )
+					}
+
+					vortexWeapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
+					vortexWeapon.e.gunShieldActive = false
 				}
-
-                entity owner = vortexWeapon.GetWeaponOwner()
-                if ( IsValid( owner ) )
-                {
-				    if ( owner.IsPlayer() )
-					    owner.ClearMeleeDisabled()
-                    owner.Signal( "GunShieldEnd" )
-                }
-
-                vortexWeapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
-                vortexWeapon.e.gunShieldActive = false
 
 				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_1p" )
 				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
@@ -215,7 +228,6 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 				EmitSoundOnEntity( titan, "titan_energyshield_down" )
 				PlayFXOnEntity( FX_TITAN_GUN_SHIELD_BREAK, titan, "PROPGUN" )
 			}
-			print( "LTS Rebalance: Forced ADS after Gun Shield end: " + vortexWeapon.GetForcedADS() )
 		}
 	)
 

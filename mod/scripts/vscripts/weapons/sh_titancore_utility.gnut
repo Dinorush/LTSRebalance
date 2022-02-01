@@ -234,8 +234,12 @@ void function CoreDeactivate( entity player, entity weapon )
 		if ( TitanDamageRewardsTitanCoreTime() )
 		{
 			if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
+			{
 				SoulTitanCore_SetNextAvailableTime( soul, 0.20 )
-			else if ( SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO ) )
+				if ( !LTSRebalance_Enabled() )
+					GiveOffhandElectricSmoke( player )
+			}
+			else if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO ) )
 				GiveOffhandElectricSmoke( player )
 		}
 		else if ( IsValid( player ) )

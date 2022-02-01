@@ -64,13 +64,14 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 		else
 			adsMultiplier = 1.0
 
+		float spreadFrac = LTSRebalance_Enabled() ? 0.043 : 0.05
 		for ( int index = 0; index < numProjectiles; index++ )
 		{
-			vector upVec = baseUpVec * file.boltOffsets[index][0] * 0.043 * RandomFloatRange( 1.2, 1.7 ) * adsMultiplier
-			vector rightVec = baseRightVec * file.boltOffsets[index][1] * 0.043 * RandomFloatRange( 1.2, 1.7 ) * adsMultiplier
+			vector upVec = baseUpVec * file.boltOffsets[index][0] * spreadFrac * RandomFloatRange( 1.2, 1.7 ) * adsMultiplier
+			vector rightVec = baseRightVec * file.boltOffsets[index][1] * spreadFrac * RandomFloatRange( 1.2, 1.7 ) * adsMultiplier
 
 			vector attackDir = attackParams.dir + upVec + rightVec
-			float projectileSpeed = 5280
+			float projectileSpeed = LTSRebalance_Enabled() ? 5280.0 : 4400.0
 
 			if ( weapon.GetWeaponClassName() == "mp_weapon_shotgun_doublebarrel" )
 				{
@@ -107,7 +108,8 @@ void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vec
 		if ( hitEnt == svGlobal.worldspawn )
 			EmitSoundAtPosition( TEAM_UNASSIGNED, pos, "Bullets.DefaultNearmiss" )
 
-        projectile.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) ) 
+		if ( LTSRebalance_Enabled() )
+        	projectile.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) ) 
 		projectile.proj.projectileBounceCount++
 	#endif
 }

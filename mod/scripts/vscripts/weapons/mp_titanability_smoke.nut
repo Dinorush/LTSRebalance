@@ -76,7 +76,7 @@ void function TitanSmokescreen( entity ent, entity weapon )
 		smokescreen.smokescreenFX = FX_ELECTRIC_SMOKESCREEN_HEAL
 	}
 	#endif
-	if( ent.IsTitan() && SoulHasPassive( ent.GetTitanSoul(), ePassives.PAS_ANTI_RODEO ) )
+	if( LTSRebalance_Enabled() && ent.IsTitan() && SoulHasPassive( ent.GetTitanSoul(), ePassives.PAS_ANTI_RODEO ) )
 		smokescreen.lifetime *= 1.25
 
 	smokescreen.isElectric = true
@@ -89,7 +89,7 @@ void function TitanSmokescreen( entity ent, entity weapon )
 	if ( weapon.HasMod( "maelstrom" ) )
 	{
 		smokescreen.dpsPilot = 90
-		smokescreen.dpsTitan = 900
+		smokescreen.dpsTitan = LTSRebalance_Enabled() ? 900 : 1350
 		smokescreen.deploySound1p = SFX_SMOKE_DEPLOY_BURN_1P
 		smokescreen.deploySound3p = SFX_SMOKE_DEPLOY_BURN_3P
 	}

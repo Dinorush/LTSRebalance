@@ -179,6 +179,7 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 		if ( ent.IsTitan() )
 		{
 			UntrackAllToneMarks( ent )
+			PhaseReflexReloadMain( ent )
 			entity titanSoul = ent.GetTitanSoul()
 			if ( titanSoul != null )
 			{
@@ -194,7 +195,10 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 	else
 	{
 		if ( ent.IsTitan() )
+		{
 			UntrackAllToneMarks( ent )
+			PhaseReflexReloadMain( ent )
+		}
 		ent.EnableNPCFlag( NPC_IGNORE_ALL )
 		EmitSoundOnEntity( ent, SHIFTER_PRE_SOUND_3P )
 	}
@@ -280,7 +284,10 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 		entity rider = GetRodeoPilot( ent )
 		if ( rider != null && Rodeo_IsAttached( rider ) )
 		{
-			rider.Signal( "RodeoOver" )
+			if ( LTSRebalance_Enabled() || !rider.IsPlayer() )
+				rider.Signal( "RodeoOver" )
+			else
+				PhaseShift( rider, 0, shiftTime )
 		}
 	}
 
@@ -504,6 +511,23 @@ void function UntrackAllToneMarks( entity ent )
 			continue
 
 		offhand.SmartAmmo_UntrackEntity( ent )
+	}
+}
+
+void function PhaseReflexReloadMain( entity titan )
+{
+	if ( LTSRebalance_Enabled() && SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_RONIN_AUTOSHIFT ) )
+	{
+		array<entity> weapons = titan.GetMainWeapons()
+		if( weapons.len() > 0 ) // During Sword Core, Leadwall doesn't exist
+		{
+			if( weapons[0].IsReloading() )
+			{
+				titan.HolsterWeapon()
+				titan.DeployWeapon()
+			}
+			weapons[0].SetWeaponPrimaryClipCount( weapons[0].GetWeaponPrimaryClipCountMax() )
+		}
 	}
 }
 #endif // #if SERVER

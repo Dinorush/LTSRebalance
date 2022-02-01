@@ -113,6 +113,8 @@ WeaponData
 		{
 			"fire_sound_1_player_1p"						"Weapon_XO16_SingleAccel_1P"
 			"fire_sound_1_player_3p"						"Weapon_XO16_SingleAccel_3P"
+
+			"hud_icon"										"r2_ui/menus/loadout_icons/titan_weapon/titan_weapon_xo16_br_upgrade"
 		}
 
 		LTSRebalance_arc_rounds_with_battle_rifle

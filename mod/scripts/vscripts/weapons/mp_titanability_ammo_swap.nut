@@ -195,16 +195,19 @@ void function ToggleAmmoMods( entity weapon, entity primaryWeapon, entity weapon
 		entity viewModel = weaponOwner.GetViewModelEntity()
 		float animDuration = viewModel.GetSequenceDuration( "ammo_swap_seq" )
 
-        if( primaryWeapon.HasMod( "pas_legion_gunshield" ) )
+        if( primaryWeapon.HasMod( "LTSRebalance_pas_legion_gunshield" ) )
             animDuration *= PAS_LEGION_GUNSHIELD_DURATION_MOD
 
 		wait animDuration
 	}
-    #if SERVER
-    weaponOwner.Anim_StopGesture( DEFAULT_SCRIPTED_ANIMATION_BLEND_TIME )
-    #endif
-    if ( IsServer() || weapon.ShouldPredictProjectiles() )
-        weaponOwner.Weapon_StopCustomActivity()
+	if ( LTSRebalance_Enabled() )
+	{
+		#if SERVER
+		weaponOwner.Anim_StopGesture( DEFAULT_SCRIPTED_ANIMATION_BLEND_TIME )
+		#endif
+		if ( IsServer() || weapon.ShouldPredictProjectiles() )
+			weaponOwner.Weapon_StopCustomActivity()
+	}
 }
 
 void function ToggleMod( entity weapon, string modName )

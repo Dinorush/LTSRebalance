@@ -40,6 +40,9 @@ void function MpTitanweaponFlameWall_Init()
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_flame_wall ( entity weapon )
 {
+	if ( !LTSRebalance_Enabled() )
+		return true
+
     return WeaponHasAmmoToUse( weapon )
 }
 
@@ -94,7 +97,7 @@ var function OnWeaponPrimaryAttack_FlameWall( entity weapon, WeaponPrimaryAttack
 	#if CLIENT
 		ClientScreenShake( 8.0, 10.0, 1.0, Vector( 0.0, 0.0, 0.0 ) )
 	#endif
-	return weapon.GetWeaponInfoFileKeyField( "ammo_min_to_fire" )
+	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
 
 #if SERVER
@@ -137,7 +140,7 @@ bool function CreateThermiteWallSegment( entity projectile, int projectileCount,
 		if ( mods.contains( "pas_scorch_flamecore" ) )
 		{
 			damageSource = eDamageSourceId.mp_titancore_flame_wave_secondary
-			duration = 1.8
+			duration = 1.5 * GetThermiteDurationBonus( owner )
 		}
 		else
 		{
@@ -241,7 +244,7 @@ void function FlameWall_DamagedTarget( entity ent, var damageInfo )
 
     entity firewall = attacker.GetOffhandWeapon( OFFHAND_RIGHT )
     entity canister = attacker.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-    if ( IsValid( firewall ) && firewall.HasMod( "pas_scorch_firewall" ) && IsValid( canister ) )
+    if ( LTSRebalance_Enabled() && IsValid( firewall ) && firewall.HasMod( "LTSRebalance_pas_scorch_firewall" ) && IsValid( canister ) )
     {
         int bonusAmmo = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE )
         int newAmmo = minint( canister.GetWeaponPrimaryClipCountMax(), canister.GetWeaponPrimaryClipCount() + bonusAmmo )

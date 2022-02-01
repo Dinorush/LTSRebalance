@@ -27,11 +27,22 @@ const LSTAR_BURNOUT_EFFECT_3P = $"xo_spark_med"
 const TPA_ADS_EFFECT_1P = $"P_TPA_electricity_FP"
 const TPA_ADS_EFFECT_3P = $"P_TPA_electricity"
 
-const CRITICAL_ENERGY_RESTORE_AMOUNT = 25
-const SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 7
+const CRITICAL_ENERGY_RESTORE_AMOUNT = 30
+const SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 8
+
+const LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT = 25
+const LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 7
 
 struct {
 	float[ADS_SHOT_COUNT_UPGRADE] boltOffsets = [
+		0.0,
+		0.022,
+		-0.022,
+		0.044,
+		-0.044,
+	]
+
+	float[ADS_SHOT_COUNT_UPGRADE] LTSRebalance_boltOffsets = [
 		0.0,
 		0.02,
 		-0.02,
@@ -59,14 +70,14 @@ void function OnWeaponStartZoomIn_titanweapon_particle_accelerator( entity weapo
 	array<string> mods = weapon.GetMods()
 	if ( weapon.HasMod( "fd_split_shot_cost") )
 	{
-		if ( weapon.HasMod( "pas_ion_weapon_ads" ) )
+		if ( weapon.HasMod( "pas_ion_weapon_ads" ) || weapon.HasMod( "LTSRebalance_pas_ion_weapon_ads" ) )
 			mods.append( "fd_upgraded_proto_particle_accelerator_pas" )
 		else
 			mods.append( "fd_upgraded_proto_particle_accelerator" )
 	}
 	else
 	{
-		if ( weapon.HasMod( "pas_ion_weapon_ads" ) )
+		if ( weapon.HasMod( "pas_ion_weapon_ads" ) || weapon.HasMod( "LTSRebalance_pas_ion_weapon_ads" ) )
 			mods.append( "proto_particle_accelerator_pas" )
 		else
 			mods.append( "proto_particle_accelerator" )
@@ -166,9 +177,10 @@ function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams attack
 
 		vector attackAngles = VectorToAngles( attackParams.dir )
 		vector baseRightVec = AnglesToRight( attackAngles )
+		float[ADS_SHOT_COUNT_UPGRADE] boltOffsets = LTSRebalance_Enabled() ? file.LTSRebalance_boltOffsets : file.boltOffsets
 		for ( int index = 0; index < shotCount; index++ )
 		{
-			vector attackVec = attackParams.dir + baseRightVec * file.boltOffsets[index]
+			vector attackVec = attackParams.dir + baseRightVec * boltOffsets[index]
 			int damageType = damageTypes.largeCaliber | DF_STOPS_TITAN_REGEN
 
 			float speed = TPAC_PROJECTILE_SPEED
@@ -240,10 +252,12 @@ void function OnHit_TitanWeaponParticleAccelerator( entity victim, var damageInf
 	if ( ( IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) ) && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
 	{
 			array<string> mods = inflictor.ProjectileGetMods()
+			var energyGain = 0
 			if ( mods.contains( "proto_particle_accelerator" ) )
-				attacker.AddSharedEnergy( SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT )
+				energyGain = LTSRebalance_Enabled() ? LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT : SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT
 			else
-				attacker.AddSharedEnergy( CRITICAL_ENERGY_RESTORE_AMOUNT )
+				energyGain = LTSRebalance_Enabled() ? LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT : CRITICAL_ENERGY_RESTORE_AMOUNT
+			attacker.AddSharedEnergy( energyGain )
 	}
 }
 #endif

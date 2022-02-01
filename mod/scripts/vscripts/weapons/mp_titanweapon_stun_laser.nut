@@ -48,6 +48,9 @@ void function MpTitanWeaponStunLaser_Init()
 void function OnWeaponActivate_titanweapon_stun_laser( entity weapon )
 {
 	#if SERVER
+	if ( !LTSRebalance_Enabled() )
+		return
+
 	entity soul = weapon.GetWeaponOwner().GetTitanSoul()
 	if( IsValid( soul ) && !( "tempShields" in soul.s ) )
 	{
@@ -115,7 +118,7 @@ void function StunLaser_HandleTempShieldChange( entity soul, int change )
 {
 	#if SERVER
 	// Have to check whether temp shields exists since it only gets added on the first Siphon use
-	if ( change == 0 || !( "tempShields" in soul.s ) || soul.s.tempShields.len() == 0 )
+	if ( !LTSRebalance_Enabled() || change == 0 || !( "tempShields" in soul.s ) || soul.s.tempShields.len() == 0 )
 		return
 
 	if ( change < 0 )
@@ -163,6 +166,9 @@ void function StunLaser_HandleTempShieldChange_Internal( entity soul, int change
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_stun_laser( entity weapon )
 {
+	if ( !LTSRebalance_Enabled() )
+		return true
+
 	return WeaponHasAmmoToUse( weapon )
 }
 
@@ -194,18 +200,22 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
+	
 	if ( attacker == target )
 	{
 		DamageInfo_SetDamage( damageInfo, 0 )
 		return
 	}
 
-	if ( !(target in weapon.s.entitiesHit) )
-		weapon.s.entitiesHit.append( target )
-	else
+	if ( LTSRebalance_Enabled() )
 	{
-		DamageInfo_SetDamage( damageInfo, 0 )
-		return
+		if ( !(target in weapon.s.entitiesHit) )
+			weapon.s.entitiesHit.append( target )
+		else
+		{
+			DamageInfo_SetDamage( damageInfo, 0 )
+			return
+		}
 	}
 
 	if ( attacker.GetTeam() == target.GetTeam() )
@@ -215,14 +225,14 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		
 		if ( !IsValid( weapon ) )
 			return
-		bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" )
+		bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" )|| weapon.HasMod( "LTSRebalance_energy_field_energy_transfer")
 		if ( target.IsTitan() && IsValid( attackerSoul ) && hasEnergyTransfer )
 		{
 			entity soul = target.GetTitanSoul()
 			if ( IsValid( soul ) )
 			{
-				int shieldRestoreAmount = STUN_LASER_TRANSFER_PERM_SHIELD
-				if ( SoulHasPassive( attackerSoul, ePassives.PAS_VANGUARD_SHIELD ) )
+				int shieldRestoreAmount = LTSRebalance_Enabled() ? STUN_LASER_TRANSFER_PERM_SHIELD : 750
+				if ( SoulHasPassive( LTSRebalance_Enabled() ? attackerSoul : soul, ePassives.PAS_VANGUARD_SHIELD ) )
 					shieldRestoreAmount = int( 1.25 * shieldRestoreAmount )
 
 				StunLaser_HandleTempShieldChange( soul, shieldRestoreAmount )
@@ -235,14 +245,17 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 					file.stunHealCallback( attacker, target, shieldRestoreAmount )
 			}
 			
-			int shieldRestoreAmount = STUN_LASER_PERM_SHIELD
-			if ( SoulHasPassive( attackerSoul, ePassives.PAS_VANGUARD_SHIELD ) )
-				shieldRestoreAmount = int( 1.25 * shieldRestoreAmount )
-			StunLaser_HandleTempShieldChange( attackerSoul, shieldRestoreAmount )
-			attackerSoul.SetShieldHealth( min( attackerSoul.GetShieldHealth() + shieldRestoreAmount, attackerSoul.GetShieldHealthMax() ) )
+			if ( LTSRebalance_Enabled() )
+			{
+				int shieldRestoreAmount = STUN_LASER_PERM_SHIELD
+				if ( SoulHasPassive( attackerSoul, ePassives.PAS_VANGUARD_SHIELD ) )
+					shieldRestoreAmount = int( 1.25 * shieldRestoreAmount )
+				StunLaser_HandleTempShieldChange( attackerSoul, shieldRestoreAmount )
+				attackerSoul.SetShieldHealth( min( attackerSoul.GetShieldHealth() + shieldRestoreAmount, attackerSoul.GetShieldHealthMax() ) )
 
-			if ( attacker.IsPlayer() )
-				MessageToPlayer( attacker, eEventNotifications.VANGUARD_ShieldGain, attacker )
+				if ( attacker.IsPlayer() )
+					MessageToPlayer( attacker, eEventNotifications.VANGUARD_ShieldGain, attacker )
+			}
 
 			if ( target.IsPlayer() )
 				MessageToPlayer( target, eEventNotifications.VANGUARD_ShieldGain, target )
@@ -270,14 +283,14 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		entity soul = attacker.GetTitanSoul()
 		if ( IsValid( soul ) )
 		{
-			int permRestoreAmount = ( target.GetArmorType() == ARMOR_TYPE_HEAVY ? STUN_LASER_PERM_SHIELD : 250 )
+			int permRestoreAmount = ( target.GetArmorType() == ARMOR_TYPE_HEAVY ? ( LTSRebalance_Enabled() ? STUN_LASER_PERM_SHIELD : 750 ) : 250 )
 			if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) )
 				permRestoreAmount = int( 1.25 * permRestoreAmount )
 
 			StunLaser_HandleTempShieldChange( soul, permRestoreAmount )
 			int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + permRestoreAmount )
 			soul.SetShieldHealth( newShield )
-			if ( target.GetArmorType() == ARMOR_TYPE_HEAVY && newShield < soul.GetShieldHealthMax() )
+			if ( LTSRebalance_Enabled() && target.GetArmorType() == ARMOR_TYPE_HEAVY && newShield < soul.GetShieldHealthMax() )
 			{
 				int tempShieldAmount = minint( soul.GetShieldHealthMax() - soul.GetShieldHealth(), STUN_LASER_TEMP_SHIELD )
 				soul.SetShieldHealth( soul.GetShieldHealth() + tempShieldAmount )

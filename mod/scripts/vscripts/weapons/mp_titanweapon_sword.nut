@@ -22,14 +22,15 @@ void function MpTitanWeaponSword_Init()
 	PrecacheParticleSystem( SWORD_GLOW_PRIME )
 
 	#if SERVER
-        AddDamageCallbackSourceID( eDamageSourceId.melee_titan_sword, Sword_DamagedTarget )
+		if ( LTSRebalance_EnabledOnInit() )
+       	 	AddDamageCallbackSourceID( eDamageSourceId.melee_titan_sword, Sword_DamagedTarget )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_shift_core, Sword_DamagedTarget )
 	#endif
 }
 
 void function OnWeaponActivate_titanweapon_sword( entity weapon )
 {
-	if ( weapon.HasMod( "super_charged" ) )
+	if ( weapon.HasMod( "super_charged" ) || weapon.HasMod( "LTSRebalance_super_charged" ) )
 	{
 		if ( weapon.HasMod( "modelset_prime" ) )
 			weapon.PlayWeaponEffectNoCull( SWORD_GLOW_PRIME_FP, SWORD_GLOW_PRIME, "sword_edge" )
@@ -37,42 +38,11 @@ void function OnWeaponActivate_titanweapon_sword( entity weapon )
 			weapon.PlayWeaponEffectNoCull( SWORD_GLOW_FP, SWORD_GLOW, "sword_edge" )
         
         #if SERVER
-        thread WaitForMeleeAttack( weapon, weapon.GetWeaponOwner() )
+		if ( LTSRebalance_Enabled() )
+        	thread WaitForMeleeAttack( weapon, weapon.GetWeaponOwner() )
         #endif
 	}
 }
-
-/* Unneeded melee pin-detection code! Use with a damage callback. Keeping it around until I get a github going
-void function OnMeleePin_PhaseReflex( entity owner, var damageInfo )
-{
-    if ( !( DamageInfo_GetDamageType( damageInfo ) & DMG_MELEE_ATTACK) )
-        return
-
-    // We don't want to block Sword Core melees
-    if ( DamageInfo_GetDamageSourceIdentifier( damageInfo ) == eDamageSourceId.mp_titancore_shift_core)
-        return
-
-    // We use IsWeaponDisabled and checking if the active weapon is the sword to check for melee pins.
-    // Checking for melee state won't work since melee pins end the melee.
-    entity ownerWeapon = owner.GetActiveWeapon()
-    if ( !ownerWeapon || ownerWeapon.GetWeaponClassName() != "melee_titan_sword" || !owner.IsWeaponDisabled() )
-        return
-
-    // Check that Phase Dash is ready
-    entity phaseDash = owner.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-    if ( !phaseDash || phaseDash.GetWeaponClassName() != "mp_titanability_phase_dash" || phaseDash.GetWeaponPrimaryClipCount() != phaseDash.GetWeaponPrimaryClipCountMax())
-        return
-
-    // In case the user is being melee'd after they land a melee
-    // 0.95 is hard coded melee duration
-    float vulnTime = 0.95 - ownerWeapon.GetWeaponSettingFloat( eWeaponVar.melee_attack_animtime ) * (1 - PAS_RONIN_AUTOSHIFT_VULN_TIME_MOD)
-    if ( Time() - ownerWeapon.s.lastMeleeTime < vulnTime )
-        return
-
-    DamageInfo_SetDamage( damageInfo, 0 )
-    PhaseShift( owner, 0, 0.5 )
-}
-*/
 
 #if SERVER
 void function WaitForMeleeAttack( entity weapon, entity titan )
@@ -265,17 +235,17 @@ void function OnWeaponDeactivate_titanweapon_sword( entity weapon )
 	else
 		weapon.StopWeaponEffect( SWORD_GLOW_FP, SWORD_GLOW )
 
-    weapon.Signal( "WeaponDeactivateEvent" )
+	if ( LTSRebalance_Enabled() )
+    	weapon.Signal( "WeaponDeactivateEvent" )
 }
 
 #if SERVER
 void function Sword_DamagedTarget( entity target, var damageInfo )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
-    entity weapon = DamageInfo_GetInflictor( damageInfo )
 	entity soul = attacker.GetTitanSoul()
 
-    if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
+    if ( LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
     {
         entity offhand
         foreach ( index in [ OFFHAND_LEFT, OFFHAND_ANTIRODEO, OFFHAND_RIGHT ] )
@@ -301,7 +271,7 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
 	if ( !IsValid( coreWeapon ) )
 		return
 
-	if ( coreWeapon.HasMod( "fd_duration" ) && IsValid( soul ) )
+	if ( ( coreWeapon.HasMod( "fd_duration" ) || coreWeapon.HasMod( "LTSRebalance_fd_duration" ) ) && IsValid( soul ) )
 	{
 		int shieldRestoreAmount = target.GetArmorType() == ARMOR_TYPE_HEAVY ? 500 : 250
 		soul.SetShieldHealth( min( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
