@@ -693,7 +693,7 @@ WeaponData
 		}
         LTSRebalance_pas_legion_gunshield
         {
-            "zoom_time_in"                                  "*0.5"
+            "zoom_time_in"                                  "*0.67"
         }
 		pas_legion_gunshield
         {
