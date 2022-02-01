@@ -103,7 +103,7 @@ void function CodeCallback_PlayerDecoyRemove( entity decoy, int currentState )
 	//PrintFunc()
 	// Hijacking for 40mm reload function. This has to be illegal
 	if ( LTSRebalance_Enabled() )
-\		OnWeaponReload_titanweapon_40mm( decoy, currentState )
+		OnWeaponReload_titanweapon_40mm( decoy, currentState )
 }
 
 
