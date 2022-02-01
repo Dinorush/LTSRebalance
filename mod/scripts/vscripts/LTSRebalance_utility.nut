@@ -1,3 +1,4 @@
+untyped
 global function WeaponHasAmmoToUse
 global function LTSRebalance_Init
 global function LTSRebalance_Enabled
