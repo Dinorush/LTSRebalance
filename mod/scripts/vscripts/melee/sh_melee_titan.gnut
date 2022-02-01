@@ -160,15 +160,17 @@ void function TitanMeleeAttack( entity titan )
 				meleeButtonHeldCheck = true
 			#endif
 
-			if ( meleeButtonHeldCheck && CodeCallback_IsValidMeleeExecutionTarget( titan, targetEnt ) )
+			bool tryExecution = meleeButtonHeldCheck && CodeCallback_IsValidMeleeExecutionTarget( titan, targetEnt )
+
+			TitanAttackTitan( titan, meleeWeapon, targetEnt, damageOrigin )
+
+			if ( tryExecution && IsValid(targetEnt) && IsAlive( targetEnt ) )
 			{
 				#if SERVER
 					AttemptScriptedExecution( titan, targetEnt )
 				#endif
 				return
 			}
-
-			TitanAttackTitan( titan, meleeWeapon, targetEnt, damageOrigin )
 			
 			didHitAnEnemyTitan = true
 		}
