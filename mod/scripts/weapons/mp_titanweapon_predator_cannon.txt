@@ -503,7 +503,7 @@ WeaponData
 			"npc_accuracy_multiplier_heavy_armor"			"1.5"
 			"npc_accuracy_multiplier_npc"					"1.5"
 		}
-        Smart_Core_Spread
+        LTSRebalance_Smart_Core_Spread
         {
             "spread_stand_ads"								"*0.1"
 			"spread_crouch_ads"   							"*0.1"
@@ -522,6 +522,11 @@ WeaponData
             "viewkick_roll_softScale" 						"*0.15"
             "viewkick_roll_hardScale" 						"*0.15"
         }
+		no_aim_assist
+		{
+			"aimassist_disable_hipfire"						"1"
+			"aimassist_disable_ads"							"1"
+		}
 		Smart_Core
 		{
 			// Removed for rebalance
@@ -667,21 +672,33 @@ WeaponData
 			"zoom_time_in"									"*0.9"
 		}
 
+		LTSRebalance_pas_legion_weapon
+		{
+			"ammo_clip_size"   								"100"
+		}
 		pas_legion_weapon
 		{
-			"ammo_clip_size"   								"100" //140
+			"ammo_clip_size"   								"140"
+		}
+		LTSRebalance_pas_legion_spinup
+		{
+			"ads_move_speed_scale"							"0.9"
 		}
 		pas_legion_spinup
 		{
-			"ads_move_speed_scale"							"0.9" //0.75
+			"ads_move_speed_scale"							"0.75"
 		}
 		fd_piercing_shots
 		{
 			"pass_through_depth"							"++500"
 		}
-        pas_legion_gunshield
+        LTSRebalance_pas_legion_gunshield
         {
-            "zoom_time_in"                                  "*0.75"
+            "zoom_time_in"                                  "*0.5"
+        }
+		pas_legion_gunshield
+        {
+
         }
 		fd_gun_shield_redirect
 		{

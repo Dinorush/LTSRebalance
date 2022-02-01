@@ -2,7 +2,13 @@
 {
 	"global"
 	{
-		sharedEnergyRegenDelay 0.5
+		ClassMods
+		{
+			LTSRebalance
+			{
+				sharedEnergyRegenDelay 0.5
+			}
+		}
 	}
 }
 
