@@ -6,7 +6,7 @@ global function LTSRebalance_Enabled
 void function LTSRebalance_Init()
 {
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
-	AddPrivateMatchModeSettingEnum( "#PM_LTSREBALANCE_SETTING", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
+	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	
 	#if SERVER
 		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
@@ -34,7 +34,8 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 	if ( !LTSRebalance_Enabled() )
 		return
 
-	titan.GiveExtraWeaponMod( "LTSRebalance" )
+	LTSRebalance_HandleAttachments( titan )
+	LTSRebalance_HandleSetfiles( titan )
 
 	entity soul = titan.GetTitanSoul()
 	if( !IsValid( soul ) ) // Should only occur on eject
@@ -69,6 +70,52 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 		TakePassive( owner, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) // We don't want normal nuke eject behavior
 		array passives = expect array( soul.passives )
 		passives[ ePassives.PAS_BUILD_UP_NUCLEAR_CORE ] = true
+	}
+}
+
+void function LTSRebalance_HandleAttachments( entity titan )
+{
+	array<entity> weapons = titan.GetMainWeapons()
+	weapons.extend( titan.GetOffhandWeapons() )
+
+	string prefix = "LTSRebalance_"
+	int prefixLen = prefix.len()
+	foreach ( weapon in weapons )
+	{
+		array<string> weaponMods = weapon.GetMods()
+		array<string> globalMods = GetWeaponMods_Global( weapon.GetWeaponClassName() )
+		for ( int i = weaponMods.len() - 1; i >= 0; i-- )
+		{
+			string rebalMod = prefix + weaponMods[i]
+			if ( globalMods.contains( rebalMod ) )
+			{
+				weaponMods.remove(i)
+				weaponMods.append( rebalMod )
+			}
+		}
+
+		if ( globalMods.contains( "LTSRebalance" ) ) // Adds base rebalancing to weapon
+			weaponMods.append( "LTSRebalance" )
+
+		weapon.SetMods( weaponMods )
+		if( weapon.GetWeaponPrimaryClipCountMax() > 0 )
+			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() )
+	}
+}
+
+void function LTSRebalance_HandleSetfiles( entity titan )
+{
+	array<string> settingsMods = titan.GetPlayerSettingsMods()
+	
+	switch( GetTitanCharacterName( titan ) )
+	{
+		case "scorch":
+		case "legion":
+			if ( settingsMods.contains( "pas_mobility_dash_capacity" ) )
+				return
+		case "ion":
+			settingsMods.append( "LTSRebalance" )
+			titan.SetPlayerSettingsWithMods( titan.GetPlayerSettings(), settingsMods )
 	}
 }
 

@@ -2,6 +2,12 @@
 {
 	"global"
 	{
-		powerregenrate 12.5
+		ClassMods
+		{
+			LTSRebalance
+			{
+				powerregenrate 12.5
+			}
+		}
 	}
 }

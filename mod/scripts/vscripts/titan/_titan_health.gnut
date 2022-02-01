@@ -82,6 +82,8 @@ void function UndoomTitan( entity titan, int numSegments )
 		if ( titan.ai.titanSpawnLoadout.setFileMods.contains( "fd_health_upgrade" ) )
 			maxHealth += segmentHealth
 		if ( soul.soul.titanLoadout.setFileMods.contains( "core_health_upgrade" ) )
+			maxHealth += segmentHealth * 2
+		else if ( soul.soul.titanLoadout.setFileMods.contains( "LTSRebalance_core_health_upgrade" ) )
 			maxHealth += segmentHealth
 	}
 	else
