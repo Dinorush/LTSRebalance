@@ -281,7 +281,7 @@ bool function IsTerminationRocket ( entity projectile )
 		return false
 	
 	array<string> mods = projectile.ProjectileGetMods()
-	if ( mods.contains( "LTSRebalance_scripted_no_damage" ) || mods.contains( "LTSRebalance_northstar_prime_execution" ) )
+	if ( mods.contains( "scripted_no_damage" ) || mods.contains( "northstar_prime_execution" ) )
 		return true
 	return false
 }

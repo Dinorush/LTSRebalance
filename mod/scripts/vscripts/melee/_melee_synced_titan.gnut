@@ -1515,10 +1515,7 @@ void function Rocket_Pod( entity guy, string tag, entity victim )
 {
 	entity oldOffhandWeapon = guy.GetOffhandWeapon( 0 )
 	guy.TakeOffhandWeapon( 0 )
-	if ( LTSRebalance_Enabled() )
-		guy.GiveOffhandWeapon( "mp_titanweapon_salvo_rockets", 0, [ "LTSRebalance_northstar_prime_execution" ] )
-	else
-		guy.GiveOffhandWeapon( "mp_titanweapon_salvo_rockets", 0, [ "northstar_prime_execution" ] )
+	guy.GiveOffhandWeapon( "mp_titanweapon_salvo_rockets", 0, [ "northstar_prime_execution" ] )
 
 	entity newOffhandWeapon = guy.GetOffhandWeapon( 0 )
 	int attachID = guy.LookupAttachment( tag )
