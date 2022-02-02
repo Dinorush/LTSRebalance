@@ -23,6 +23,8 @@ WeaponData
 		}
 		LTSRebalance_pas_tone_burst
 		{
+			"ads_move_speed_scale"							"0.75"
+
 			"charge_time" 									"2.5" // functionally 2/3 of this, so it matches reticle
 			"charge_cooldown_time"							"0.01"
 			"charge_cooldown_delay"   						"0.05"
