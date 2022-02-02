@@ -52,12 +52,16 @@ var function OnWeaponPrimaryAttack_particle_wall( entity weapon, WeaponPrimaryAt
 void function PasToneWallWatchForEnd( entity weapon, entity particleWall )
 {
     particleWall.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "OnDestroy" )
     float startTime = Time()
     OnThreadEnd(
     function() : ( weapon, startTime )
         {
+			if ( !IsValid( weapon ) )
+				return
+
             float lostTime = startTime + MP_PARTICLE_WALL_DURATION - Time()
-            if( lostTime < 0.1 )
+            if ( lostTime < 0.1 )
                 return
 
             // Wall broken early
