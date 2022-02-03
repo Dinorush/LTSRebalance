@@ -216,11 +216,11 @@ void function IncrementChargeBlockAnim( entity blockingEnt, var damageInfo )
 }
 
 const float TITAN_BLOCK_DAMAGE_REDUCTION = 0.3
-const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION = 0.22
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION = 0.25
 const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT = 1.15
 const float SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.15
-const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.11
-const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.254
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.125
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.27
 const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT = 1000.0
 
 float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var damageInfo )
@@ -251,7 +251,7 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
 		if ( !LTSRebalance_Enabled() )
 			return TITAN_BLOCK_DAMAGE_REDUCTION
 
-        int damageTaken = int( DamageInfo_GetDamage( damageInfo ) + 0.5 ) / 10  //Divide by 10 since ammo must be < 1000 for display
+        int damageTaken = int( DamageInfo_GetDamage( damageInfo ) + 0.5 ) / 10  // Work with damage / 10 since ammo must be < 1000 for display
         int newAmmo = int( max ( 1, weapon.GetWeaponPrimaryClipCount() - damageTaken ) )
         weapon.SetWeaponPrimaryClipCount( newAmmo )
         float power = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / (LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0)

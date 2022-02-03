@@ -1,12 +1,12 @@
 WeaponData
 {
 	// Ammo
-	"ammo_stockpile_max"							"800"
-	"ammo_clip_size"   								"800"
-	"ammo_default_total"							"800"
-	"ammo_per_shot"                                 "800"
+	"ammo_stockpile_max"							"700"
+	"ammo_clip_size"   								"700"
+	"ammo_default_total"							"700"
+	"ammo_per_shot"                                 "700"
 	"ammo_min_to_fire"								"0"
-    "regen_ammo_refill_rate"                        "120"
+    "regen_ammo_refill_rate"                        "100"
     "regen_ammo_refill_start_delay"                 "0.65"
     "ammo_display"									"bar"
     "cooldown_type"                                 "ammo_instant"
