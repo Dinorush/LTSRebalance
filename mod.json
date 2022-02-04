@@ -3,9 +3,20 @@
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.9.3.3",
+	"Version": "0.9.4",
+
+	"ConVars": [
+		{
+			"Name": "ltsrebalance_force_recompile",
+			"DefaultValue": "1"
+		}
+	],
 
 	"Scripts": [
+		{
+			"Path": "weapons/mp_titanweapon_shift_core_sword.nut",
+			"RunOn": "(CLIENT || SERVER) && MP"
+		},
 		{
 			"Path": "LTSRebalance_utility.nut",
 			"RunOn": "(CLIENT || SERVER) && MP",
