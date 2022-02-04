@@ -24,6 +24,7 @@ void function MpTitanWeaponSword_Init()
 	#if SERVER
 		if ( LTSRebalance_EnabledOnInit() )
        	 	AddDamageCallbackSourceID( eDamageSourceId.melee_titan_sword, Sword_DamagedTarget )
+				
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_shift_core, Sword_DamagedTarget )
 	#endif
 }
@@ -37,9 +38,10 @@ void function OnWeaponActivate_titanweapon_sword( entity weapon )
 		else
 			weapon.PlayWeaponEffectNoCull( SWORD_GLOW_FP, SWORD_GLOW, "sword_edge" )
         
-        #if SERVER
+		#if SERVER
+		entity owner = weapon.GetWeaponOwner()
 		if ( LTSRebalance_Enabled() )
-        	thread WaitForMeleeAttack( weapon, weapon.GetWeaponOwner() )
+        	thread WaitForMeleeAttack( weapon, owner )
         #endif
 	}
 }
