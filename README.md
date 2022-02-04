@@ -10,7 +10,7 @@ This mod enables a new setting, "LTS Rebalance", under the "Promode" category in
 
 ### ConVars
 
-- `ltsrebalance_force_recompile`: Default value of `1`. Recompiles KeyValue files upon entering the multiplayer lobby if they do not have LTSRebalance changes. Will not work if the mod is disabled. (If you're not sure what this does, it's safe to leave it on)
+- `ltsrebalance_force_recompile`: Default value of `1`. Recompiles KeyValue files upon entering the multiplayer lobby if they do not have LTSRebalance changes. Will not work if the mod is disabled. (If you're not sure what this does, just leave it on)
 
 ## Balance Changelog
 
