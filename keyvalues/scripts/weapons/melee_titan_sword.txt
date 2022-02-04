@@ -9,22 +9,17 @@ WeaponData
     "charge_wave_step_dist"							"115.0"
     "wave_passes_vortex"                            "pass"
     "explosion_damage"                              "75"
-    "explosion_damage_heavy_armor"                  "1000"
+    "explosion_damage_heavy_armor"                  "900"
     "explosionradius"                               "100"
     "projectilemodel" 								"models/dev/empty_model.mdl"
 
 	Mods
 	{
-		LTSRebalance
-		{
-			"deploy_time"                                   "0.01"
-		}
 		LTSRebalance_super_charged
 		{
-			"fire_mode"											"offhand_melee_hybrid"
 			"melee_damage"										"++1400"
-			"melee_damage_heavyarmor"							"++400"
-			"attack_button_presses_melee"						"1"
+			"melee_damage_heavyarmor"							"++300"
+			"melee_raise_recovery_animtime_normal"				"0.01"
 			"impact_effect_table"								"titan_sword"
 			"melee_rumble_on_hit"								"titan_melee_hit_swordcore"
 			"offhand_transition_has_attach_detach_anim_events"	"0"

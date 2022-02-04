@@ -151,7 +151,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
 	}
 
-    OldWeaponData prevWeaponData
+	OldWeaponData prevWeaponData
     entity soul = owner.GetTitanSoul()
 	if ( soul != null )
 	{
@@ -165,35 +165,46 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 			AddAnimEvent( titan, "shift_core_use_meter", Shift_Core_UseMeter_NPC )
 		}
 
-		if ( LTSRebalance_Enabled() )
-			titan.GetOffhandWeapon( OFFHAND_MELEE ).AddMod( "LTSRebalance_super_charged" )
+		entity meleeWeapon = titan.GetOffhandWeapon( OFFHAND_MELEE )
+		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
+			meleeWeapon.AddMod( "LTSRebalance_super_charged" )
 		else
-			titan.GetOffhandWeapon( OFFHAND_MELEE ).AddMod( "super_charged" )
+			meleeWeapon.AddMod( "super_charged" )
 
 		if ( IsSingleplayer() )
 		{
-			titan.GetOffhandWeapon( OFFHAND_MELEE ).AddMod( "super_charged_SP" )
+			meleeWeapon.AddMod( "super_charged_SP" )
 		}
 
-		titan.SetActiveWeaponByName( "melee_titan_sword" )
-
-		entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
-		if ( LTSRebalance_Enabled() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
-			block.AddMod( "LTSRebalance_core_regen" )
-
 		entity mainWeapon = titan.GetMainWeapons()[0]
-		if ( !LTSRebalance_Enabled() )
-			mainWeapon.AllowUse( false )
-		else
+		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
+			// Take Leadwall away to skip holstering anim
 			prevWeaponData.name = mainWeapon.GetWeaponClassName()
 			prevWeaponData.ammo = mainWeapon.GetWeaponPrimaryClipCount()
 			prevWeaponData.maxAmmo = mainWeapon.GetWeaponPrimaryClipCountMax()
 			prevWeaponData.mods = mainWeapon.GetMods()
-			titan.TakeWeapon( prevWeaponData.name )
+			titan.TakeWeaponNow( prevWeaponData.name )
 			// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
 			if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
 				thread WatchForPhaseReflex( titan, prevWeaponData )
+
+			array<string> mods = []
+			if( meleeWeapon.HasMod( "modelset_prime" ) )
+				mods.append( "modelset_prime" )
+
+			titan.GiveWeapon( "mp_titanweapon_shift_core_sword", mods )
+			titan.SetActiveWeaponByName( "mp_titanweapon_shift_core_sword" )
+
+			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
+			if ( LTSRebalance_Enabled() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+				block.AddMod( "LTSRebalance_core_regen" )
+		}
+		else
+		{
+			titan.SetActiveWeaponByName( "melee_titan_sword" )
+			
+			mainWeapon.AllowUse( false )
 		}
 	}
 
@@ -311,7 +322,7 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 		entity meleeWeapon = titan.GetOffhandWeapon( OFFHAND_MELEE )
 		if ( IsValid( meleeWeapon ) )
 		{
-			if( LTSRebalance_Enabled() )
+			if( LTSRebalance_Enabled() && titan.IsPlayer() )
 				meleeWeapon.RemoveMod( "LTSRebalance_super_charged" )
 			else
 				meleeWeapon.RemoveMod( "super_charged" )
@@ -322,23 +333,23 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 			}
 		}
 
-		entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
-		if ( LTSRebalance_Enabled() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
-			block.RemoveMod( "LTSRebalance_core_regen" )
-
-		if( prevWeaponData.name != "" )
-        {
-            titan.GiveWeapon( prevWeaponData.name, prevWeaponData.mods )
-            titan.GetMainWeapons()[0].SetWeaponPrimaryClipCount( prevWeaponData.ammo )
-            //titan.SetActiveWeaponByName( prevWeaponData.name )
-        }
-
-		array<entity> mainWeapons = titan.GetMainWeapons()
-		if ( !LTSRebalance_Enabled() && mainWeapons.len() > 0 )
+		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
-			entity mainWeapon = titan.GetMainWeapons()[0]
-			mainWeapon.AllowUse( true )
-		}
+			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
+			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+				block.RemoveMod( "LTSRebalance_core_regen" )
+			titan.TakeWeaponNow( "mp_titanweapon_shift_core_sword" )
+
+			if ( prevWeaponData.name != "" )
+        	{
+				titan.GiveWeapon( prevWeaponData.name, prevWeaponData.mods )
+				titan.GetMainWeapons()[0].SetWeaponPrimaryClipCount( prevWeaponData.ammo )
+				if ( !titan.IsWeaponDisabled() )
+					titan.SetActiveWeaponByName( titan.GetMainWeapons()[0].GetWeaponClassName() )
+			}
+		} 
+		else if ( titan.GetMainWeapons().len() > 0 )
+			titan.GetMainWeapons()[0].AllowUse( true )
 
 		if ( titan.IsNPC() )
 		{

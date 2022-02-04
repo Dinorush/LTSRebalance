@@ -1,0 +1,146 @@
+WeaponData
+{
+	// General
+	"printname"   									"#WPN_TITAN_SWORD"
+	"shortprintname"								"#WPN_TITAN_SWORD_SHORT"
+	"description" 									"#WPN_TITAN_SWORD_DESC"
+	"longdesc"										"#WPN_TITAN_SWORD_LONGDESC"
+
+	"menu_icon"										"r2_ui/menus/loadout_icons/titan_weapon/titan_weapon_sword"
+	"hud_icon"										"r2_ui/menus/loadout_icons/titan_weapon/titan_weapon_sword"
+
+	"weaponClass" 									"titan"
+	"fire_mode"   									"auto"
+	//"body_type"										"battle_rifle"
+	"never_drop"									"1"
+
+	"OnWeaponActivate"								"OnWeaponActivate_titanweapon_shift_core_sword"
+	"OnWeaponDeactivate"							"OnWeaponDeactivate_titanweapon_shift_core_sword"
+	"OnWeaponPrimaryAttack"							"OnWeaponPrimaryAttack_titanweapon_shift_core_sword"
+
+	"npc_max_engage_range"							"250"
+	"npc_max_engage_range_heavy_armor"				"250"
+
+	"npc_min_burst"									"0"
+	"npc_max_burst"									"0"
+
+	// Models
+	"viewmodel"   									"models/weapons/titan_sword/atpov_titan_sword.mdl"
+	"playermodel" 									"models/weapons/titan_sword/w_titan_sword.mdl"
+	"holstermodel"    								"models/weapons/titan_sword/w_titan_sword.mdl"
+
+	"damage_flags"									"DF_MELEE | DF_GIB"
+	"impact_effect_table"							"titan_sword"
+	"impulse_force"   								"5000"
+
+	"zoom_effects"									"0"
+	"deploy_time"									"0.01"
+	"raise_time"									"0.01"
+	"holster_time"									"0.5"
+
+	"ammo_stockpile_max"							"120"
+	"ammo_clip_size"   								"120"
+	"ammo_default_total"							"120"
+	"ammo_no_remove_from_stockpile"					"1"
+	"ammo_no_remove_from_clip"						"1"
+
+	"fire_rate"										"2" // 1/fire_rate must be < 0.9
+	"primary_fire_does_not_block_sprint"			"1"
+
+	//
+	"damage_rodeo" 									"100"
+	"aimassist_disable_hipfire"						"1"
+	"aimassist_disable_ads"							"1"
+
+	// Bob
+	"bob_cycle_time"  								"0.7"
+	"bob_vert_dist"   								"1.5"
+	"bob_horz_dist"   								"2.5"
+	"bob_max_speed"   								"150"
+	"bob_pitch"   									"1"
+	"bob_yaw" 										"0.80"
+	"bob_roll"										"-2.25"
+
+	// View Drift
+	"viewdrift_hipfire_stand_scale_pitch" 			"0.5"
+	"viewdrift_hipfire_crouch_scale_pitch"			"0.1"
+	"viewdrift_hipfire_air_scale_pitch"   			"0.1"
+	"viewdrift_hipfire_stand_scale_yaw"   			"0.5"
+	"viewdrift_hipfire_crouch_scale_yaw"  			"0.075"
+	"viewdrift_hipfire_air_scale_yaw" 				"0.075"
+	"viewdrift_hipfire_speed_pitch"   				"0.6"
+	"viewdrift_hipfire_speed_yaw" 					"0.5"
+
+	// Sway
+	"sway_rotate_attach"  							"SWAY_ROTATE"
+	"sway_min_x"  									"-0.3"
+	"sway_min_y"  									"-0.5"
+	"sway_min_z"  									"-0.5"
+	"sway_max_x"  									"0.3"
+	"sway_max_y"  									"0.5"
+	"sway_max_z"  									"0.1"
+	"sway_min_pitch"  								"-3"
+	"sway_min_yaw"									"-3.5"
+	"sway_min_roll"   								"-1"
+	"sway_max_pitch"  								"3"
+	"sway_max_yaw"									"3.5"
+	"sway_max_roll"   								"2"
+	"sway_translate_gain" 							"10"
+	"sway_rotate_gain"								"12"
+	"sway_move_forward_translate_x"   				"0"
+	"sway_move_forward_translate_z"   				"-0.5"
+	"sway_move_back_translate_x"  					"-2"
+	"sway_move_back_translate_z"  					"-1"
+	"sway_move_left_translate_y"  					"-1"
+	"sway_move_left_translate_z"  					"-0.5"
+	"sway_move_left_rotate_roll"  					"-1"
+	"sway_move_right_translate_y" 					"1"
+	"sway_move_right_translate_z" 					"-0.5"
+	"sway_move_right_rotate_roll" 					"2"
+	"sway_move_up_translate_z"						"-1"
+	"sway_move_down_translate_z"  					"1"
+	"sway_turn_left_rotate_yaw"   					"-2"
+	"sway_turn_right_rotate_yaw"  					"2"
+	"sway_turn_up_rotate_pitch"   					"2"
+	"sway_turn_down_rotate_pitch" 					"-2"
+
+	// WeaponED Unhandled Key/Values and custom script Key/Values
+	"deployfirst_time"								"1.25"
+
+	"npc_max_range"   								"100"	// prevent COND_CAN_RANGE_ATTACK1
+	active_crosshair_count				"1"
+	rui_crosshair_index					"0"
+
+	Mods
+	{
+		modelset_prime
+		{
+            "viewmodel"   									"models/weapons/titan_sword/atpov_titan_sword_prime.mdl"
+            "playermodel" 									"models/weapons/titan_sword/w_titan_sword_prime.mdl"
+            "holstermodel"    								"models/weapons/titan_sword/w_titan_sword_prime.mdl"
+		}
+	}
+
+	RUI_CrosshairData
+	{
+		DefaultArgs
+		{
+			isSprinting					player_is_sprinting
+			teamColor					crosshair_team_color
+			isAmped						weapon_is_amped
+		    crosshairMovementX          crosshair_movement_x
+		    crosshairMovementY          crosshair_movement_y
+		    isActive					weapon_is_active
+		}
+
+		Crosshair_1
+		{
+			"ui"						"ui/crosshair_titan_predator_close_range"
+			"base_spread"				"0.0"
+			Args
+			{
+				isFiring				weapon_is_firing
+			}
+		}
+	}
+}
