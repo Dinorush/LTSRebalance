@@ -108,9 +108,7 @@ WeaponData
 	"deployfirst_time"								"1.25"
 
 	"npc_max_range"   								"100"	// prevent COND_CAN_RANGE_ATTACK1
-	active_crosshair_count				"1"
-	rui_crosshair_index					"0"
-
+	
 	Mods
 	{
 		modelset_prime
@@ -118,29 +116,6 @@ WeaponData
             "viewmodel"   									"models/weapons/titan_sword/atpov_titan_sword_prime.mdl"
             "playermodel" 									"models/weapons/titan_sword/w_titan_sword_prime.mdl"
             "holstermodel"    								"models/weapons/titan_sword/w_titan_sword_prime.mdl"
-		}
-	}
-
-	RUI_CrosshairData
-	{
-		DefaultArgs
-		{
-			isSprinting					player_is_sprinting
-			teamColor					crosshair_team_color
-			isAmped						weapon_is_amped
-		    crosshairMovementX          crosshair_movement_x
-		    crosshairMovementY          crosshair_movement_y
-		    isActive					weapon_is_active
-		}
-
-		Crosshair_1
-		{
-			"ui"						"ui/crosshair_titan_predator_close_range"
-			"base_spread"				"0.0"
-			Args
-			{
-				isFiring				weapon_is_firing
-			}
 		}
 	}
 }
