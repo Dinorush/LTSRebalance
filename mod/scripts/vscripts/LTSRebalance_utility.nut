@@ -15,6 +15,11 @@ void function LTSRebalance_Init()
 	
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
 	#if SERVER
+		LTSRebalance_RecompileKeyValues() // Recompiles KeyValues if it detects that LTSRebalance weapon mods are missing
+		if ( !file.ltsrebalance_enabled )
+			return
+		MpTitanweaponShiftCoreSword_Init()
+		
 		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
 		AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
 		AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
@@ -30,24 +35,48 @@ bool function LTSRebalance_EnabledOnInit()
 	return GetCurrentPlaylistVarInt( "ltsrebalance_enable", 0 ) == 1
 }
 
-// For general use, since I dunno if getting the playlist varas many times as I need to is performant
+// For general use, since I dunno if getting the playlist var as many times as I need to is performant
 bool function LTSRebalance_Enabled() 
 {
 	return file.ltsrebalance_enabled
 }
 
 #if SERVER
+void function LTSRebalance_RecompileKeyValues()
+{
+	if ( !GetConVarBool( "ltsrebalance_force_recompile" ) )
+		return
+
+	thread LTSRebalance_RecompileKeyValues_Think()
+}
+
+void function LTSRebalance_RecompileKeyValues_Think()
+{
+	string[2] testDummy = [ "mp_titanweapon_predator_cannon", "LTSRebalance_Smart_Core_Spread" ] // Some weapon and a LTSRebalance mod to check if it was compiled
+
+	int netChanModeOriginal = GetConVarInt( "net_chan_limit_mode" )
+	bool svCheatsOriginal = GetConVarBool( "sv_cheats" )
+	SetConVarInt( "net_chan_limit_mode", 0 )	// Don't want to kick the player back to main menu when recompiling
+	SetConVarBool( "sv_cheats", true )			// Need sv_cheats to execute command
+	
+	// tries limits this to not run for more than 10s; there are probably bigger issues if that happens
+	for ( int tries = 0; !GetWeaponMods_Global( testDummy[0] ).contains( testDummy[1] ) && tries < 100; tries++ )
+	{
+		ServerCommand( "weapon_reparse" )
+		WaitFrame()
+	}
+
+	SetConVarBool( "sv_cheats", svCheatsOriginal )
+	SetConVarInt( "net_chan_limit_mode", netChanModeOriginal )
+}
+
 void function GiveLTSRebalanceWeaponMod( entity player )
 {
-	if ( LTSRebalance_Enabled() )
-		player.GiveExtraWeaponMod( "LTSRebalance" )
+	player.GiveExtraWeaponMod( "LTSRebalance" )
 }
 
 void function GiveLTSRebalanceTitanMod( entity titan )
 {
-	if ( !LTSRebalance_Enabled() )
-		return
-
 	LTSRebalance_HandleAttachments( titan )
 
 	entity soul = titan.GetTitanSoul()
