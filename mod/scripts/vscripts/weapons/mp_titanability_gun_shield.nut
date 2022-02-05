@@ -67,14 +67,14 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	//owner.EndSignal( "SettingsChanged")
 
 	weapon.e.gunShieldActive = true
-    if( !weapon.HasMod( "LTSRebalance_pas_legion_spinup" ) )
+    if( !LTSRebalance_Enabled() || !weapon.HasMod( "pas_legion_spinup" ) )
 	    weapon.SetForcedADS()
     #if SERVER
     entity soul = owner.GetTitanSoul()
-    if( LTSRebalance_Enabled() && ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) ) )
-        weapon.AddMod( "LTSRebalance_pas_legion_gunshield" )
+    if ( LTSRebalance_Enabled() && ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) ) )
+        weapon.AddMod( "pas_legion_gunshield" )
     #endif
-	if( !weapon.HasMod( "LTSRebalance_pas_legion_gunshield") && owner.IsPlayer() )
+	if( !LTSRebalance_Enabled() || ( !weapon.HasMod( "pas_legion_gunshield") && owner.IsPlayer() ) )
 		owner.SetMeleeDisabled()
 
 	OnThreadEnd(
@@ -83,8 +83,8 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 			if ( IsValid( weapon ) )
 			{
                 #if SERVER
-                if( weapon.HasMod( "LTSRebalance_pas_legion_gunshield" ) )
-                    weapon.RemoveMod( "LTSRebalance_pas_legion_gunshield" )
+                if( weapon.HasMod( "pas_legion_gunshield" ) )
+                    weapon.RemoveMod( "pas_legion_gunshield" )
                 #endif
 
 				if ( !LTSRebalance_Enabled() )
@@ -135,7 +135,7 @@ bool function CanUseGunShield( entity owner, bool reqZoom = true )
 	}
 	else
 	{
-		return owner.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_predator_cannon"
+		return owner.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_predator_cannon" || owner.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_predator_cannon_ltsrebalance"
 	}
 
 	return true

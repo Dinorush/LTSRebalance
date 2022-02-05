@@ -56,14 +56,15 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 	}
 
     #if SERVER
-    if ( primaryWeapon.HasMod( "LTSRebalance_Smart_Core_Spread" ) )
-        primaryWeapon.RemoveMod( "LTSRebalance_Smart_Core_Spread" )
+    if ( primaryWeapon.HasMod( "Smart_Core_Spread" ) )
+        primaryWeapon.RemoveMod( "Smart_Core_Spread" )
         
 	if ( primaryWeapon.HasMod( "LongRangeAmmo" ) )
 	{
         array<string> mods = primaryWeapon.GetMods()
 		mods.fastremovebyvalue( "LongRangeAmmo" )
-        mods.append( "BasePowerShot" )
+		if( LTSRebalance_Enabled() )
+        	mods.append( "BasePowerShot" )
 		mods.append( "LongRangePowerShot" )
 		if ( mods.contains( "fd_longrange_helper" ) )
 			mods.append( "fd_LongRangePowerShot" )
@@ -74,14 +75,13 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 	else
 	{
         array<string> mods = primaryWeapon.GetMods()
-        mods.append( "BasePowerShot" )
+        if( LTSRebalance_Enabled() )
+        	mods.append( "BasePowerShot" )
 		mods.append( "CloseRangePowerShot" )
 		if ( mods.contains( "fd_closerange_helper" ) )
 			mods.append( "fd_CloseRangePowerShot" )
 		if ( weapon.HasMod( "pas_legion_chargeshot" ) )
 			mods.append( "pas_CloseRangePowerShot" )
-		if ( LTSRebalance_Enabled() )
-			mods.append( "LTSRebalance_CloseRangePowerShot")
 		primaryWeapon.SetMods( mods )
 	}
     
@@ -168,7 +168,7 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
 	#endif
 	if ( IsValid( weapon ) )
 	{
-		if ( weapon.HasMod( "LTSRebalance_pas_legion_spinup" ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
+		if ( ( LTSRebalance_Enabled() && weapon.HasMod( "pas_legion_spinup" ) ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
 		{
 			while( weapon.GetForcedADS() )
 				weapon.ClearForcedADS()
@@ -181,7 +181,7 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
 		foreach( mod in modsToAdd )
 			mods.append( mod )
         if( LTSRebalance_Enabled() && weapon.HasMod( "Smart_Core" ) )
-            mods.append( "LTSRebalance_Smart_Core_Spread" )
+            mods.append( "Smart_Core_Spread" )
 		weapon.SetMods( mods )
 		#endif
 	}

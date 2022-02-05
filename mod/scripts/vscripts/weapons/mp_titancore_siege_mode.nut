@@ -149,9 +149,7 @@ void function GiveSmartCoreMod( entity player )
 	array<string> mods = weapon.GetMods()
 	mods.append( "Smart_Core" )
     if ( LTSRebalance_Enabled() && !mods.contains("BasePowerShot") )
-        mods.append( "LTSRebalance_Smart_Core_Spread" )
-	if ( !LTSRebalance_Enabled() )
-		mods.append( "no_aim_assist" )
+        mods.append( "Smart_Core_Spread" )
 	weapon.SetMods( mods )
 }
 
@@ -166,10 +164,8 @@ void function TakeSmartCoreMod( entity player )
 	entity weapon = weapons[0]
 	array<string> mods = weapon.GetMods()
 	mods.fastremovebyvalue( "Smart_Core" )
-    if ( LTSRebalance_Enabled() && mods.contains("LTSRebalance_Smart_Core_Spread") ) //may not have it, if ended on a Power Shot
-        mods.fastremovebyvalue( "LTSRebalance_Smart_Core_Spread" )
-	if ( !LTSRebalance_Enabled() )
-		mods.fastremovebyvalue( "no_aim_assist" )
+    if ( LTSRebalance_Enabled() && mods.contains("Smart_Core_Spread") ) //may not have it, if ended on a Power Shot
+        mods.fastremovebyvalue( "Smart_Core_Spread" )
 	weapon.SetMods( mods )
 }
 #endif

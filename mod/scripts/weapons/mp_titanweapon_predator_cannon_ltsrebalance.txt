@@ -29,7 +29,7 @@ WeaponData
 	"OnWeaponStartZoomOut"							"OnWeaponStartZoomOut_titanweapon_predator_cannon"
 	"OnWeaponOwnerChanged"							"OnWeaponOwnerChanged_titanweapon_predator_cannon"
 	"OnWeaponNpcPreAttack"							"OnWeaponNpcPreAttack_titanweapon_predator_cannon"
-    "OnWeaponChargeBegin"                           "OnWeaponChargeBegin_AmpCore" // Hijacking to prevent vanilla server crash
+    "OnWeaponChargeBegin"                           "OnWeaponChargeBegin_titanweapon_predator_cannon"
 
 	// Menu Stats
 	"stat_damage" 									"65"
@@ -522,11 +522,6 @@ WeaponData
             "viewkick_roll_softScale" 						"*0.15"
             "viewkick_roll_hardScale" 						"*0.15"
         }
-		no_aim_assist
-		{
-			"aimassist_disable_hipfire"						"1"
-			"aimassist_disable_ads"							"1"
-		}
 		Smart_Core
 		{
 			"smart_ammo_allow_ads_lock"						"1"
@@ -587,7 +582,7 @@ WeaponData
 			"spread_air_ads"  								"16.0"
 			"damage_far_value"								"50"
 			"damage_near_distance"							"800"
-			"damage_far_distance" 							"1600"
+			"damage_far_distance" 							"1300"
 			
 			"fx_muzzle_flash_view"							"P_muzzleflash_predator_PS_FP"
 			"fx_muzzle_flash_world"							"P_muzzleflash_predator_PS"
@@ -596,10 +591,6 @@ WeaponData
 			
 			"npc_accuracy_multiplier_heavy_armor"			"3"
 			"npc_accuracy_multiplier_npc"					"3"
-		}
-		LTSRebalance_CloseRangePowerShot
-		{
-			"damage_far_distance" 							"--300"
 		}
 		pas_CloseRangePowerShot
 		{
@@ -670,34 +661,21 @@ WeaponData
 		{
 			"zoom_time_in"									"*0.9"
 		}
-
-		LTSRebalance_pas_legion_weapon
-		{
-			"ammo_clip_size"   								"100"
-		}
 		pas_legion_weapon
 		{
-			"ammo_clip_size"   								"140"
-		}
-		LTSRebalance_pas_legion_spinup
-		{
-			"ads_move_speed_scale"							"0.9"
+
 		}
 		pas_legion_spinup
 		{
-			"ads_move_speed_scale"							"0.75"
+			"ads_move_speed_scale"							"0.9"
 		}
 		fd_piercing_shots
 		{
 			"pass_through_depth"							"++500"
 		}
-        LTSRebalance_pas_legion_gunshield
+        pas_legion_gunshield
         {
             "zoom_time_in"                                  "*0.67"
-        }
-		pas_legion_gunshield
-        {
-
         }
 		fd_gun_shield_redirect
 		{
