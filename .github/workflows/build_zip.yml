@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Build mod zip
 on:
   release:
     types: [published]
