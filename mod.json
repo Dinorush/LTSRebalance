@@ -3,7 +3,7 @@
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.9.4",
+	"Version": "0.9.4.1",
 
 	"ConVars": [
 		{
