@@ -5,7 +5,7 @@ WeaponData
 	"ammo_clip_size"   								"700"
 	"ammo_default_total"							"700"
 	"ammo_per_shot"                                 "700"
-	"ammo_min_to_fire"								"0"
+	"ammo_min_to_fire"								"700"
     "regen_ammo_refill_rate"                        "100"
     "regen_ammo_refill_start_delay"                 "0.65"
     "ammo_display"									"bar"
@@ -23,7 +23,7 @@ WeaponData
         }
         LTSRebalance_stop_regen
         {
-            "regen_ammo_refill_rate"                "0"
+            "regen_ammo_refill_rate"                "0.001"
         }
 	}
 }
