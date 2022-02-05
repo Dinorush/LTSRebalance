@@ -4,6 +4,9 @@ global function OnWeaponDeactivate_titanweapon_shift_core_sword
 global function OnWeaponPrimaryAttack_titanweapon_shift_core_sword
 global function MpTitanweaponShiftCoreSword_Init
 
+// This file would normally be < 50 lines, but Respawn stinky and I have to add in semi-auto functionality manually
+// since the Sword Core viewmodel has basically 0 forgiveness for timing a "shot" after melee
+
 void function MpTitanweaponShiftCoreSword_Init()
 {
 	PrecacheWeapon( "mp_titanweapon_shift_core_sword" )
@@ -53,7 +56,6 @@ void function Cl_ShiftCore_ReleasedThink( entity player, entity weapon )
 
 void function OnWeaponActivate_titanweapon_shift_core_sword( entity weapon )
 {
-	print( "START: " + Time() )
 	entity owner = weapon.GetWeaponOwner()
 	if ( owner.IsPlayer() && !( "ShiftCore_HoldFire" in owner.s ) )
 	{
@@ -83,9 +85,6 @@ void function OnWeaponDeactivate_titanweapon_shift_core_sword( entity weapon )
 var function OnWeaponPrimaryAttack_titanweapon_shift_core_sword( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
 	entity owner = weapon.GetWeaponOwner()
-	print( "ATTACK CALLED: " + Time() )
-	if ( ( "ShiftCore_HoldFire" in owner.s ) )
-		print( "Hold: " + owner.s.ShiftCore_HoldFire )
 	if ( !( "ShiftCore_HoldFire" in owner.s ) || owner.s.ShiftCore_HoldFire )
 		return 0	
 	

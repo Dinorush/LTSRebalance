@@ -52,7 +52,7 @@ void function LTSRebalance_RecompileKeyValues()
 
 void function LTSRebalance_RecompileKeyValues_Think()
 {
-	string[2] testDummy = [ "mp_titanweapon_predator_cannon", "LTSRebalance_Smart_Core_Spread" ] // Some weapon and a LTSRebalance mod to check if it was compiled
+	string[2] testDummy = [ "mp_titanweapon_sniper", "LTSRebalance" ] // Some weapon and a LTSRebalance mod to check if it was compiled
 
 	int netChanModeOriginal = GetConVarInt( "net_chan_limit_mode" )
 	bool svCheatsOriginal = GetConVarBool( "sv_cheats" )
@@ -118,6 +118,13 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 void function LTSRebalance_HandleAttachments( entity titan )
 {
 	array<entity> weapons = titan.GetMainWeapons()
+	if ( weapons.len() > 0 && weapons[0].GetWeaponClassName() == "mp_titanweapon_predator_cannon" ) // We just replace Predator Cannon because we need to replace the file anyway
+	{
+		array<string> mods = weapons[0].GetMods()
+		titan.TakeWeaponNow( "mp_titanweapon_predator_cannon" )
+		titan.GiveWeapon( "mp_titanweapon_predator_cannon_ltsrebalance", mods )
+		weapons = []
+	}
 	weapons.extend( titan.GetOffhandWeapons() )
 
 	string prefix = "LTSRebalance_"

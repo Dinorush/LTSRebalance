@@ -25,7 +25,8 @@ void function MpTitanWeaponpredatorcannon_Init()
 {
 	PrecacheParticleSystem( SPIN_EFFECT_1P )
 	PrecacheParticleSystem( SPIN_EFFECT_3P )
-
+	if( LTSRebalance_EnabledOnInit() )
+		PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
 	#if SERVER
 	//if ( GetCurrentPlaylistVarInt( "aegis_upgrades", 0 ) == 1 )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_predator_cannon, PredatorCannon_DamagedTarget )
@@ -245,10 +246,7 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 			if( !LTSRebalance_Enabled() )
 				PowerShotCleanup( owner, weapon, ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"] , [] )
 			#else
-			array<string> modsToClean = ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"]
-			if ( LTSRebalance_Enabled() )
-				modsToClean.append( "LTSRebalance_CloseRangePowerShot" )
-			PowerShotCleanup( owner, weapon, modsToClean, [] )
+			PowerShotCleanup( owner, weapon, ["CloseRangePowerShot","fd_CloseRangePowerShot","pas_CloseRangePowerShot"], [] )
 			#endif
 
 			return 1
@@ -388,7 +386,7 @@ bool function IsPredatorCannonActive( entity owner, bool reqZoom = true )
 	}
 	else
 	{
-		return owner.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_predator_cannon"
+		return owner.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_predator_cannon" || owner.GetActiveWeapon.GetWeaponClassName() == "mp_titanweapon_predator_cannon_ltsrebalance"
 	}
 
 	return true
@@ -419,7 +417,7 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 		if ( !target.IsTitan() )
 			return
 		
-		if ( weapon.HasMod( "LTSRebalance_pas_legion_weapon" ) )
+		if ( weapon.HasMod( "pas_legion_weapon" ) )
 		{
 			bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
 			if( isCritical )
