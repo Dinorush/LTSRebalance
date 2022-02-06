@@ -202,12 +202,15 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
 
     if (mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
         EmitSoundAtPosition( TEAM_UNASSIGNED, projectile.GetOrigin(), "explo_40mm_splashed_impact_3p")
+	
+	if ( LTSRebalance_Enabled() ) // Remove crit lock effect of enhanced tracker rounds
+		return
 	#if SERVER
 	entity owner = projectile.GetOwner()
 	if ( !IsAlive( owner ) )
 		return
 
-	if ( !LTSRebalance_Enabled() && mods.contains( "pas_tone_weapon" ) && isCrit )
+	if ( mods.contains( "pas_tone_weapon" ) && isCrit )
  		ApplyTrackerMark( owner, hitEnt )
 	#endif
 }
@@ -326,7 +329,7 @@ void function OnOwnerDeathOrDisembark(entity owner, entity hitEnt, entity tracke
 	OnThreadEnd(
 		function () : ( hitEnt, statusEffectID )
 		{
-			if(hitEnt != null && IsAlive(hitEnt))
+			if( IsValid( hitEnt ) && IsAlive( hitEnt ))
 				StatusEffect_Stop( hitEnt, statusEffectID )
 		}
 	)
@@ -335,7 +338,7 @@ void function OnOwnerDeathOrDisembark(entity owner, entity hitEnt, entity tracke
 
 	if( LTSRebalance_Enabled() )
 	{
-		while( IsAlive( owner ) && IsAlive( hitEnt ) && SmartAmmo_EntHasEnoughTrackedMarks ( trackerRockets, hitEnt ) )
+		while( IsAlive( owner ) && IsAlive( hitEnt ) && SmartAmmo_EntHasEnoughTrackedMarks( trackerRockets, hitEnt ) )
         	wait 0.1
 	}
 	else
@@ -379,7 +382,7 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
     entity projectile = DamageInfo_GetInflictor( damageInfo )
     int flags = DamageInfo_GetCustomDamageType( damageInfo )
 
-    if( projectile.ProjectileGetMods().contains( "LTSRebalance_pas_tone_weapon_on" ) && flags & DF_IMPACT )
+    if( flags & DF_IMPACT && projectile.ProjectileGetMods().contains( "LTSRebalance_pas_tone_weapon_on" ) )
         ApplyTrackerMark( attacker, ent )
 }
 #endif
