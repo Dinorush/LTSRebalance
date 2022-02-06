@@ -53,7 +53,6 @@ void function TitanHealth_Init()
 	RegisterSignal( SIGNAL_TITAN_HEALTH_REGEN )
 	RegisterSignal( SIGNAL_TITAN_SHIELD_REGEN )
 	RegisterSignal( "Doomed" )
-	RegisterSignal( "DoomInvulnEnd" )
 	RegisterSignal( "TitanUnDoomed" )
 	RegisterSignal( "StopShieldRegen" )
 	RegisterSignal( "WeakTitanHealthInitialized" )
@@ -625,11 +624,14 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 	titanSoul.Signal( "Doomed" )
 
 	if ( LTSRebalance_Enabled() )
-		thread SetDoomInvulnThink( soulOwner )
+		AddEntityCallback_OnDamaged( soulOwner, DoomInvuln_OnDamage )
 
 	// allow the damage to go through before resetting the health, so that we get proper damage indicators, etc...
 	// this process should also be in code
 	WaitEndFrame()
+
+	if ( LTSRebalance_Enabled() && IsValid( soulOwner ) )
+		RemoveEntityCallback_OnDamaged( soulOwner, DoomInvuln_OnDamage )
 
 	// grab the soul owner again since there was a wait
 	soulOwner = titanSoul.GetTitan()
@@ -639,7 +641,6 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
     if ( LTSRebalance_Enabled() && !titanSoul.IsDoomed() )
     {
         soulOwner.ClearDoomed()
-		soulOwner.Signal( "DoomInvulnEnd" )
         return
     }
 
@@ -651,7 +652,6 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 		//soulOwner.SetHealthPerSegment( 0 )
 
 		soulOwner.ClearDoomed()
-		soulOwner.Signal( "DoomInvulnEnd" )
 
 		if ( soulOwner.IsPlayer() && PlayerHasAutoEject( soulOwner ) )
 		{
