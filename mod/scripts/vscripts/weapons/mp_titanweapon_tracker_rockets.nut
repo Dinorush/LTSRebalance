@@ -20,7 +20,12 @@ struct
 
 void function MpTitanWeaponTrackerRockets_Init()
 {
+	#if CLIENT
 	AddCallback_PlayerClassChanged( TrackerRockets_OnPlayerClassChanged )
+	#else
+	if( LTSRebalance_EnabledOnInit() )
+		AddCallback_OnPilotBecomesTitan( TrackerRockets_ClearLocksOnDisembark )
+	#endif
 }
 
 void function OnWeaponActivate_titanweapon_tracker_rockets( entity weapon )
@@ -140,21 +145,21 @@ var function OnWeaponNPCPrimaryAttack_titanweapon_tracker_rockets( entity weapon
 {
 	return OnWeaponPrimaryAttack_titanweapon_tracker_rockets( weapon, attackParams )
 }
+
+void function TrackerRockets_ClearLocksOnDisembark( entity player, entity titan )
+{
+	entity trackerRockets = player.GetOffhandWeapon( OFFHAND_ORDNANCE )
+	if ( IsValid( trackerRockets ) && trackerRockets.GetBurstFireShotsPending() > 0 )
+		trackerRockets.SmartAmmo_Clear(true, true)
+}
 #endif
 
+#if CLIENT
 void function TrackerRockets_OnPlayerClassChanged( entity player )
 {
-	#if CLIENT
 	HidePlayerHint( "#WPN_TITAN_TRACKER_ROCKETS_ERROR_HINT" )
-	#else
-		if( !LTSRebalance_Enabled() )
-			return
-			
-		entity trackerRockets = player.GetOffhandWeapon( OFFHAND_ORDNANCE )
-		if ( IsValid( trackerRockets ) && player.IsTitan() )
-			trackerRockets.SmartAmmo_Clear(true, true)
-	#endif
 }
+#endif
 
 //This function checks the player being targeted and removes the lockon status effect IF there are no more lock ons
 void function DelayedDisableToneLockOnNotification(entity target, int statusID)
