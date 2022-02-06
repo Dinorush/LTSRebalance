@@ -1,6 +1,5 @@
 WeaponData
 {
-	// Uses existing script to prevent crashes when joining non-modded server
     "OnWeaponReload"                                "OnWeaponReload_weapon_lstar"
 
     Mods
@@ -56,43 +55,8 @@ WeaponData
 		}
         LTSRebalance_pas_tone_weapon_on
         {
+			"is_burn_mod"						"1" // Used to make the reticle orange
             "impact_effect_table"               "predator_bullet_ps_alt" // Similar explosion effect, but basically no sound (so we can play normal vfx with different sfx)
-            rui_crosshair_index					"2"
         }
-	}
-
-    RUI_CrosshairData
-	{
-        Crosshair_1
-		{
-			"ui"						"ui/crosshair_40mm"
-			"base_spread"				"0.5"
-			Args
-			{
-				isFiring				weapon_is_firing
-			}
-		}
-
-		Crosshair_2
-		{
-			"ui"						"ui/crosshair_40mm_burst"
-			"base_spread"				"0.5"
-			Args
-			{
-				isFiring				weapon_is_firing
-				//chargeLevel			player_chargeLevel
-			}
-		}
-        
-        Crosshair_3
-		{
-			"ui"						"ui/crosshair_40mm"
-			"base_spread"				"0.5"
-			Args
-			{
-				isAmped						weapon_is_active
-                isFiring				    weapon_is_firing
-			}
-		}
 	}
 }
