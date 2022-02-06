@@ -25,7 +25,7 @@ WeaponData
 			"ads_move_speed_scale"							"0.75"
 
 			"charge_time" 									"2.5" // functionally 2/3 of this, so it matches reticle
-			"charge_cooldown_time"							"0.01"
+			"charge_cooldown_time"							"0.01" // needed to prevent the forced 1/3 charge from disappearing
 			"charge_cooldown_delay"   						"0.05"
 			"charge_end_forces_fire"						"0"
 			"charge_require_input"							"0"
