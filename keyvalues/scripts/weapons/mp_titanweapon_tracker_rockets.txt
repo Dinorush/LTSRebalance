@@ -4,8 +4,15 @@ WeaponData
 
 	Mods
 	{
+		directional_notification
+		{
+
+		}
+		
 		LTSRebalance
 		{
+			"damage_near_value"								"370"
+			"damage_far_value"								"370"
 			"deploy_time"								   	"0.35"
 			"projectile_lifetime"							"7.0"
 		}
