@@ -1,13 +1,15 @@
 name: Build mod zip
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+    - 'v*' 
+
 jobs:
   upload-zip:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v2
 
