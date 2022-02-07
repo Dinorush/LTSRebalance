@@ -27,7 +27,6 @@ const int STUN_LASER_TRANSFER_PERM_SHIELD = 750
 struct
 {
 	void functionref(entity,entity,int) stunHealCallback
-	int trackedShieldHealth
 } file
 
 void function MpTitanWeaponStunLaser_Init()
