@@ -24,7 +24,7 @@ jobs:
           files: ./Dinorush.LTSRebalance
           dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
             
-      - name: Release with Notes
+      - name: Attach the mod to the release
         uses: softprops/action-gh-release@v1
         with:
           files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
