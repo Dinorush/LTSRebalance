@@ -6,7 +6,7 @@ WeaponData
 	{
 		directional_notification
 		{
-
+			// For some reason the first mod in this list makes lock-on notifs directional. So this is a placeholder for that.
 		}
 		
 		LTSRebalance
