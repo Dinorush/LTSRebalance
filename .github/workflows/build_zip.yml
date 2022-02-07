@@ -19,7 +19,7 @@ jobs:
         run: |
           echo IMAGE_TAG=$(echo ${{ github.ref }} | tr '[:upper:]' '[:lower:]' | awk '{split($0,a,"/"); print a[3]}') >> $GITHUB_ENV
 
-      - uses: papeloto/action-zip@v1
+      - uses: vimtor/action-zip@v1
         with:
           files: ./Dinorush.LTSRebalance
           dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
