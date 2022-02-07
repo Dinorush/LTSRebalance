@@ -74,7 +74,7 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
     if ( LTSRebalance_Enabled() && ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) ) )
         weapon.AddMod( "pas_legion_gunshield" )
     #endif
-	if( !LTSRebalance_Enabled() || ( !weapon.HasMod( "pas_legion_gunshield") && owner.IsPlayer() ) )
+	if( ( !LTSRebalance_Enabled() || !weapon.HasMod( "pas_legion_gunshield") ) && owner.IsPlayer() )
 		owner.SetMeleeDisabled()
 
 	OnThreadEnd(
