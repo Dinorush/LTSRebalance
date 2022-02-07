@@ -18,4 +18,4 @@ All balancing/changes can be viewed in [this changelog document](https://docs.go
 
 ## If disabling mod in main menu and you want to play Tone - IMPORTANT
 
-Either don't use Tone or make sure to run `sv_cheats 1; weapon_reparse; sv_cheats 0` in the multiplayer menu or your own private lobby. While most things should not be impacted, 40mm will crash your client to main menu if it reloads. Until Northstar forces weapon reparsing when disabling/enabling mods on the main menu, this problem will persist.
+Make sure to run `sv_cheats 1; weapon_reparse; sv_cheats 0` in the multiplayer menu or your own private lobby. While most things should not be impacted, 40mm will crash your client to main menu if it reloads. Until Northstar forces weapon reparsing when disabling/enabling mods on the main menu, this problem will persist.
