@@ -15,3 +15,7 @@ This mod enables a new setting, "LTS Rebalance", under the "Promode" category in
 ## Balance Changelog
 
 All balancing/changes can be viewed in [this changelog document](https://docs.google.com/document/d/10mZtK7w7MOTv9kGNQru96G7XpEZqv8_dUw_I29RhDj4/edit?usp=sharing).
+
+## If disabling mod in main menu and you want to play Tone - IMPORTANT
+
+Either don't use Tone or make sure to run `sv_cheats 1; weapon_reparse; sv_cheats 0` in the multiplayer menu or your own private lobby. While most things should not be impacted, 40mm will crash your client to main menu if it reloads. Until Northstar forces weapon reparsing when disabling/enabling mods on the main menu, this problem will persist.
