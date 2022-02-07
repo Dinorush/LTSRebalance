@@ -1,6 +1,11 @@
 WeaponData
 {
 	"projectile_lifetime"							"30.0"
+	MP_BASE
+	{
+		"damage_near_value_titanarmor"   			"350"
+		"damage_far_value_titanarmor"				"350"
+	}
 
 	Mods
 	{
