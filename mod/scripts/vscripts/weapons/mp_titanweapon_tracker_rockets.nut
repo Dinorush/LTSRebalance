@@ -36,7 +36,6 @@ void function OnWeaponActivate_titanweapon_tracker_rockets( entity weapon )
 		SmartAmmo_SetMissileHomingSpeed( weapon, 200 )
 		SmartAmmo_SetUnlockAfterBurst( weapon, false )
 		SmartAmmo_SetAllowUnlockedFiring( weapon, false )
-		SmartAmmo_SetWarningIndicatorDelay( weapon, 9999.0 ) // Disable directional locking notif
 		weapon.s.missileThinkThread <- MissileThink
 		weapon.s.initialized <- true
 	}
