@@ -1,13 +1,15 @@
 name: Build mod zip
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+    - 'v*' 
+
 jobs:
   upload-zip:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v2
 
@@ -23,10 +25,10 @@ jobs:
         with:
           files: ./Dinorush.LTSRebalance
           dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v2
+            
+      - name: Attach the mod to the release
+        uses: softprops/action-gh-release@v1
         with:
-          path: |
-            ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
-
+          files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
