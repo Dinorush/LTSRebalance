@@ -150,7 +150,7 @@ void function TrackerRockets_ClearLocksOnDisembark( entity player, entity titan 
 {
 	entity trackerRockets = player.GetOffhandWeapon( OFFHAND_ORDNANCE )
 	if ( IsValid( trackerRockets ) && trackerRockets.GetBurstFireShotsPending() > 0 )
-		trackerRockets.SmartAmmo_Clear(true, true)
+		trackerRockets.SmartAmmo_Clear( true, false )
 }
 #endif
 
