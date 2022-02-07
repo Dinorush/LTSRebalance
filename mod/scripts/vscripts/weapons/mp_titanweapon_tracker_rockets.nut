@@ -24,7 +24,7 @@ void function MpTitanWeaponTrackerRockets_Init()
 	AddCallback_PlayerClassChanged( TrackerRockets_OnPlayerClassChanged )
 	#else
 	if( LTSRebalance_EnabledOnInit() )
-		AddCallback_OnPilotBecomesTitan( TrackerRockets_ClearLocksOnDisembark )
+		AddCallback_OnTitanBecomesPilot( TrackerRockets_ClearLocksOnDisembark )
 	#endif
 }
 
