@@ -3,6 +3,7 @@ global function WeaponHasAmmoToUse
 global function LTSRebalance_Init
 global function LTSRebalance_Enabled
 global function LTSRebalance_EnabledOnInit
+global function LTSRebalance_Precache
 
 struct {
 	bool ltsrebalance_enabled = false
@@ -14,6 +15,7 @@ void function LTSRebalance_Init()
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
+	LTSRebalance_Precache()
 	#if SERVER
 		LTSRebalance_RecompileKeyValues() // Recompiles KeyValues if it detects that LTSRebalance weapon mods are missing
 		if ( !file.ltsrebalance_enabled )
@@ -39,6 +41,18 @@ bool function LTSRebalance_EnabledOnInit()
 bool function LTSRebalance_Enabled() 
 {
 	return file.ltsrebalance_enabled
+}
+
+void function LTSRebalance_Precache()
+{
+	if ( !file.ltsrebalance_enabled )
+		return
+
+	PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
+	PrecacheWeapon( "mp_titanweapon_sticky_40mm_ltsrebalance" )
+	table damageSourceTable = expect table( getconsttable()["eDamageSourceId"] )
+	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
+	damageSourceTable.mp_titanweapon_sticky_40mm_ltsrebalance <- eDamageSourceId.mp_titanweapon_sticky_40mm
 }
 
 #if SERVER
