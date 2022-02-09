@@ -25,8 +25,6 @@ void function MpTitanWeaponpredatorcannon_Init()
 {
 	PrecacheParticleSystem( SPIN_EFFECT_1P )
 	PrecacheParticleSystem( SPIN_EFFECT_3P )
-	if( LTSRebalance_EnabledOnInit() )
-		PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
 	#if SERVER
 	//if ( GetCurrentPlaylistVarInt( "aegis_upgrades", 0 ) == 1 )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_predator_cannon, PredatorCannon_DamagedTarget )

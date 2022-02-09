@@ -35,9 +35,6 @@ void function MpTitanweapon40mm_Init()
 	PrecacheParticleSystem( $"wpn_mflash_40mm_smoke_side" )
 	PrecacheParticleSystem( $"P_scope_glint" )
 
-	if( LTSRebalance_EnabledOnInit() )
-		PrecacheWeapon( "mp_titanweapon_sticky_40mm_ltsrebalance" )
-
 	#if SERVER
 		PrecacheModel( TITAN_40MM_SHELL_EJECT )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_sticky_40mm, Tracker40mm_DamagedTarget )
