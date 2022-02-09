@@ -118,12 +118,17 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 void function LTSRebalance_HandleAttachments( entity titan )
 {
 	array<entity> weapons = titan.GetMainWeapons()
-	if ( weapons.len() > 0 && weapons[0].GetWeaponClassName() == "mp_titanweapon_predator_cannon" ) // We just replace Predator Cannon because we need to replace the file anyway
+	if ( weapons.len() > 0 ) // We replace certain weapons that would cause errors in vanilla or need new files for other reasons
 	{
-		array<string> mods = weapons[0].GetMods()
-		titan.TakeWeaponNow( "mp_titanweapon_predator_cannon" )
-		titan.GiveWeapon( "mp_titanweapon_predator_cannon_ltsrebalance", mods )
-		weapons = []
+		string weaponName = weapons[0].GetWeaponClassName()
+		switch ( weaponName )
+		{
+			case "mp_titanweapon_predator_cannon":
+			case "mp_titanweapon_sticky_40mm":
+				array<string> mods = weapons[0].GetMods()
+				titan.TakeWeaponNow( weaponName )
+				titan.GiveWeapon( weaponName + "_ltsrebalance", mods )
+		}
 	}
 	weapons.extend( titan.GetOffhandWeapons() )
 
