@@ -2,8 +2,6 @@ WeaponData
 {
     // We need to replace this file instead of merely using standard KeyValue modding because its attachments
     // change too many values and hit the cap. This file consolidates common Power Shot changes to make space.
-    // Of course, this requires that Power Shot be modded to add the new baseline Power Shot attachment.
-
 
 	// General
 	"printname"   									"#WPN_TITAN_PREDATOR_CANNON"
@@ -503,7 +501,7 @@ WeaponData
 			"npc_accuracy_multiplier_heavy_armor"			"1.5"
 			"npc_accuracy_multiplier_npc"					"1.5"
 		}
-        LTSRebalance_Smart_Core_Spread
+        Smart_Core_Spread
         {
             "spread_stand_ads"								"*0.1"
 			"spread_crouch_ads"   							"*0.1"
