@@ -83,6 +83,14 @@ void function EarnMeterMP_ReplaceReward( entity player, EarnObject reward, float
 		PlayerEarnMeter_EnableReward( player )
 }
 
+string function EarnMeterModeGetKey( int trgt )
+{
+	foreach ( key, val in eEarnMeterMode )
+		if ( val == trgt )
+			return key
+	return "NONE"
+}
+
 void function EarnMeterMP_PlayerLifeThink( entity player )
 {
 	player.EndSignal( "OnDeath" )
@@ -92,6 +100,11 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 	float pilotRewardFrac = PlayerEarnMeter_GetRewardFrac( player )
 	int lastEarnMeterMode = PlayerEarnMeter_GetMode( player )
 	float lastPassiveGainTime = Time()
+
+	print( "Pilot Reward: " + pilotReward.ref )
+	print( "Pilot Reward Frac: " + pilotRewardFrac )
+	print( "Earn Meter Mode: " + EarnMeterModeGetKey( lastEarnMeterMode ) )
+	print( "Time: " + Time() )
 
 	OnThreadEnd(
 		function() : ( player, pilotReward, pilotRewardFrac )
