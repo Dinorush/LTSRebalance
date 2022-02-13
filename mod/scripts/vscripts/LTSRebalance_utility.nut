@@ -13,7 +13,7 @@ void function LTSRebalance_Init()
 {
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
-	
+
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
 	LTSRebalance_Precache()
 	#if SERVER
@@ -66,6 +66,8 @@ void function LTSRebalance_RecompileKeyValues()
 
 void function LTSRebalance_RecompileKeyValues_Think()
 {
+	wait 1.0 // Sometimes, reparse can fail if done too early. Might be a better way to handle it, but wait is ez
+
 	string[2] testDummy = [ "mp_titanweapon_sniper", "LTSRebalance" ] // Some weapon and a LTSRebalance mod to check if it was compiled
 
 	int netChanModeOriginal = GetConVarInt( "net_chan_limit_mode" )
@@ -74,10 +76,10 @@ void function LTSRebalance_RecompileKeyValues_Think()
 	SetConVarBool( "sv_cheats", true )			// Need sv_cheats to execute command
 	
 	// tries limits this to not run for more than 10s; there are probably bigger issues if that happens
-	for ( int tries = 0; !GetWeaponMods_Global( testDummy[0] ).contains( testDummy[1] ) && tries < 100; tries++ )
+	for ( int tries = 0; !GetWeaponMods_Global( testDummy[0] ).contains( testDummy[1] ) && tries < 10; tries++ )
 	{
 		ServerCommand( "weapon_reparse" )
-		WaitFrame()
+		wait 1.0
 	}
 
 	SetConVarBool( "sv_cheats", svCheatsOriginal )
