@@ -280,6 +280,8 @@ void function UpdateTitanArmBadge( entity soul )
 		return
 
 	entity armBadge = soul.soul.armBadge
+	if( !IsValid(armBadge) )
+        return
 
 	//armBadge.SetModel( model )
 	//armBadge.SetSkin( titan.GetSkin() )
