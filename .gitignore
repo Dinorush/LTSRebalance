@@ -1,0 +1,7 @@
+/*
+
+!/.gitignore
+!/Dinorush.LTSRebalance/
+
+# Folder to not ignore
+!/.github/
