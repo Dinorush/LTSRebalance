@@ -1,6 +1,6 @@
 WeaponData
 {
-	"OnWeaponAttemptOffhandSwitch"				"OnWeaponAttemptOffhandSwitch_titanweapon_stun_laser"
+	"OnWeaponAttemptOffhandSwitch"				"OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse"
 
 	Mods
 	{

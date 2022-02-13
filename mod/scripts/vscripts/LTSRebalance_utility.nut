@@ -1,9 +1,10 @@
 untyped
-global function WeaponHasAmmoToUse
 global function LTSRebalance_Init
 global function LTSRebalance_Enabled
 global function LTSRebalance_EnabledOnInit
 global function LTSRebalance_Precache
+global function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse
+global function WeaponHasAmmoToUse
 
 struct {
 	bool ltsrebalance_enabled = false
@@ -11,17 +12,18 @@ struct {
 
 void function LTSRebalance_Init()
 {
-	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
-
-	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
-	LTSRebalance_Precache()
 	#if SERVER
 		LTSRebalance_RecompileKeyValues() // Recompiles KeyValues if it detects that LTSRebalance weapon mods are missing
-		if ( !file.ltsrebalance_enabled )
-			return
-		MpTitanweaponShiftCoreSword_Init()
-		
+	#endif
+
+	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
+	if ( !file.ltsrebalance_enabled )
+		return
+
+	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
+	LTSRebalance_Precache()
+	#if SERVER
 		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
 		AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
 		AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
@@ -48,11 +50,10 @@ void function LTSRebalance_Precache()
 	if ( !file.ltsrebalance_enabled )
 		return
 
+	MpTitanweaponShiftCoreSword_Init()
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
-	PrecacheWeapon( "mp_titanweapon_sticky_40mm_ltsrebalance" )
 	table damageSourceTable = expect table( getconsttable()["eDamageSourceId"] )
 	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
-	damageSourceTable.mp_titanweapon_sticky_40mm_ltsrebalance <- eDamageSourceId.mp_titanweapon_sticky_40mm
 }
 
 #if SERVER
@@ -140,7 +141,6 @@ void function LTSRebalance_HandleAttachments( entity titan )
 		switch ( weaponName )
 		{
 			case "mp_titanweapon_predator_cannon":
-			case "mp_titanweapon_sticky_40mm":
 				array<string> mods = weapons[0].GetMods()
 				titan.TakeWeaponNow( weaponName )
 				titan.GiveWeapon( weaponName + "_ltsrebalance", mods )
@@ -242,4 +242,12 @@ void function UnstableReactor_OnDeath( entity titan, entity attacker, var damage
 bool function WeaponHasAmmoToUse( entity weapon )
 {
 	return weapon.GetWeaponPrimaryClipCount() >= weapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
+}
+
+bool function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse( entity weapon )
+{
+	if ( !LTSRebalance_Enabled() )
+		return true
+
+	return WeaponHasAmmoToUse( weapon )
 }
