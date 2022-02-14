@@ -19,7 +19,7 @@ jobs:
 
       - uses: vimtor/action-zip@v1
         with:
-          files: ./Dinorush.LTSRebalance, ./Dinorush.LTSRebalance_KVFix
+          files: ./Dinorush.LTSRebalance ./Dinorush.LTSRebalance_KVFix
           dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
             
       - name: Attach the mod to the release
