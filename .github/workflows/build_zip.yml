@@ -12,6 +12,10 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Create folder
+        run: |
+          mkdir -p Dinorush.LTSRebalance_ && cp -R Dinorush.LTSRebalance/ Dinorush.LTSRebalance_KVFix/ Dinorush.LTSRebalance_/
 
       - name: Prepare image tag
         run: |
@@ -19,7 +23,7 @@ jobs:
 
       - uses: vimtor/action-zip@v1
         with:
-          files: ./Dinorush.LTSRebalance ./Dinorush.LTSRebalance_KVFix
+          files: ./Dinorush.LTSRebalance_
           dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
             
       - name: Attach the mod to the release
