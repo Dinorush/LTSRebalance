@@ -5,13 +5,6 @@
 	"RequiredOnClient": true,
 	"Version": "0.9.4.5",
 
-	"ConVars": [
-		{
-			"Name": "ltsrebalance_force_recompile",
-			"DefaultValue": "1"
-		}
-	],
-
 	"Scripts": [
 		{
 			"Path": "weapons/mp_titanweapon_shift_core_sword.nut",
