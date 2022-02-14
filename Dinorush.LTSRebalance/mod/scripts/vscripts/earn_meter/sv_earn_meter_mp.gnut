@@ -142,10 +142,10 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 				pilotRewardFrac = PlayerEarnMeter_GetRewardFrac( player )
 			}
 
-			if ( desiredEarnMeterMode == eEarnMeterMode.DEFAULT )
+			if ( desiredEarnMeterMode == eEarnMeterMode.DEFAULT || desiredEarnMeterMode == eEarnMeterMode.PET )
 			{
-				if ( !IsTitanAvailable( player ) && lastEarnMeterMode == eEarnMeterMode.PET ) // this should only be the case after player has dropped their titan
-					EarnMeterMP_ReplaceReward( player, pilotReward, pilotRewardFrac )
+				// Occurs at any point where the player is a pilot with a titan; after drop, disembarking, or ejection.
+				EarnMeterMP_ReplaceReward( player, pilotReward, pilotRewardFrac )
 
 				if ( PlayerEarnMeter_GetRewardFrac( player ) != 0 )
 					PlayerEarnMeter_EnableReward( player )
@@ -159,6 +159,16 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 			}
 			else if ( desiredEarnMeterMode == eEarnMeterMode.CORE_ACTIVE ) // Enables smoke after core use (doesn't show up during active, so looks fine)
 				PlayerEarnMeter_EnableReward( player )
+
+			if ( !player.IsTitan() && PlayerEarnMeter_GetReward( player ).ref == "core_electric_smoke" )
+			{
+				print( "Pilot E-smoke Error Detected" )
+				print( "Pilot Reward: " + pilotReward.ref )
+				print( "Pilot Reward Frac: " + pilotRewardFrac )
+				print( "Desired Earn Meter Mode: " + EarnMeterModeGetKey( desiredEarnMeterMode ) )
+				print( "Last Earn Meter Mode: " + EarnMeterModeGetKey( lastEarnMeterMode ) )
+				print( "Time: " + Time() )
+			}
 
 			lastEarnMeterMode = desiredEarnMeterMode
 		}
