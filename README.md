@@ -4,6 +4,10 @@
 
 Does a comprehensive rebalancing of titans and titan kits focused on LTS balance.
 
+### Installation
+
+Download the zip from the [latest release](https://github.com/Dinorush/LTSRebalance/releases) and extract the files to `Titanfall2/R2Northstar/mods`.
+
 ### Activation
 
 This mod enables a new setting, "LTS Rebalance", under the "Promode" category in private match settings. When turned on, LTS Rebalance changes will apply.
@@ -19,7 +23,7 @@ These weapons are entirely replaced, and will not work with mods that attempt to
 - Predator Cannon
   - Needed to fit more attachments for rebalance features
 
-## What is Dinorush.LTSRebalance_KVFix?
+### What is Dinorush.LTSRebalance_KVFix?
 
 Basic ver: Northstar currently does not reload all the files it should when reloading mods via the mod menu. This mod fixes the problem if LTSRebalance is enabled/disabled, otherwise you may experience weird gameplay behavior or crashes. (Note: will cause a short "freeze" when loaded into MP)
 
