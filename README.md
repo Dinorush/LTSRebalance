@@ -22,5 +22,17 @@ These weapons are entirely replaced, and will not work with mods that attempt to
 
 - Predator Cannon
   - Needed to fit more attachments for rebalance features
-- 40mm Tracker Cannon
-  - Needed to prevent crash on vanilla servers, until Northstar forces `weapon_reparse` when mods are disabled on the main menu.
+
+## What is Dinorush.LTSRebalance_KVFix?
+
+Basic ver: Northstar currently does not reload all the files it should when reloading mods via the mod menu. This mod fixes the problem if LTSRebalance is enabled/disabled, otherwise you may experience weird gameplay behavior or crashes. (Note: will cause a short "freeze" when loaded into MP)
+
+Technical ver: Northstar doesn't reparse weapon keyvalue files when reloading mods. This mod checks whether LTSRebalance is on and whether LTSRebalance keyvalue files are loaded. If it detects that these two checks do not match, it will attempt a `weapon_reparse` when possible. Otherwise, the user can get incorrect keyvalue desyncs during gameplay or even crashes for certain function calls that don't work in vanilla.
+
+### If I want to disable LTSRebalance, should I also disable LTSRebalance_KVFix?
+
+**No.** This mod exists specifically for the case that LTSRebalance is disabled; it should be left on.
+
+### Can I turn off LTSRebalance_KVFix and still use LTSRebalance?
+
+Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you ever use the mod menu to enable/disable LTSRebalance, you will need to manually run `weapon_reparse` with `sv_cheats` on in the multiplayer menu/a private match or reboot your game to avoid the aforementioned issues. Unless you know what you're doing, I wouldn't recommend turning KVFix off.
