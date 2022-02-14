@@ -101,18 +101,12 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 	int lastEarnMeterMode = PlayerEarnMeter_GetMode( player )
 	float lastPassiveGainTime = Time()
 
-	print( player.GetPlayerName() + " Earn Meter Start Info" )
-	print( "Pilot Reward: " + pilotReward.ref )
-	print( "Pilot Reward Frac: " + pilotRewardFrac )
-	print( "Earn Meter Mode: " + EarnMeterModeGetKey( lastEarnMeterMode ) )
-	print( "Time: " + Time() )
-
 	OnThreadEnd(
 		function() : ( player, pilotReward, pilotRewardFrac )
 		{
 			if ( !IsValid( player ) )
 				return
-				
+
 			// Resets the meter to the pilot version if the player dies in a titan (otherwise pilot gets e-smoke earn meter, which is bad)
 			int earnMode = PlayerEarnMeter_GetMode( player )
 			if( earnMode == eEarnMeterMode.CORE || earnMode == eEarnMeterMode.CORE_ACTIVE )
@@ -169,7 +163,7 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 				print( "Pilot E-smoke Error Detected for " + player.GetPlayerName() )
 				print( "Pilot Reward: " + pilotReward.ref )
 				print( "Pilot Reward Frac: " + pilotRewardFrac )
-				print( "Desired Earn Meter Mode: " + EarnMeterModeGetKey( desiredEarnMeterMode ) )
+				print( "Earn Meter Mode: " + EarnMeterModeGetKey( desiredEarnMeterMode ) )
 				print( "Last Earn Meter Mode: " + EarnMeterModeGetKey( lastEarnMeterMode ) )
 				print( "Time: " + Time() )
 			}
