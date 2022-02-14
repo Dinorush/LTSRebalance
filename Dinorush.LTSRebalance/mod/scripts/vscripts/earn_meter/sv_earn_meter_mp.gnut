@@ -83,14 +83,6 @@ void function EarnMeterMP_ReplaceReward( entity player, EarnObject reward, float
 		PlayerEarnMeter_EnableReward( player )
 }
 
-string function EarnMeterModeGetKey( int trgt )
-{
-	foreach ( key, val in eEarnMeterMode )
-		if ( val == trgt )
-			return key
-	return "NONE"
-}
-
 void function EarnMeterMP_PlayerLifeThink( entity player )
 {
 	player.EndSignal( "OnDeath" )
@@ -151,16 +143,6 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 			}
 			else if ( desiredEarnMeterMode == eEarnMeterMode.CORE_ACTIVE ) // Enables smoke after core use (doesn't show up during active, so looks fine)
 				PlayerEarnMeter_EnableReward( player )
-
-			if ( !player.IsTitan() && PlayerEarnMeter_GetReward( player ).ref == "core_electric_smoke" )
-			{
-				print( "Pilot E-smoke Error Detected for " + player.GetPlayerName() )
-				print( "Pilot Reward: " + pilotReward.ref )
-				print( "Pilot Reward Frac: " + pilotRewardFrac )
-				print( "Earn Meter Mode: " + EarnMeterModeGetKey( desiredEarnMeterMode ) )
-				print( "Last Earn Meter Mode: " + EarnMeterModeGetKey( lastEarnMeterMode ) )
-				print( "Time: " + Time() )
-			}
 
 			lastEarnMeterMode = desiredEarnMeterMode
 		}
