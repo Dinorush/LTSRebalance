@@ -108,6 +108,12 @@ void function OnWeaponStartZoomOut_titanweapon_particle_accelerator( entity weap
 
 void function OnWeaponActivate_titanweapon_particle_accelerator( entity weapon )
 {
+	if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_stun_laser" )
+	{
+		OnWeaponActivate_titanweapon_stun_laser( weapon )
+		return
+	}
+	
 	if ( !( "initialized" in weapon.s ) )
 	{
 		weapon.s.initialized <- true

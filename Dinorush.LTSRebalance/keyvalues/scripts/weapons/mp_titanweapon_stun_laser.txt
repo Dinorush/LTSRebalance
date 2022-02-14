@@ -1,6 +1,6 @@
 WeaponData
 {
-	"OnWeaponActivate"							  	"OnWeaponActivate_titanweapon_stun_laser"
+	"OnWeaponActivate"							  	"OnWeaponActivate_titanweapon_particle_accelerator"
 	
 	Mods
 	{

@@ -1,6 +1,6 @@
 WeaponData
 {
-    "OnWeaponReload"                                "OnWeaponReload_titanweapon_40mm"
+    "OnWeaponReload"                                "OnWeaponReload_weapon_lstar"
 
     Mods
     {
