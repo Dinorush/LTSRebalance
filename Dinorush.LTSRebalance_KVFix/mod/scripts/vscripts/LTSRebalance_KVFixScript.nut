@@ -4,10 +4,7 @@ global function LTSRebalance_KVFixUI_Init
 void function LTSRebalance_KVFixUI_Init()
 {
 	bool ornull modOn = NSIsModEnabled( "Dinorush's LTS Rebalance" )
-	if ( modOn != null )
-		SetConVarBool( "ltsrebalance_mod_on", NSIsModEnabled( "Dinorush's LTS Rebalance" ) )
-	else
-		SetConVarBool( "ltsrebalance_mod_on", false )
+	SetConVarBool( "ltsrebalance_mod_on", modOn ? true : false )
 }
 #else
 global function LTSRebalance_KVFix_Init
