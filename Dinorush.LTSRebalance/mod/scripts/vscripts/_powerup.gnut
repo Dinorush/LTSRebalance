@@ -42,7 +42,7 @@ void function RespawnPowerups()
 	foreach ( entity spawnpoint in file.powerupSpawns )
 	{
 		PowerUp powerupDef = GetPowerUpFromItemRef( expect string( spawnpoint.kv.powerUpType ) )
-		if ( editSpawns && index < 3 && powerupDef.spawnFunc() )
+		if ( editSpawns && index < LTSBatterySpawns[map].len() && powerupDef.spawnFunc() )
 			spawnpoint.SetOrigin( LTSBatterySpawns[map][index++] )
 
 		thread PowerupSpawnerThink( spawnpoint, powerupDef )
