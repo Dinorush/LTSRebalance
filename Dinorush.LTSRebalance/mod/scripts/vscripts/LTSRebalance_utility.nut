@@ -13,13 +13,13 @@ struct {
 void function LTSRebalance_Init()
 {
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
+	LTSRebalance_Precache()
 
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
 	if ( !file.ltsrebalance_enabled )
 		return
 
-	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
-	LTSRebalance_Precache()
+	LTSRebalance_WeaponInit()
 	#if SERVER
 		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
 		AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
@@ -44,13 +44,16 @@ bool function LTSRebalance_Enabled()
 
 void function LTSRebalance_Precache()
 {
-	if ( !file.ltsrebalance_enabled )
-		return
-
-	MpTitanweaponShiftCoreSword_Init()
+	PrecacheWeapon( "mp_titanweapon_shift_core_sword" )
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
 	table damageSourceTable = expect table( getconsttable()["eDamageSourceId"] )
 	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
+}
+
+void function LTSRebalance_WeaponInit()
+{
+	MpTitanweaponShiftCoreSword_Init()
+	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 }
 
 #if SERVER

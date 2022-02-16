@@ -9,8 +9,6 @@ global function MpTitanweaponShiftCoreSword_Init
 
 void function MpTitanweaponShiftCoreSword_Init()
 {
-	PrecacheWeapon( "mp_titanweapon_shift_core_sword" )
-
 	#if SERVER
 	AddClientCommandCallback( "AllowShiftCoreMelee", AllowShiftCoreMelee )
 	#endif
