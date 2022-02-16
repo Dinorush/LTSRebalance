@@ -3,7 +3,6 @@ global function PowerUps_Init
 
 struct {
 	array<entity> powerupSpawns
-	
 } file
 
 const table< string, array<vector> > LTSBatterySpawns = {
