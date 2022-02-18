@@ -23,6 +23,12 @@ These weapons are entirely replaced, and will not work with mods that attempt to
 - Predator Cannon
   - Needed to fit more attachments for rebalance features
 
+## FAQs
+
+### My game bugs out/crashed when I played Tone on normal servers.
+
+Recent Northstar updates broke something, and joining normal servers with the mod on no longer fully disables it (has the same issue as what KVFix fixes below). Until this is fixed, you need to disable the mod (not KVFix) on the main menu to join normal servers and not get wack behavior.
+
 ### What is Dinorush.LTSRebalance_KVFix?
 
 Basic ver: Northstar currently does not reload all the files it should when reloading mods via the mod menu. This mod fixes the problem if LTSRebalance is enabled/disabled, otherwise you may experience weird gameplay behavior or crashes. (Note: will cause a short "freeze" when loaded into MP)
