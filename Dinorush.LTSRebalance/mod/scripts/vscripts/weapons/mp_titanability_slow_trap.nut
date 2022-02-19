@@ -178,12 +178,12 @@ function DeploySlowTrap( entity projectile )
 
 	damageArea.EndSignal( "OnDestroy" )
 
-	wait SLOW_TRAP_BUILD_TIME
+	wait LTSRebalance_Enabled() ? LTSREBALANCE_SLOW_TRAP_BUILD_TIME : SLOW_TRAP_BUILD_TIME
 
 	AddEntityCallback_OnDamaged( damageArea, OnSlowTrapDamaged )
 	damageArea.SetTakeDamageType( DAMAGE_YES )
 
-	wait SLOW_TRAP_LIFETIME
+	wait LTSRebalance_Enabled() ? LTSREBALANCE_SLOW_TRAP_LIFETIME : SLOW_TRAP_LIFETIME
 }
 
 void function OnSlowTrapDamaged( entity damageArea, var damageInfo )
