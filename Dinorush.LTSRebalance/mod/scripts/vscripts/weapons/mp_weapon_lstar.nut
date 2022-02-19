@@ -68,7 +68,7 @@ void function OnWeaponCooldown_weapon_lstar( entity weapon )
 
 void function OnWeaponReload_weapon_lstar( entity weapon, int milestoneIndex )
 {
-	if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_40mm" )
+	if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_sticky_40mm" )
 	{
 		OnWeaponReload_titanweapon_40mm( weapon, milestoneIndex )
 		return
