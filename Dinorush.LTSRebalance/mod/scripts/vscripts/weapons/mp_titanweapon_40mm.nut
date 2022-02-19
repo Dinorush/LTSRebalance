@@ -129,8 +129,10 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 
 void function OnWeaponReload_titanweapon_40mm( entity weapon, int milestone )
 {
+	#if SERVER
     if( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
         weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
+	#endif
 }
 
 #if CLIENT
