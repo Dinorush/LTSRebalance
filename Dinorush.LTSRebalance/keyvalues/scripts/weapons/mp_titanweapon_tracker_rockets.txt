@@ -1,16 +1,12 @@
 WeaponData
 {
 	"projectile_lifetime"							"30.0"
-	MP_BASE
-	{
-		"damage_near_value_titanarmor"   			"350"
-		"damage_far_value_titanarmor"				"350"
-	}
-
 	Mods
 	{
 		LTSRebalance
 		{
+			"damage_near_value_titanarmor"   				"350"
+			"damage_far_value_titanarmor"					"350"
 			"damage_near_value"								"370"
 			"damage_far_value"								"370"
 			"deploy_time"								   	"0.35"
@@ -19,8 +15,8 @@ WeaponData
 		
 		LTSRebalance_pas_tone_rockets
 		{
-			"burst_fire_count"								"8"
-			"smart_ammo_max_targeted_burst"					"8"
+			"burst_fire_count"								"7"
+			"smart_ammo_max_targeted_burst"					"7"
 			"fire_rate"									 	"8.6"
 		}
 	}
