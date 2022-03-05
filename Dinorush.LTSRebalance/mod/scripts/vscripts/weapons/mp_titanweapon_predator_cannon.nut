@@ -20,6 +20,7 @@ const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 
 const float PAS_LEGION_SMARTCORE_MAX_MOD = 0.5 // added to 1
 const float PAS_LEGION_SMARTCORE_MAX_TIME = 3.0
+const float PAS_LEGION_WEAPON_RESTORE_FRAC = 0.7
 
 void function MpTitanWeaponpredatorcannon_Init()
 {
@@ -107,6 +108,7 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 			weapon.s.lockStartTime <- Time()
 			weapon.s.locking <- true
 			weapon.s.smartArrayTargets <- {}
+			weapon.s.ammoRestoreBuffer <- 0.0
 		#endif
 	}
 
@@ -418,10 +420,13 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 		if ( weapon.HasMod( "pas_legion_weapon" ) )
 		{
 			bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
-			if( isCritical )
+			if ( isCritical )
 			{
-				int newAmmo = int( min ( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + 1 ) )
-				weapon.SetWeaponPrimaryClipCount( newAmmo ) 
+				weapon.s.ammoRestoreBuffer += ( weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1 ) * PAS_LEGION_WEAPON_RESTORE_FRAC
+				int regenAmt = int( weapon.s.ammoRestoreBuffer )
+				weapon.s.ammoRestoreBuffer -= float( regenAmt )
+				int newAmmo = minint( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + regenAmt )
+				weapon.SetWeaponPrimaryClipCount( newAmmo )
 			}
 		}
 	}
