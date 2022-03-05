@@ -111,15 +111,11 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 				bolt.kv.gravity = 0.05
 			}
 		}
-        if ( LTSRebalance_Enabled() && weapon.HasMod( "pas_tone_weapon" ) )
+
+        if ( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
         {
-            if( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
-            {
-                weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
-                weapon.EmitWeaponSound_1p3p( "Weapon_40mm_Fire_Amped_1P", "Weapon_40mm_Fire_Amped_3P" )
-            }
-            else
-                weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
+			weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
+			weapon.EmitWeaponSound_1p3p( "Weapon_40mm_Fire_Amped_1P", "Weapon_40mm_Fire_Amped_3P" )
         }
 	}
 
@@ -202,7 +198,7 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
 {
 	array<string> mods = projectile.ProjectileGetMods()
 
-    if (mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
+    if ( mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
         EmitSoundAtPosition( TEAM_UNASSIGNED, projectile.GetOrigin(), "explo_40mm_splashed_impact_3p")
 	
 	if ( LTSRebalance_Enabled() ) // Remove crit lock effect of enhanced tracker rounds
@@ -381,11 +377,22 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 
 	if ( !LTSRebalance_Enabled() )
 		return
+
     entity projectile = DamageInfo_GetInflictor( damageInfo )
     int flags = DamageInfo_GetCustomDamageType( damageInfo )
+	array<string> mods = projectile.ProjectileGetMods()
 
-    if( flags & DF_IMPACT && projectile.ProjectileGetMods().contains( "LTSRebalance_pas_tone_weapon_on" ) )
-        ApplyTrackerMark( attacker, ent )
+    if ( mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
+	{
+		if ( flags & DF_IMPACT )
+        	ApplyTrackerMark( attacker, ent )
+	}
+	else if ( mods.contains( "pas_tone_weapon" ) && attacker.GetMainWeapons().len() > 0 )
+	{
+		entity weapon = attacker.GetMainWeapons()[0]
+		if ( IsValid( weapon ) )
+			weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
+	}
 }
 #endif
 
@@ -419,8 +426,11 @@ void function OnWeaponStartZoomIn_titanweapon_sticky_40mm( entity weapon )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
 		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
 		{
-			weapon.SetWeaponChargeFractionForced(0.33) // Doing this instead of using 2 charge levels to get the reticle to cooperate
-			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+			if ( weapon.GetWeaponChargeFraction() < 0.33 )
+			{
+				weapon.SetWeaponChargeFractionForced( 0.33 ) // Doing this instead of using 2 charge levels to get the reticle to cooperate
+				weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+			}
 		}
 	}
 }
@@ -434,8 +444,11 @@ void function OnWeaponReadyToFire_titanweapon_sticky_40mm( entity weapon )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
 		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" )  )
 		{
-			weapon.SetWeaponChargeFractionForced(0.33) // Doing this instead of using 2 charge levels to get the reticle to cooperate
-			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+			if ( weapon.GetWeaponChargeFraction() < 0.33 )
+			{
+				weapon.SetWeaponChargeFractionForced( 0.33 ) // Doing this instead of using 2 charge levels to get the reticle to cooperate
+				weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+			}
 		}
     }
 }
