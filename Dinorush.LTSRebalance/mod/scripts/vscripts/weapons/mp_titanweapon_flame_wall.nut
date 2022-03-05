@@ -242,14 +242,7 @@ void function FlameWall_DamagedTarget( entity ent, var damageInfo )
 			UpdateScorchHotStreakCoreMeter( attacker, DamageInfo_GetDamage( damageInfo ) )
 	}
 
-    entity firewall = attacker.GetOffhandWeapon( OFFHAND_RIGHT )
-    entity canister = attacker.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-    if ( LTSRebalance_Enabled() && IsValid( firewall ) && firewall.HasMod( "LTSRebalance_pas_scorch_firewall" ) && IsValid( canister ) )
-    {
-        int bonusAmmo = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE )
-        int newAmmo = minint( canister.GetWeaponPrimaryClipCountMax(), canister.GetWeaponPrimaryClipCount() + bonusAmmo )
-        canister.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
-    }
+    PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) )
 }
 
 #endif

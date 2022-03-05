@@ -14,6 +14,7 @@ global function CreatePhysicsThermiteTrail
 global function Scorch_SelfDamageReduction
 global function GetMeteorRadiusDamage
 global function GetThermiteDurationBonus
+global function PasScorchFirewall_ReduceCooldowns
 
 global const PLAYER_METEOR_DAMAGE_TICK = 100.0
 global const PLAYER_METEOR_DAMAGE_TICK_PILOT = 20.0
@@ -21,8 +22,8 @@ global const PLAYER_METEOR_DAMAGE_TICK_PILOT = 20.0
 global const NPC_METEOR_DAMAGE_TICK = 100.0
 global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 
-global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.1
-global const float PAS_SCORCH_FLAMECORE_MOD = 1.2
+global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.05
+global const float PAS_SCORCH_FLAMECORE_MOD = 1.25
 const float PAS_SCORCH_SELFDMG_SHIELD_MOD = 0.15
 
 global struct MeteorRadiusDamage
@@ -121,6 +122,29 @@ void function MeteorThermite_DamagedTarget( entity target, var damageInfo )
 			DamageInfo_ScaleDamage( damageInfo, FD_FIRE_DAMAGE_SCALE )
 		if ( weapons[0].HasMod( "fd_hot_streak" ) )
 			UpdateScorchHotStreakCoreMeter( attacker, DamageInfo_GetDamage( damageInfo ) )
+	}
+
+	PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) )
+}
+
+void function PasScorchFirewall_ReduceCooldowns( entity owner, float damage )
+{
+	if ( !LTSRebalance_Enabled() || !IsValid( owner ) )
+		return
+	
+	entity ordnance = owner.GetOffhandWeapon( OFFHAND_RIGHT )
+	if ( !IsValid( ordnance ) || !ordnance.HasMod( "LTSRebalance_pas_scorch_firewall" ) )
+		return
+
+	int bonusAmmo = int( damage * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE )
+	int newAmmo = minint( ordnance.GetWeaponPrimaryClipCountMax(), ordnance.GetWeaponPrimaryClipCount() + bonusAmmo )
+	ordnance.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
+
+	entity utility = owner.GetOffhandWeapon( OFFHAND_ANTIRODEO )
+	if ( IsValid( utility ) )
+	{
+		newAmmo = minint( utility.GetWeaponPrimaryClipCountMax(), utility.GetWeaponPrimaryClipCount() + bonusAmmo )
+		utility.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
 	}
 }
 

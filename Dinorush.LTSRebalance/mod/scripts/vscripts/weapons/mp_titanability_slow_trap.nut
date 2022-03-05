@@ -585,14 +585,8 @@ void function FireTrap_DamagedPlayerOrNPC( entity ent, var damageInfo )
 			UpdateScorchHotStreakCoreMeter( attacker, DamageInfo_GetDamage( damageInfo ) )
 	}
 
-    entity firewall = attacker.GetOffhandWeapon( OFFHAND_RIGHT )
-    entity canister = attacker.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-    if ( LTSRebalance_Enabled() && IsValid( firewall ) && firewall.HasMod( "LTSRebalance_pas_scorch_firewall" ) && IsValid( canister ) )
-    {
-        int bonusAmmo = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE )
-        int newAmmo = minint( firewall.GetWeaponPrimaryClipCountMax(), firewall.GetWeaponPrimaryClipCount() + bonusAmmo )
-        firewall.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
-    }
+	// Firewall does 70 damage, which *0.05 becomes 3.5. Ammo uses ints, so use random to average it to 3.5 instead of 3.
+	PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) + RandomInt( 2 ) * 10 )
 }
 #endif
 
