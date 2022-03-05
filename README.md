@@ -16,16 +16,18 @@ This mod enables a new setting, "LTS Rebalance", under the "Promode" category in
 
 All balancing/changes can be viewed in [this changelog document](https://docs.google.com/document/d/10mZtK7w7MOTv9kGNQru96G7XpEZqv8_dUw_I29RhDj4/edit?usp=sharing).
 
-### Weapon Mod Conflictions
+### Weapon Cosmetic Mod Conflictions
 
-These weapons are entirely replaced, and will not work with mods that attempt to add reticles or effects to a set list of weapons:
+These weapons have limitations that prevent them from working with certain mods that attempt to add reticles or effects to a set list of weapons:
 
 - Predator Cannon
-  - Needed to fit more attachments for rebalance features
+  - Weapon is entirely replaced. No mods that reference this weapon specifically or modify its reticle will work.
+- 40mm Tracker Cannon
+  - Reticles are replaced. Reticle mods will not work.
 
 ## FAQs
 
-### My game bugs out/crashed when I played Tone on normal servers.
+### My game bugs out/crashed when I played Tone/Monarch on normal servers.
 
 Recent Northstar updates broke something, and joining normal servers with the mod on no longer fully disables it (has the same issue as what KVFix fixes below). Until this is fixed, you need to disable the mod (not KVFix) on the main menu to join normal servers and not get wack behavior.
 
