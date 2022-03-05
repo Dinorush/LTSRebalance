@@ -8,13 +8,13 @@ global function OnWeaponNPCPrimaryAttack_titanweapon_salvo_rockets
 const SALVOROCKETS_MISSILE_SFX_LOOP			= "Weapon_Sidwinder_Projectile"
 const SALVOROCKETS_NUM_ROCKETS_PER_SHOT 	= 1
 const SALVOROCKETS_APPLY_RANDOM_SPREAD 		= true
-const SALVOROCKETS_LAUNCH_OUT_ANG 			= 5
+const SALVOROCKETS_LAUNCH_OUT_ANG 			= 2.5
 const SALVOROCKETS_LAUNCH_OUT_TIME 			= 0.20
 const SALVOROCKETS_LAUNCH_IN_LERP_TIME 		= 0.2
-const SALVOROCKETS_LAUNCH_IN_ANG 			= -10
+const SALVOROCKETS_LAUNCH_IN_ANG 			= -5
 const SALVOROCKETS_LAUNCH_IN_TIME 			= 0.10
 const SALVOROCKETS_LAUNCH_STRAIGHT_LERP_TIME = 0.1
-global const SALVOROCKETS_MISSILE_SPEED            = 2500.0
+const SALVOROCKETS_MISSILE_SPEED            = 3000.0
 const SALVOROCKETS_DEBUG_DRAW_PATH 			= false
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_salvo_rockets( entity weapon )
