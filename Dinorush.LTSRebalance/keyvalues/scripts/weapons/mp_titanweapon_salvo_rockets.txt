@@ -6,9 +6,9 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"damage_near_value_titanarmor"   				"350"
-			"damage_far_value_titanarmor"   				"350"
-			"explosion_damage_heavy_armor"					"350"
+			"damage_near_value_titanarmor"   				"300"
+			"damage_far_value_titanarmor"   				"300"
+			"explosion_damage_heavy_armor"					"300"
 
 			"ammo_stockpile_max"							"108"
 			"ammo_clip_size"   								"108"
