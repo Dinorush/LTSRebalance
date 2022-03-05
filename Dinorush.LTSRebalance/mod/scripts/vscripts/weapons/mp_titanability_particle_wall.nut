@@ -11,6 +11,7 @@ global function OnWeaponNpcPrimaryAttack_particle_wall
 global const SP_PARTICLE_WALL_DURATION = 8.0
 global const MP_PARTICLE_WALL_DURATION = 6.0
 global const LTSREBALANCE_MP_PARTICLE_WALL_DURATION = 4.0
+const LTSREBALANCE_PAS_TONE_WALL_REFUND_SCALAR = 1.5
 
 function MpTitanabilityBubbleShield_Init()
 {
@@ -66,6 +67,7 @@ void function PasToneWallWatchForEnd( entity weapon, entity particleWall )
 
             // Wall broken early
             float regenRate = weapon.GetWeaponSettingFloat( eWeaponVar.regen_ammo_refill_rate )
+			lostTime *= LTSREBALANCE_PAS_TONE_WALL_REFUND_SCALAR
             int newAmmo = minint( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + int( regenRate * lostTime ) )
             weapon.SetWeaponPrimaryClipCount( newAmmo )
         }
