@@ -71,6 +71,10 @@ bool function OnAbilityCharge_FlameWave( entity weapon )
 void function DelayedChargeSlow ( entity soul, float delay, float duration )
 {
     wait delay
+
+	if ( !IsValid( soul ) )
+		return
+		
     StatusEffect_AddTimed( soul, eStatusEffect.move_slow, 0.6, (duration - delay), 0 )
     StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.6, (duration - delay), 0 )
     StatusEffect_AddTimed( soul, eStatusEffect.damageAmpFXOnly, 1.0, (duration - delay), 0 )
