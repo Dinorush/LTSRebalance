@@ -210,7 +210,7 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 						array<string> mods = offhandWeapon.GetMods()
 						mods.fastremovebyvalue( "energy_transfer" )
 						if ( LTSRebalance_Enabled() )
-							mods.append( "LTSRebalance_energy_field" )
+							mods.append( "LTSRebalance_energy_field_energy_transfer" )
 						else
 							mods.append( "energy_field_energy_transfer" )
 						offhandWeapon.SetMods( mods )
