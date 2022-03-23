@@ -25,6 +25,7 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( entity weapon
 		if ( !canUse )
 			FlashEnergyNeeded_Bar( curCost )
 	#endif
+
 	return canUse
 }
 
