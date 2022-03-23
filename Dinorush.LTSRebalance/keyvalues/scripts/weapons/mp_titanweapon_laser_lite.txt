@@ -10,7 +10,7 @@ WeaponData
 
 			"fire_rate"   									"2"
 			"holster_time"									"0.5"
-			"deploy_time" 									"0.57"
+			"deploy_time" 									"0.52"
 		}
     }
 }
