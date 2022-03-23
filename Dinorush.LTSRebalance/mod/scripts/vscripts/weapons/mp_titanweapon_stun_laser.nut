@@ -17,7 +17,7 @@ const FX_SHIELD_GAIN_SCREEN		= $"P_xo_shield_up"
 const SHIELD_BODY_FX			= $"P_xo_armor_body_CP"
 
 const int STUN_LASER_PERM_SHIELD = 500
-const int STUN_LASER_TEMP_SHIELD = 850
+const int STUN_LASER_TEMP_SHIELD = 900
 const float TEMP_SHIELD_DECAY_RATE = STUN_LASER_TEMP_SHIELD / 4.0
 const float PAS_VANGUARD_SHIELD_DECAY_MOD = 1.75
 const float TEMP_SHIELD_TICK_RATE = 0.1
@@ -224,7 +224,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		
 		if ( !IsValid( weapon ) )
 			return
-		bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" )|| weapon.HasMod( "LTSRebalance_energy_field_energy_transfer")
+		bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" ) || weapon.HasMod( "LTSRebalance_energy_field_energy_transfer")
 		if ( target.IsTitan() && IsValid( attackerSoul ) && hasEnergyTransfer )
 		{
 			entity soul = target.GetTitanSoul()
