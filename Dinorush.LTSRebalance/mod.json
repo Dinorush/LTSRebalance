@@ -1,11 +1,15 @@
 {
 	"Name": "Dinorush's LTS Rebalance",
-	"Description": "Implements a number of changes to balance titans, mainly for LTS.",
+	"Description": "Implements a number of changes to balance titans, mainly for LTS.\nCredits: JustANormalUser - HUD Revamp UI scripts",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.9.5",
+	"Version": "0.9.6",
 
 	"Scripts": [
+		{
+			"Path": "client/LTSRebalance_basic_image_bar.gnut",
+			"RunOn": "CLIENT"
+		},
 		{
 			"Path": "weapons/mp_titanweapon_shift_core_sword.nut",
 			"RunOn": "(CLIENT || SERVER) && MP"
@@ -14,9 +18,11 @@
 			"Path": "LTSRebalance_utility.nut",
 			"RunOn": "(CLIENT || SERVER) && MP",
 			"ClientCallback": {
+				"Before": "LTSRebalance_PreInit",
 				"After": "LTSRebalance_Init"
 			},
 			"ServerCallback": {
+				"Before": "LTSRebalance_PreInit",
 				"After": "LTSRebalance_Init"
 			}
 		}
