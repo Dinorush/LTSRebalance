@@ -2164,6 +2164,11 @@ array<string> function GetWeaponBurnMods( string weaponClassName )
 {
 	array<string> burnMods = []
 	array<string> mods = GetWeaponMods_Global( weaponClassName )
+
+	// HACK - Prevent titan weaponry from being amped by A-Wall
+	if ( LTSRebalance_Enabled() && weaponClassName.find( "titan" ) != null )
+		return burnMods
+
 	string prefix = "burn_mod"
 	foreach ( mod in mods )
 	{
@@ -2431,14 +2436,21 @@ bool function PROTO_FlakCannon_HasNearbyEnemies( vector origin, int team, float 
 void function GiveEMPStunStatusEffects( entity ent, float duration, float fadeoutDuration = 0.5, float slowTurn = EMP_SEVERITY_SLOWTURN, float slowMove = EMP_SEVERITY_SLOWMOVE)
 {
 	entity target = ent.IsTitan() ? ent.GetTitanSoul() : ent
-	int slowEffect = StatusEffect_AddTimed( target, eStatusEffect.turn_slow, slowTurn, duration, fadeoutDuration )
-	int turnEffect = StatusEffect_AddTimed( target, eStatusEffect.move_slow, slowMove, duration, fadeoutDuration )
+	
+	int slowEffect
+	if ( slowTurn > 0 ) // Slowed turn has an innate reduction, so don't add effect if it's actually 0
+		slowEffect = StatusEffect_AddTimed( target, eStatusEffect.turn_slow, slowTurn, duration, fadeoutDuration )
+	int turnEffect
+	if ( slowMove > 0 )
+		turnEffect = StatusEffect_AddTimed( target, eStatusEffect.move_slow, slowMove, duration, fadeoutDuration )
 
 	#if SERVER
 	if ( ent.IsPlayer() )
 	{
-		ent.p.empStatusEffectsToClearForPhaseShift.append( slowEffect )
-		ent.p.empStatusEffectsToClearForPhaseShift.append( turnEffect )
+		if ( slowTurn > 0 )
+			ent.p.empStatusEffectsToClearForPhaseShift.append( slowEffect )
+		if ( slowMove > 0 )
+			ent.p.empStatusEffectsToClearForPhaseShift.append( turnEffect )
 	}
 	#endif
 }
@@ -2875,6 +2887,16 @@ array<entity> function GetPlayerWeapons( entity player, array<string> excludeNam
 	return weapons
 }
 
+const table< string, table<string, float> > WAVE_ATTACK_FIXES = {
+	mp_titancore_flame_wave = {
+		step = 130.0
+	},
+	mp_titanweapon_arc_wave = {
+		count = 14.0,
+		step = 120.0
+	}
+}
+
 void function WeaponAttackWave( entity ent, int projectileCount, entity inflictor, vector pos, vector dir, bool functionref( entity, int, entity, entity, vector, vector, int ) waveFunc )
 {
 	ent.EndSignal( "OnDestroy" )
@@ -2906,8 +2928,14 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
             passVortex = string( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
 		maxCount = expect int( ent.ProjectileGetWeaponInfoFileKeyField( chargedPrefix + "wave_max_count" ) )
 		step = expect float( ent.ProjectileGetWeaponInfoFileKeyField( chargedPrefix + "wave_step_dist" ) )
-		if ( LTSRebalance_Enabled() && ent.ProjectileGetWeaponClassName() == "mp_titancore_flame_wave" ) // Hardcoded here since can't be changed via attachment
-			step = 130.0
+		string name = ent.ProjectileGetWeaponClassName()
+		if ( LTSRebalance_Enabled() && name in WAVE_ATTACK_FIXES ) // Changed here since can't be changed via attachment
+		{
+			if ( "count" in WAVE_ATTACK_FIXES[name] )
+				maxCount = int( WAVE_ATTACK_FIXES[name].count )
+			if ( "step" in WAVE_ATTACK_FIXES[name] )
+				step = WAVE_ATTACK_FIXES[name].step
+		}
 		owner = ent.GetOwner()
 		damageNearValueTitanArmor = projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value_titanarmor )
 	}
@@ -3045,7 +3073,7 @@ void function EMP_DamagedPlayerOrNPC( entity ent, var damageInfo )
 
 void function ArcBlast_DamagedPlayerOrNPC( entity ent, var damageInfo )
 {
-	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, 0.0, EMP_SEVERITY_SLOWMOVE )
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, 0.01, EMP_SEVERITY_SLOWMOVE )
 }
 
 void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInfo )
