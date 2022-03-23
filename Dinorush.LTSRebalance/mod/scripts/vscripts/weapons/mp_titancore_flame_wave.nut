@@ -241,7 +241,7 @@ void function FlameWave_DamagedPlayerOrNPC( entity ent, var damageInfo )
 		return
 
     // Bug fix: can hit both player titan and the auto titan if hitting as disembark/embark ends
-    if( LTSRebalance_Enabled() && ent.IsTitan() )
+    if( LTSRebalance_Enabled() && ent.IsTitan() && DamageInfo_GetDamageSourceIdentifier( damageInfo ) == eDamageSourceId.mp_titancore_flame_wave )
     {
         entity soul = ent.GetTitanSoul()
         entity projectile = DamageInfo_GetInflictor( damageInfo )
