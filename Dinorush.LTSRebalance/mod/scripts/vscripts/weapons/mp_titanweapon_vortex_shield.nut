@@ -23,9 +23,11 @@ global function OnClientAnimEvent_titanweapon_vortex_shield
 
 
 const ACTIVATION_COST_FRAC = 0.05 //0.2 //R1 was 0.1
-const int ION_ACTIVATION_ENERGY_COST = 30
+const int ION_ACTIVATION_ENERGY_COST = 25
 const int ION_MINIMUM_ENERGY = 150
 global const float PAS_ION_VORTEX_AMP = 1.5
+const float PAS_ION_VORTEX_AMP_ON_ENERGY = -0.5
+const float PAS_ION_VORTEX_AMP_OFF_ENERGY = 0.25
 
 function MpTitanweaponVortexShield_Init()
 {
@@ -97,6 +99,37 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 	#endif
 }
 
+#if SERVER
+void function LTSRebalance_VortexAmpEnergyThink( entity weapon, entity owner )
+{
+	weapon.EndSignal( "OnDestroy" )
+	owner.EndSignal( "OnDestroy" )
+	owner.EndSignal( "OnDeath" )
+
+	entity vortexSphere = weapon.GetWeaponUtilityEntity()
+	vortexSphere.EndSignal( "OnDestroy" )
+
+	float cost = float( weapon.GetWeaponSettingInt( eWeaponVar.shared_energy_charge_cost ) ) * 60 //Cost is per frame, we want it per second
+	float accumulatedEnergy = 0
+	float lastTime = Time()
+	while(1)
+	{
+		WaitFrame()
+		float passedTime = Time() - lastTime
+		bool hasCaught = vortexSphere.GetBulletAbsorbedCount() > 0 || vortexSphere.GetProjectileAbsorbedCount() > 0
+		accumulatedEnergy += passedTime * cost * ( hasCaught ? PAS_ION_VORTEX_AMP_ON_ENERGY : PAS_ION_VORTEX_AMP_OFF_ENERGY )
+
+		if ( accumulatedEnergy > 0 )
+			owner.AddSharedEnergy( int( accumulatedEnergy ) )
+		else
+			owner.TakeSharedEnergy( int( -accumulatedEnergy ) )
+
+		accumulatedEnergy -= float( int( accumulatedEnergy ) )
+		lastTime = Time()
+	}
+}
+#endif
+
 void function OnWeaponDeactivate_titanweapon_vortex_shield( entity weapon )
 {
 	EndVortex( weapon )
@@ -143,6 +176,11 @@ function StartVortex( entity weapon )
 		CreateVortexSphere( weapon, false, false, sphereRadius, bulletFOV )
 		EnableVortexSphere( weapon )
 		weapon.EmitWeaponSound_1p3p( "vortex_shield_loop_1P", "vortex_shield_loop_3P" )
+
+		#if SERVER
+		if ( weapon.HasMod( "LTSRebalance_pas_ion_vortex" ) )
+			thread LTSRebalance_VortexAmpEnergyThink( weapon, weaponOwner )
+		#endif
 	}
 	else
 	{
@@ -275,9 +313,9 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 }
 
 // Dumb method to determine if it's from Northstar Prime/Tone Prime termination because we can't set refire behavior to absorb in attachments
-bool function IsTerminationRocket ( entity projectile )
+bool function IsTerminationRocket( entity projectile )
 {
-	if( !LTSRebalance_Enabled() || !IsValid( projectile ) )
+	if ( !LTSRebalance_Enabled() || !IsValid( projectile ) )
 		return false
 	
 	array<string> mods = projectile.ProjectileGetMods()
@@ -411,15 +449,11 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_vortex_shield( entity wea
 	entity soul = weaponOwner.GetTitanSoul()
 	Assert( IsValid( soul ) )
 	entity activeWeapon = weaponOwner.GetActiveWeapon()
-	int minEnergyCost = LTSRebalance_Enabled() ? 150 : 100
+	int minEnergyCost = LTSRebalance_Enabled() ? ION_MINIMUM_ENERGY : 100
 	if ( IsValid( activeWeapon ) && activeWeapon.IsChargeWeapon() && activeWeapon.IsWeaponCharging() )
-	{
 		allowSwitch = false
-	}
 	else if ( weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
-	{
 		allowSwitch = weaponOwner.CanUseSharedEnergy( minEnergyCost )
-	}
 	else
 	{
 		//Assert( weapon.IsChargeWeapon(), weapon.GetWeaponClassName() + " should be a charge weapon." )
