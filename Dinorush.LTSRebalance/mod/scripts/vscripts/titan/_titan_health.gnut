@@ -427,6 +427,7 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 	{
 		entity boss = titanSoul.GetBossPlayer()
 		Soul_SetLastAttackInfo( titanSoul, damageInfo )
+		print( "LTS Rebalance - Killshot detected" + ( ( IsValid( boss ) && boss.IsPlayer() ) ? " on Player " + boss.GetPlayerName() : "") )
 
 		if ( ShouldDoomTitan( ent, damageInfo ) )
 		{
@@ -457,6 +458,8 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 
 			int health = ent.GetHealth()
 			DamageInfo_SetDamage( damageInfo, health - 1 )
+			print( "LTS Rebalance - Killshot doomed titan; dealt " + DamageInfo_GetDamage( damageInfo ) + " damage" )
+			print( "LTS Rebalance - Titan health after doom shot: " + (ent.GetHealth() - DamageInfo_GetDamage( damageInfo )) )
 			return true
 		}
 		else
@@ -470,6 +473,8 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 				return false
 			}
 		}
+		print( "LTS Rebalance - Titan health after kill shot: " + (ent.GetHealth() - DamageInfo_GetDamage( damageInfo )) )
+		print( "LTS Rebalance - Titan was doomed for kill: " + GetDoomedState( ent ) )
 	}
 
 	// Handle doom state damage
