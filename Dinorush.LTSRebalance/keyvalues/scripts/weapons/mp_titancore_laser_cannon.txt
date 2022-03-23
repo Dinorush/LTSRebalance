@@ -1,0 +1,14 @@
+WeaponData
+{
+	Mods
+	{
+		LTSRebalance_pas_ion_lasercannon
+		{
+			"core_duration"									"*0.4"
+			"sustained_discharge_duration"					"*0.4"
+			"charge_time"									"*0.6"
+			"charge_cooldown_time"							"*0.5"
+			"charge_cooldown_delay"   						"*0.5"
+		}
+	}
+}

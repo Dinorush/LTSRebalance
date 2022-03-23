@@ -216,6 +216,11 @@ void function CoreActivate( entity player )
 
 	if ( IsValid( soul ) && !player.ContextAction_IsMeleeExecution() )
 	{
+		entity weapon = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+		// Check < MAX_COUNT here as it gets set to 0 only when core ends for UI to look better
+		if ( IsValid( weapon ) && weapon.HasMod( "LTSRebalance_pas_ion_lasercannon") && weapon.s.laserCoreCount < LTSREBALANCE_PAS_ION_LASERCANNON_COUNT )
+			return
+
 		if ( TitanDamageRewardsTitanCoreTime() )
 			SoulTitanCore_SetNextAvailableTime( soul, 0.0 )
 		else
@@ -233,6 +238,10 @@ void function CoreDeactivate( entity player, entity weapon )
 	{
 		if ( TitanDamageRewardsTitanCoreTime() )
 		{
+			// Check == 0 here since counter should reset on the last use
+			if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon") && weapon.s.laserCoreCount > 0 )
+				return
+
 			if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 			{
 				SoulTitanCore_SetNextAvailableTime( soul, 0.20 )
@@ -370,6 +379,9 @@ bool function CoreChargeBegin( entity player, entity titan, entity weapon )
 #endif
 #else // #if CLIENT
 	float coreWaitTime = GetTitanCoreDurationFromWeapon( weapon ) + GetTitanCoreChargeTimeFromWeapon( weapon )
+	// HACK - Can't modify chargup_time with attachments, so need to modify the value here
+	if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
+		coreWaitTime -= GetTitanCoreChargeTimeFromWeapon( weapon ) - weapon.GetWeaponSettingFloat( eWeaponVar.charge_time )
 
 	SoulTitanCore_SetExpireTime( soul, Time() + coreWaitTime )
 	soul.SetCoreChargeStartTime( Time() )
