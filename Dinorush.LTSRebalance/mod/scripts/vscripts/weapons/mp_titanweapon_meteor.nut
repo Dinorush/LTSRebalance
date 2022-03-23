@@ -6,6 +6,10 @@ global function OnWeaponPrimaryAttack_Meteor
 global function OnWeaponActivate_Meteor
 global function OnWeaponDeactivate_Meteor
 
+#if CLIENT
+global function ServerCallback_TemperedPlating_UpdateBurnTime
+#endif
+
 #if SERVER
 global function CreateThermiteTrail
 global function CreateThermiteTrailOnMovingGeo
@@ -24,7 +28,7 @@ global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 
 global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.05
 global const float PAS_SCORCH_FLAMECORE_MOD = 1.25
-const float PAS_SCORCH_SELFDMG_SHIELD_MOD = 0.15
+const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
 
 global struct MeteorRadiusDamage
 {
@@ -71,6 +75,11 @@ function MpTitanweaponMeteor_Init()
 
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_meteor_thermite, MeteorThermite_DamagedTarget )
+	if ( LTSRebalance_EnabledOnInit() )
+	{
+		AddDamageCallback( "player", TemperedPlating_DamageReduction )
+		AddDamageCallback( "npc_titan", TemperedPlating_DamageReduction )
+	}
 
 	PrecacheParticleSystem( THERMITE_GRENADE_FX )
 	PrecacheModel( METEOR_SHELL_EJECT )
@@ -100,6 +109,89 @@ var function OnWeaponPrimaryAttack_Meteor( entity weapon, WeaponPrimaryAttackPar
 	weapon.EmitWeaponNpcSound( LOUD_WEAPON_AI_SOUND_RADIUS_MP, 0.2 )
 
 	return PlayerOrNPCFire_Meteor( attackParams, true, weapon )
+}
+
+#if SERVER
+void function TemperedPlating_UpdateBurnTime( entity soul )
+{
+	if ( !( "scorchLastBurnTime" in soul.s ) )
+	{
+		soul.s.scorchLastBurnTime <- Time()
+		thread TemperedPlating_FXThink( soul )
+	}
+	else
+		soul.s.scorchLastBurnTime = Time()
+
+	entity titan = soul.GetTitan()
+	if ( IsValid( titan ) && titan.IsPlayer() )
+		Remote_CallFunction_NonReplay( titan, "ServerCallback_TemperedPlating_UpdateBurnTime" )
+}
+#else
+void function ServerCallback_TemperedPlating_UpdateBurnTime()
+{
+	entity player = GetLocalClientPlayer()
+	if ( !IsValid( player ) || !player.IsTitan() ) // JFS - Player may have disembarked between touching thermite and receiving remote call
+		return
+
+	if ( !( "scorchLastBurnTime" in player.s ) )
+	{
+		player.s.scorchLastBurnTime <- Time()
+		thread TemperedPlating_FXThink( player )
+	}
+	else
+		player.s.scorchLastBurnTime = Time()
+}
+#endif
+
+void function TemperedPlating_FXThink( entity owner )
+{
+	owner.EndSignal( "OnDestroy" )
+	float lastTime = 0
+	#if SERVER
+	entity lastTitan = owner.GetTitan()
+	entity chargeEffect = null
+	#else
+	int cockpitHandle = -1
+	#endif
+	while(1)
+	{
+		float curTime = Time()
+		float burnTime = expect float( owner.s.scorchLastBurnTime + 0.5 ) - curTime
+		#if SERVER
+		entity titan = owner.GetTitan()
+		if ( burnTime > 0 && ( lastTime <= 0 || lastTitan != titan ) && IsValid( titan ) )
+		{
+			int index = titan.LookupAttachment( "hijack" )
+			chargeEffect = StartParticleEffectOnEntity_ReturnEntity( titan, GetParticleSystemIndex( $"P_titan_core_atlas_charge" ), FX_PATTACH_POINT_FOLLOW, index )
+
+			chargeEffect.kv.VisibilityFlags = (ENTITY_VISIBLE_TO_FRIENDLY | ENTITY_VISIBLE_TO_ENEMY) // everyone but owner
+			chargeEffect.SetOwner( titan )
+		}
+		#else
+		if ( burnTime > 0 && lastTime <= 0 )
+		{
+			entity cockpit = owner.GetCockpit()
+    		cockpitHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		}
+		#endif
+		else if ( lastTime > 0 && burnTime <= 0 )
+		{
+			#if SERVER
+			if ( IsValid( chargeEffect ) )
+				chargeEffect.Destroy()
+			#else
+			if ( EffectDoesExist( cockpitHandle ) )
+        		EffectStop( cockpitHandle, false, true )
+			#endif
+		}
+
+		lastTime = burnTime
+		#if SERVER
+		lastTitan = titan
+		#endif
+
+		WaitFrame()
+	}
 }
 
 #if SERVER
@@ -167,10 +259,7 @@ void function Scorch_SelfDamageReduction( entity target, var damageInfo )
 		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
 		{
 			if( LTSRebalance_Enabled() )
-			{
-				int shieldRestoreAmount = int( DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_SELFDMG_SHIELD_MOD )
-				soul.SetShieldHealth( minint( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
-			}
+				TemperedPlating_UpdateBurnTime( soul )
 			else
 				DamageInfo_SetDamage( damageInfo, 0.0 )
 		}
@@ -181,6 +270,16 @@ void function Scorch_SelfDamageReduction( entity target, var damageInfo )
 	{
 		DamageInfo_ScaleDamage( damageInfo, 0.20 )
 	}
+}
+
+void function TemperedPlating_DamageReduction( entity ent, var damageInfo )
+{
+	if ( !ent.IsTitan() )
+		return
+
+	entity soul = ent.GetTitanSoul()
+	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) &&  "scorchLastBurnTime" in soul.s && soul.s.scorchLastBurnTime + 0.5 >= Time() )
+		DamageInfo_ScaleDamage( damageInfo, 1.0 - PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION )
 }
 
 var function OnWeaponNpcPrimaryAttack_Meteor( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -222,8 +321,8 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 
 	//EmitSoundAtPosition( owner.GetTeam(), origin, "Explo_MeteorGun_Impact_3P" )
 
-	float thermiteLifetimeMin = 2.0 * GetThermiteDurationBonus( owner )
-	float thermiteLifetimeMax = 2.5 * GetThermiteDurationBonus( owner )
+	float thermiteLifetimeMin = 1.9 * GetThermiteDurationBonus( owner )
+	float thermiteLifetimeMax = 2.3 * GetThermiteDurationBonus( owner )
 
 	if ( IsSingleplayer() )
 	{
@@ -295,8 +394,6 @@ float function GetThermiteDurationBonus ( entity owner ) {
         return 1
 
     return ( ordnance.HasMod( "pas_scorch_flamecore" ) ? PAS_SCORCH_FLAMECORE_MOD : 1.0 )
-
-    //TODO: Add Tempered
 }
 
 void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor, int damageSourceId = eDamageSourceId.mp_titanweapon_meteor_thermite )
