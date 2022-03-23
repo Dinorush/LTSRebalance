@@ -61,7 +61,7 @@ void function PasToneWallWatchForEnd( entity weapon, entity particleWall )
 			if ( !IsValid( weapon ) )
 				return
 
-            float lostTime = startTime + MP_PARTICLE_WALL_DURATION - Time()
+            float lostTime = startTime + LTSREBALANCE_MP_PARTICLE_WALL_DURATION - Time()
             if ( lostTime < 0.1 )
                 return
 
@@ -73,7 +73,7 @@ void function PasToneWallWatchForEnd( entity weapon, entity particleWall )
         }
     )
 
-    wait MP_PARTICLE_WALL_DURATION + 0.1
+    wait LTSREBALANCE_MP_PARTICLE_WALL_DURATION + 0.1
 }
 
 var function OnWeaponNpcPrimaryAttack_particle_wall( entity weapon, WeaponPrimaryAttackParams attackParams )
