@@ -26,24 +26,14 @@ void function UpgradeCore_Init()
     #if SERVER
 	if ( !LTSRebalance_EnabledOnInit() )
 		return
-    AddCallback_OnTitanDoomed( EnergyThief_OnPlayerDoom )
-    AddCallback_OnPlayerAssist( EnergyThief_OnPlayerAssist )
-    AddCallback_OnPlayerKilled( EnergyThief_OnPlayerOrNPCKilled )
-    AddCallback_OnNPCKilled( EnergyThief_OnPlayerOrNPCKilled )
+	AddCallback_OnTitanHealthSegmentLost( EnergyThief_OnSegmentLost )
+	AddCallback_OnPlayerKilled( EnergyThief_OnPlayerOrNPCKilled )
+	AddCallback_OnNPCKilled( EnergyThief_OnPlayerOrNPCKilled )
     #endif
 }
 
 #if SERVER
-void function EnergyThief_OnPlayerDoom( entity victim, var damageInfo )
-{
-    entity attacker = DamageInfo_GetAttacker( damageInfo )
-    if( !IsValid( attacker ) )
-        return
-
-    EnergyThief_GrantShield( victim, attacker )
-}
-
-void function EnergyThief_OnPlayerAssist( entity attacker, entity victim )
+void function EnergyThief_OnSegmentLost( entity victim, entity attacker )
 {
     EnergyThief_GrantShield( victim, attacker )
 }
