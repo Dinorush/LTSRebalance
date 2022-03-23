@@ -23,23 +23,24 @@ const asset LASER_TRIP_FX_FRIENDLY = $"wpn_grenade_frag_blue_icon"
 const asset LASER_TRIP_EXPLODE_FX = $"P_impact_exp_XLG_metal"
 const float LASER_TRIP_HEALTH = 300.0
 const float LTSREBALANCE_LASER_TRIP_INNER_RADIUS = 240.0
-const float LTSREBALANCE_LASER_TRIP_OUTER_RADIUS = 240.0
+const float LTSREBALANCE_LASER_TRIP_OUTER_RADIUS = 360.0
 const float LASER_TRIP_INNER_RADIUS = 400.0
 const float LASER_TRIP_OUTER_RADIUS = 400.0
+const float LTSREBALANCE_LASER_TRIP_DAMAGE_HEAVY_ARMOR = 1500.0
+const float LTSREBALANCE_LASER_TRIP_DAMAGE = 100.0
 const float LASER_TRIP_DAMAGE = 200.0
-const float LTSREBALANCE_LASER_TRIP_DAMAGE_HEAVY_ARMOR = 1100.0
 const float LASER_TRIP_DAMAGE_HEAVY_ARMOR = 1500.0
 const float LASER_TRIP_MIN_ANGLE = 180.0
 const float LASER_TRIP_BIGZAP_RANGE = 1500.0
 
 const float LTSREBALANCE_LASER_TRIP_LIFETIME = 6.0
+const float PAS_ION_LASER_TRIP_LIFETIME = 1.2
 const float LASER_TRIP_LIFETIME = 12.0
 const float LASER_TRIP_BUILD_TIME = 1.0
 const int LASER_TRIP_MAX = 9
 
 const float LASER_TRIP_DEPLOY_POWER = 900.0
 const float LASER_TRIP_DEPLOY_SIDE_POWER = 1200.0
-const float PAS_ION_LASER_TRIP_DEPLOY_POWER = 1000.0
 const int SHARED_ENERGY_RESTORE_AMOUNT = 350
 
 struct
@@ -126,34 +127,24 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_trip( entity weapon, Weapon
 
 #if SERVER
 	//This wave attack is spawning 3 waves, and we want them all to only do damage once to any individual target.
-	entity inflictor = CreateDamageInflictorHelper( -1.0 )
+	entity inflictor = LTSRebalance_Enabled() ? CreatePylonDamageInflictorHelper() : CreateDamageInflictorHelper( -1.0 )
 #endif
 
 	vector right = CrossProduct( attackParams.dir, <0,0,1> )
 	vector dir = attackParams.dir
-    float sidePower = LASER_TRIP_DEPLOY_SIDE_POWER
 
 	array<entity> deployables = []
 
 	dir.z = min( dir.z, -0.2 )
 
-    if ( weapon.HasMod( "LTSRebalance_pas_ion_tripwire" ) )
-    {
-        right *= 0.788 // equal to tan(45 * 0.85), to achieve the desired 15% angle decrease
-        sidePower = PAS_ION_LASER_TRIP_DEPLOY_POWER
-    }
-
 	attackParams.dir = dir - right
-	deployables.append( ThrowDeployable( weapon, attackParams, sidePower, OnLaserPylonPlanted ) )
+	deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_SIDE_POWER, OnLaserPylonPlanted ) )
 
-    if ( !weapon.HasMod( "LTSRebalance_pas_ion_tripwire" ) )
-    {
-        attackParams.dir = dir
-        deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_POWER, OnLaserPylonPlanted ) )
-    }
+	attackParams.dir = dir
+	deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_POWER, OnLaserPylonPlanted ) )
 
 	attackParams.dir = dir + right
-	deployables.append( ThrowDeployable( weapon, attackParams, sidePower, OnLaserPylonPlanted ) )
+	deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_SIDE_POWER, OnLaserPylonPlanted ) )
 
 	#if SERVER
 	foreach ( i, deployable in deployables )
@@ -171,7 +162,6 @@ void function OnLaserPylonPlanted( entity projectile )
 	#if SERVER
 		thread DeployLaserPylon( projectile )
 	#endif
-
 }
 
 #if SERVER
@@ -229,7 +219,10 @@ function DeployLaserPylon( entity projectile )
 	if ( attachparent != null )
 		tower.SetParent( attachparent )
 
-	float lifetime = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_LIFETIME : LASER_TRIP_LIFETIME
+	float lifetime = LASER_TRIP_LIFETIME
+	bool hasRebalZPT = projectile.ProjectileGetMods().contains( "LTSRebalance_pas_ion_tripwire" )
+	if ( LTSRebalance_Enabled() )
+		lifetime = hasRebalZPT ? PAS_ION_LASER_TRIP_LIFETIME : LTSREBALANCE_LASER_TRIP_LIFETIME
 	// hijacking this int so we don't create a new one
 	string noSpawnIdx = CreateNoSpawnArea( TEAM_INVALID, team, origin, LASER_TRIP_BUILD_TIME + lifetime, LASER_TRIP_OUTER_RADIUS )
 
@@ -296,6 +289,7 @@ function DeployLaserPylon( entity projectile )
 			if ( IsValid( soul ) )
 			{
 				entity titan = soul.GetTitan()
+				float pilotDamage = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_DAMAGE : LASER_TRIP_DAMAGE
 				float titanDamage = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_DAMAGE_HEAVY_ARMOR : LASER_TRIP_DAMAGE_HEAVY_ARMOR
 				float innerRadius = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_INNER_RADIUS : LASER_TRIP_INNER_RADIUS
 				float outerRadius = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_OUTER_RADIUS : LASER_TRIP_OUTER_RADIUS
@@ -303,13 +297,13 @@ function DeployLaserPylon( entity projectile )
 				if ( IsValid( titan ) )
 				{
 					RadiusDamage(
-						pylonOrigin,											// center
+						pylonOrigin,									// center
 						titan,											// attacker
 						inflictor,										// inflictor
-						LASER_TRIP_DAMAGE,								// damage
-						titanDamage,					// damageHeavyArmor
-						innerRadius,						// innerRadius
-						outerRadius,						// outerRadius
+						pilotDamage,									// damage
+						titanDamage,									// damageHeavyArmor
+						innerRadius,									// innerRadius
+						outerRadius,									// outerRadius
 						SF_ENVEXPLOSION_NO_DAMAGEOWNER,					// flags
 						0,												// distanceFromAttacker
 						0,												// explosionForce
@@ -359,48 +353,51 @@ function DeployLaserPylon( entity projectile )
 
 	AddToScriptManagedEntArray( file.laserPylonsIdx, pylon )
 
-	foreach ( p in projectile.proj.projectileGroup )
+	if ( !hasRebalZPT )
 	{
-		if ( IsValid( p ) && !p.IsProjectile() && p != pylon && p.e.projectileID == projectile.proj.projectileID + 1 )
+		foreach ( p in projectile.proj.projectileGroup )
 		{
-			vector pOrg = p.GetOrigin()
-			vector pylonOrg = pylon.GetOrigin()
-			TraceResults trace = TraceLine( pOrg, pylonOrg, [], TRACE_MASK_NPCWORLDSTATIC, TRACE_COLLISION_GROUP_NONE )
-			if ( trace.fraction < 0.99 )
-				continue
+			if ( IsValid( p ) && !p.IsProjectile() && p != pylon && p.e.projectileID == projectile.proj.projectileID + 1 )
+			{
+				vector pOrg = p.GetOrigin()
+				vector pylonOrg = pylon.GetOrigin()
+				TraceResults trace = TraceLine( pOrg, pylonOrg, [], TRACE_MASK_NPCWORLDSTATIC, TRACE_COLLISION_GROUP_NONE )
+				if ( trace.fraction < 0.99 )
+					continue
 
-			thread LaserPylonSetThink( p, pylon, team )
-			if ( p.IsMarkedForDeletion() )
-				continue
+				thread LaserPylonSetThink( p, pylon, team )
+				if ( p.IsMarkedForDeletion() )
+					continue
 
-			entity cpEnd = CreateEntity( "info_placement_helper" )
-			SetTargetName( cpEnd, UniqueString( "laser_pylon_cpEnd" ) )
-			cpEnd.SetParent( p, "center", false, 0.0 )
-			DispatchSpawn( cpEnd )
+				entity cpEnd = CreateEntity( "info_placement_helper" )
+				SetTargetName( cpEnd, UniqueString( "laser_pylon_cpEnd" ) )
+				cpEnd.SetParent( p, "center", false, 0.0 )
+				DispatchSpawn( cpEnd )
 
-			entity beamFX = CreateEntity( "info_particle_system" )
-			beamFX.kv.cpoint1 = cpEnd.GetTargetName()
+				entity beamFX = CreateEntity( "info_particle_system" )
+				beamFX.kv.cpoint1 = cpEnd.GetTargetName()
 
-			beamFX.SetValueForEffectNameKey( LASER_TRIP_BEAM_FX )
-			beamFX.kv.start_active = 1
-			// SetTeam( beamFX, GetOtherTeam( owner.GetTeam() ) )
-			// beamFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_FRIENDLY
-			beamFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_EVERYONE
-			beamFX.SetOrigin( pylonOrg )
-			vector cpEndPoint = cpEnd.GetOrigin()
-			beamFX.SetAngles( VectorToAngles( cpEndPoint - pylon.GetOrigin() ) )
-			beamFX.SetParent( pylon, "center", true, 0.0 )
-			DispatchSpawn( beamFX )
+				beamFX.SetValueForEffectNameKey( LASER_TRIP_BEAM_FX )
+				beamFX.kv.start_active = 1
+				// SetTeam( beamFX, GetOtherTeam( owner.GetTeam() ) )
+				// beamFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_FRIENDLY
+				beamFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_EVERYONE
+				beamFX.SetOrigin( pylonOrg )
+				vector cpEndPoint = cpEnd.GetOrigin()
+				beamFX.SetAngles( VectorToAngles( cpEndPoint - pylon.GetOrigin() ) )
+				beamFX.SetParent( pylon, "center", true, 0.0 )
+				DispatchSpawn( beamFX )
 
-			vector centerPoint = pylonOrg + ( ( pOrg - pylonOrg ) / 2 )
-			EmitSoundAtPosition( TEAM_UNASSIGNED, centerPoint, "Wpn_LaserTripMine_LaserLoop" )
-			thread StopLaserSoundAtPosition( pylon, centerPoint )
-			if ( projCount == 3 )
-				EmitSoundAtPosition( TEAM_UNASSIGNED, centerPoint, "Wpn_LaserTripMine_FirstConnect" )
-			else
-				EmitSoundAtPosition( TEAM_UNASSIGNED, centerPoint, "Wpn_LaserTripMine_SecondConnect" )
+				vector centerPoint = pylonOrg + ( ( pOrg - pylonOrg ) / 2 )
+				EmitSoundAtPosition( TEAM_UNASSIGNED, centerPoint, "Wpn_LaserTripMine_LaserLoop" )
+				thread StopLaserSoundAtPosition( pylon, centerPoint )
+				if ( projCount == 3 )
+					EmitSoundAtPosition( TEAM_UNASSIGNED, centerPoint, "Wpn_LaserTripMine_FirstConnect" )
+				else
+					EmitSoundAtPosition( TEAM_UNASSIGNED, centerPoint, "Wpn_LaserTripMine_SecondConnect" )
 
-			pylon.e.fxArray.append( p )
+				pylon.e.fxArray.append( p )
+			}
 		}
 	}
 
@@ -484,6 +481,25 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_laser_trip( entity weapon
 #if SERVER
 void function LaserTrip_DamagedPlayerOrNPC( entity ent, var damageInfo )
 {
+	if ( LTSRebalance_Enabled() )
+	{
+		entity inflictor = DamageInfo_GetInflictor( damageInfo )
+		float maxDamage = 0
+		if ( ent in inflictor.s.entityDamageTable )
+			maxDamage = expect float( inflictor.s.entityDamageTable[ent] )
+		else
+			inflictor.s.entityDamageTable[ent] <- 0
+
+		float damage = DamageInfo_GetDamage( damageInfo )
+		if ( damage > maxDamage )
+		{
+			DamageInfo_SetDamage( damageInfo, damage - maxDamage )
+			inflictor.s.entityDamageTable[ent] = damage
+		}
+		else
+			DamageInfo_SetDamage( damageInfo, 0 )
+	}
+
 	if ( ent.IsPlayer() )
 	{
 		if ( ent.IsTitan() )
@@ -491,5 +507,13 @@ void function LaserTrip_DamagedPlayerOrNPC( entity ent, var damageInfo )
 		else
 		 	EmitSoundOnEntityOnlyToPlayer( ent, ent, "flesh_explo_med_3p_vs_1p" )
 	}
+}
+
+entity function CreatePylonDamageInflictorHelper()
+{
+	entity inflictor = CreateEntity( "info_target" )
+	DispatchSpawn( inflictor )
+	inflictor.s.entityDamageTable <- {}
+	return inflictor
 }
 #endif
