@@ -4,7 +4,7 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"fire_rate"   									"2.22"
+			"fire_rate"   									"2.33"
 
 			"deploy_time" 									".22"
 		}
