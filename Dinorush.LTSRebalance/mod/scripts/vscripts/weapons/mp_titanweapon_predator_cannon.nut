@@ -417,7 +417,7 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 		if ( !target.IsTitan() )
 			return
 		
-		if ( weapon.HasMod( "pas_legion_weapon" ) )
+		if ( weapon.HasMod( "pas_legion_weapon" ) && !weapon.HasMod( "Smart_Core" ) )
 		{
 			bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
 			if ( isCritical )
