@@ -64,7 +64,7 @@ var function OnWeaponPrimaryAttack_titanweapon_flightcore_rockets( entity weapon
 			// Check that the target is a living titan.
 			if (IsAlive(hitEnt) && hitEnt.GetArmorType() == ARMOR_TYPE_HEAVY)
 			{
-				endPos = hitResult.endPos
+				endPos = hitResult.endPos + attackParams.dir * 20 // Make the missiles go behind the trace ending so the missiles don't turn tail right in front of them
 				float dist = Distance(owner.GetOrigin(), hitEnt.GetOrigin())
 				vector flat_vel = hitEnt.GetVelocity()
 				flat_vel.z = min(flat_vel.z, 0)
