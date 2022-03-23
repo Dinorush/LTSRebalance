@@ -30,8 +30,8 @@ const TPA_ADS_EFFECT_3P = $"P_TPA_electricity"
 const CRITICAL_ENERGY_RESTORE_AMOUNT = 30
 const SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 8
 
-const LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT = 25
-const LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 7
+const LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT = 27
+const LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 8
 
 struct {
 	float[ADS_SHOT_COUNT_UPGRADE] boltOffsets = [
@@ -153,7 +153,7 @@ function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams attack
 
 	entity owner = weapon.GetWeaponOwner()
     bool inADS = weapon.IsWeaponInAds()
-	int ADS_SHOT_COUNT = weapon.HasMod( "pas_ion_weapon_ads" ) ? ADS_SHOT_COUNT_UPGRADE : ADS_SHOT_COUNT_NORMAL
+	int ADS_SHOT_COUNT = ( weapon.HasMod( "pas_ion_weapon_ads" ) || weapon.HasMod( "LTSRebalance_pas_ion_weapon_ads" ) ) ? ADS_SHOT_COUNT_UPGRADE : ADS_SHOT_COUNT_NORMAL
 
 	if ( shouldCreateProjectile )
 	{
