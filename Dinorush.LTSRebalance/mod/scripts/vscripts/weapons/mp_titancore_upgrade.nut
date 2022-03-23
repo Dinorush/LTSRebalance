@@ -12,7 +12,7 @@ const LASER_CHAGE_FX_3P = $"P_handlaser_charge"
 const FX_SHIELD_GAIN_SCREEN		= $"P_xo_shield_up"
 const int SUPERIOR_CHASSIS_HEALTH_AMOUNT = 2500
 const int SUPERIOR_CHASSIS_SHIELD_AMOUNT = 1875
-const int PAS_VANGUARD_COREMETER_SHIELD = 625
+const int PAS_VANGUARD_COREMETER_SHIELD = 500
 const int PAS_VANGUARD_DOOM_HEAL = 1250
 
 void function UpgradeCore_Init()
