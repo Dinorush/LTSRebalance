@@ -4,8 +4,6 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"charge_time" 									"4.0"
-			"charge_cooldown_time"							"7.0"
 			"charge_cooldown_delay"   						"0.5"
 			
 			"deploy_time" 									".25"
