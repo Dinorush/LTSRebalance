@@ -1,4 +1,5 @@
 untyped
+global function LTSRebalance_PreInit
 global function LTSRebalance_Init
 global function LTSRebalance_Enabled
 global function LTSRebalance_EnabledOnInit
@@ -10,8 +11,19 @@ struct {
 	bool ltsrebalance_enabled = false
 } file
 
+void function LTSRebalance_PreInit()
+{
+	AddCallback_OnRegisteringCustomNetworkVars( LTSRebalance_RegisterRemote )
+}
+
+void function LTSRebalance_RegisterRemote()
+{
+	Remote_RegisterFunction( "ServerCallback_TemperedPlating_UpdateBurnTime" )
+}
+
 void function LTSRebalance_Init()
 {
+	
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	LTSRebalance_Precache()
 
@@ -27,6 +39,8 @@ void function LTSRebalance_Init()
 		AddCallback_OnNPCKilled( UnstableReactor_OnDeath )
 		AddCallback_OnPlayerRespawned( GiveLTSRebalanceWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
+	#else
+		AddCallback_OnClientScriptInit( ClLTSRebalance_ClientScripts )
 	#endif
 }
 
@@ -67,7 +81,7 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 	LTSRebalance_HandleAttachments( titan )
 
 	entity soul = titan.GetTitanSoul()
-	if( !IsValid( soul ) ) // Should only occur on eject
+	if( !IsValid( soul ) )
 		return
 
 	if ( SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO ) )
@@ -84,6 +98,7 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 				smoke.SetWeaponPrimaryAmmoCount( smoke.GetWeaponPrimaryAmmoCount() - 1 )
 		}
 	}
+
 	if ( SoulHasPassive( soul, ePassives.PAS_ENHANCED_TITAN_AI ) )
 	{
 		entity melee = titan.GetMeleeWeapon()
@@ -206,6 +221,69 @@ void function UnstableReactor_OnDeath( entity titan, entity attacker, var damage
 	entity soul = titan.GetTitanSoul()
 	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
 		UnstableReactor_Blast( titan )
+}
+#else
+void function ClLTSRebalance_ClientScripts( entity player )
+{
+	thread ClLTSRebalance_LightCannonUIThink()
+}
+
+void function ClLTSRebalance_LightCannonUIThink()
+{
+	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.25, 0.0 >, 0.11, 0.03 )
+	RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+	RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0 )
+	LTSRebalance_BarTopoData coreCharges = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.25, 0.0 >, 0.1, 0.01 )
+	LTSRebalance_BasicImageBar_UpdateSegmentCount( coreCharges, 3, 0.075 )
+	LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, 0.0 )
+	int last = 0
+	while( true )
+	{
+		WaitFrame()
+
+		entity player = GetLocalClientPlayer()
+
+		if ( !ClLTSRebalance_ShouldRenderLightCannonUI( player ) )
+		{				
+			LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, 0.0 )
+
+			// Only clear background when the last core finishes
+			if ( IsValid( player ) )
+			{
+				entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+				if ( !IsValid( core ) || !("laserCoreCount" in core.s) || core.s.laserCoreCount == 0 )
+					RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+			}
+			continue
+		}
+		
+		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.5 )
+		entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+		int count = LTSREBALANCE_PAS_ION_LASERCANNON_COUNT
+		if ( "laserCoreCount" in core.s )
+			count -= expect int( core.s.laserCoreCount )
+		LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, float( count ) / float( LTSREBALANCE_PAS_ION_LASERCANNON_COUNT ) )
+	}
+}
+
+bool function ClLTSRebalance_ShouldRenderLightCannonUI( entity player )
+{
+	if ( !IsValid( player ) || !player.IsTitan() )
+		return false
+
+	entity soul = player.GetTitanSoul()
+	if ( !IsValid( soul ) )
+		return false
+
+	entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+	if ( !IsValid( core ) || !core.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
+		return false
+
+	float coreAvailableFrac = soul.GetTitanSoulNetFloat( "coreAvailableFrac" )
+	if ( coreAvailableFrac < 1.0 )
+		return false
+
+	return true
 }
 #endif
 
