@@ -8,7 +8,6 @@ WeaponData
 			"damage_far_distance" 							"1200"
 
 			"lower_time"  									"0.01"
-			"raise_time"  									"0.5"
 
 			"projectile_damage_reduction_per_bounce"		"-25"
 			"projectile_damages_owner"						"0"
