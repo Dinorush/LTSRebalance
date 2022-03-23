@@ -4,13 +4,12 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"fire_rate"   									"2.5"
+			"fire_rate"   									"2.22"
 
-			"deploy_time" 									".25"
+			"deploy_time" 									".22"
 		}
 		LTSRebalance_pas_ion_vortex
 		{
-			"shared_energy_charge_cost"					 	"3"
 			"damage_near_value"   							"*1.5"
 			"damage_far_value"								"*1.5"
 			"damage_near_value_titanarmor"					"*1.5"
