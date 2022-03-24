@@ -3,7 +3,7 @@
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.\nCredits: JustANormalUser - HUD Revamp UI scripts",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.9.6",
+	"Version": "0.9.6.1",
 
 	"Scripts": [
 		{
