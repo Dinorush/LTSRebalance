@@ -251,11 +251,12 @@ void function OnAbilityEnd_LaserCannon( entity weapon )
 	if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
 	{
 		table weaponDotS = expect table( weapon.s )
-		if ( "laserCoreCount" in weaponDotS)
+		if ( "laserCoreCount" in weaponDotS )
 			weaponDotS.laserCoreCount %= LTSREBALANCE_PAS_ION_LASERCANNON_COUNT
 		// Had an issue where this was off on the client by one; prints are for debugging if it happens again
 		#if CLIENT
-		print( "LTS Rebalance - Light Cannon ending count: " + weaponDotS.laserCoreCount )
+		if ( "laserCoreCount" in weaponDotS )
+			print( "LTS Rebalance - Light Cannon ending count: " + weaponDotS.laserCoreCount )
 		#endif
 	}
 
