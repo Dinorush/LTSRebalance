@@ -335,7 +335,7 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 
 		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
-			bool shouldSetActive = titan.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_shift_core_sword"
+			bool shouldSetActive = IsValid( titan.GetActiveWeapon() ) && titan.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_shift_core_sword"
 			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
 			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
 				block.RemoveMod( "LTSRebalance_core_regen" )
