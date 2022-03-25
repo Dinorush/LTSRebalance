@@ -2437,20 +2437,14 @@ void function GiveEMPStunStatusEffects( entity ent, float duration, float fadeou
 {
 	entity target = ent.IsTitan() ? ent.GetTitanSoul() : ent
 	
-	int slowEffect
-	if ( slowTurn > 0 ) // Slowed turn has an innate reduction, so don't add effect if it's actually 0
-		slowEffect = StatusEffect_AddTimed( target, eStatusEffect.turn_slow, slowTurn, duration, fadeoutDuration )
-	int turnEffect
-	if ( slowMove > 0 )
-		turnEffect = StatusEffect_AddTimed( target, eStatusEffect.move_slow, slowMove, duration, fadeoutDuration )
+	int slowEffect = StatusEffect_AddTimed( target, eStatusEffect.turn_slow, slowTurn, duration, fadeoutDuration )
+	int turnEffect = StatusEffect_AddTimed( target, eStatusEffect.move_slow, slowMove, duration, fadeoutDuration )
 
 	#if SERVER
 	if ( ent.IsPlayer() )
 	{
-		if ( slowTurn > 0 )
-			ent.p.empStatusEffectsToClearForPhaseShift.append( slowEffect )
-		if ( slowMove > 0 )
-			ent.p.empStatusEffectsToClearForPhaseShift.append( turnEffect )
+		ent.p.empStatusEffectsToClearForPhaseShift.append( slowEffect )
+		ent.p.empStatusEffectsToClearForPhaseShift.append( turnEffect )
 	}
 	#endif
 }
@@ -3073,7 +3067,7 @@ void function EMP_DamagedPlayerOrNPC( entity ent, var damageInfo )
 
 void function ArcBlast_DamagedPlayerOrNPC( entity ent, var damageInfo )
 {
-	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, 0.01, EMP_SEVERITY_SLOWMOVE )
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, EMP_SEVERITY_SLOWTURN, EMP_SEVERITY_SLOWMOVE )
 }
 
 void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInfo )
@@ -3082,7 +3076,7 @@ void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInf
 	if ( IsValid( attacker ) && attacker.GetTeam() == ent.GetTeam() )
 		return
 
-	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LTSRebalance_Enabled() ? 0.0 : LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE )
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE )
 }
 
 void function Elecriticy_DamagedPlayerOrNPC( entity ent, var damageInfo, asset humanFx, asset titanFx, float slowTurn, float slowMove )
@@ -3185,7 +3179,7 @@ void function Elecriticy_DamagedPlayerOrNPC( entity ent, var damageInfo, asset h
 
 	if ( ent.IsPlayer() )
 	{
-		thread EMPGrenade_EffectsPlayer( ent, damageInfo )
+		thread EMPGrenade_EffectsPlayer( ent, damageInfo, slowTurn, slowMove )
 	}
 	else if ( ent.IsTitan() )
 	{
@@ -3477,7 +3471,7 @@ function EMPGrenade_AffectsAccuracy( npcTitan )
 }
 
 
-function EMPGrenade_EffectsPlayer( entity player, damageInfo )
+function EMPGrenade_EffectsPlayer( entity player, damageInfo, float slowTurn, float slowMove )
 {
 	player.Signal( "OnEMPPilotHit" )
 	player.EndSignal( "OnEMPPilotHit" )
@@ -3523,7 +3517,10 @@ function EMPGrenade_EffectsPlayer( entity player, damageInfo )
 		//DamageInfo_SetDamage( damageInfo, 0 )
 	}
 
-	GiveEMPStunStatusEffects( player, (duration + fadeoutDuration), fadeoutDuration)
+	if ( LTSRebalance_Enabled() )
+		GiveEMPStunStatusEffects( player, (duration + fadeoutDuration), fadeoutDuration, slowTurn, slowMove)
+	else
+		GiveEMPStunStatusEffects( player, (duration + fadeoutDuration), fadeoutDuration)
 }
 
 function EMPGrenade_ArcBeam( grenadePos, ent )
