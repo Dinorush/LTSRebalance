@@ -484,11 +484,11 @@ void function LaserTrip_DamagedPlayerOrNPC( entity ent, var damageInfo )
 	if ( LTSRebalance_Enabled() )
 	{
 		entity inflictor = DamageInfo_GetInflictor( damageInfo )
-		float maxDamage = 0
+		float maxDamage = 0.0
 		if ( ent in inflictor.s.entityDamageTable )
 			maxDamage = expect float( inflictor.s.entityDamageTable[ent] )
 		else
-			inflictor.s.entityDamageTable[ent] <- 0
+			inflictor.s.entityDamageTable[ent] <- 0.0
 
 		float damage = DamageInfo_GetDamage( damageInfo )
 		if ( damage > maxDamage )
