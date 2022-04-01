@@ -662,7 +662,7 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 		{
 			HandleAutoEject( soulOwner, titanSoul )
 		}
-		else
+		else if ( !LTSRebalance_Enabled() )
 		{
 			//If it's an auto-titan with auto-eject, this just instantly kills it.
 			var attacker = ( "attacker" in titanSoul.lastAttackInfo ) ? expect table( titanSoul.lastAttackInfo ).attacker : null
