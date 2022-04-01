@@ -19,6 +19,7 @@ global function Scorch_SelfDamageReduction
 global function GetMeteorRadiusDamage
 global function GetThermiteDurationBonus
 global function PasScorchFirewall_ReduceCooldowns
+global function PerfectKits_TemperedPlating_SlowThink
 
 global const PLAYER_METEOR_DAMAGE_TICK = 100.0
 global const PLAYER_METEOR_DAMAGE_TICK_PILOT = 20.0
@@ -29,6 +30,10 @@ global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.05
 global const float PAS_SCORCH_FLAMECORE_MOD = 1.25
 const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
+const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.2125
+global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.15
+
+const int PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT = 2
 
 global struct MeteorRadiusDamage
 {
@@ -278,8 +283,82 @@ void function TemperedPlating_DamageReduction( entity ent, var damageInfo )
 		return
 
 	entity soul = ent.GetTitanSoul()
-	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) &&  "scorchLastBurnTime" in soul.s && soul.s.scorchLastBurnTime + 0.5 >= Time() )
-		DamageInfo_ScaleDamage( damageInfo, 1.0 - PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION )
+	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
+	{
+		if ( "scorchLastBurnTime" in soul.s && soul.s.scorchLastBurnTime + 0.5 >= Time() )
+			DamageInfo_ScaleDamage( damageInfo, 1.0 - PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION )
+
+		if ( PerfectKits_Enabled() )
+		{
+			int segmentHealth = GetSegmentHealthForTitan( ent )
+			int segmentsLost = minint( 4, ( ent.GetMaxHealth() - ent.GetHealth() ) / segmentHealth )
+			if ( soul.IsDoomed() )
+				segmentsLost = 4
+
+			if ( segmentsLost == 4 )
+			{
+				DamageInfo_ScaleDamage( damageInfo, 1.0 - segmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION )
+				return
+			}
+
+			float curDamage = DamageInfo_GetDamage( damageInfo )
+			float totalDamage = 0
+			int segmentLeft = ent.GetHealth() % segmentHealth
+			while( curDamage > 0 )
+			{
+				float mod = ( 1.0 - segmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION )
+				float damageNeeded = float( segmentLeft ) / mod
+				totalDamage += min( curDamage, damageNeeded ) * mod
+				curDamage -= damageNeeded
+
+				// If iterations continue, we can assume we hit the next segment
+				segmentLeft = segmentHealth
+				if ( segmentsLost < 4 )
+					segmentsLost++
+			}
+			DamageInfo_SetDamage( damageInfo, totalDamage )
+		}
+	}
+}
+
+void function PerfectKits_TemperedPlating_SlowThink( entity soul )
+{
+	soul.EndSignal( "OnDestroy" )
+
+	while ( !IsValid( soul.GetTitan() ) )
+		WaitFrame()
+
+	entity titan = soul.GetTitan()
+	int segmentHealth = GetSegmentHealthForTitan( titan )
+	int prevSegmentsLost = minint( 4, ( titan.GetMaxHealth() - titan.GetHealth() ) / segmentHealth )
+	if ( soul.IsDoomed() )
+		prevSegmentsLost = 4
+	int slowID = -1
+	int dashID = -1
+	while (1) {
+		WaitFrame()
+		entity curTitan = soul.GetTitan()
+		if ( IsValid( curTitan ) && curTitan != titan )
+		{
+			titan = curTitan
+			segmentHealth = GetSegmentHealthForTitan( titan )
+		}
+		else if ( !IsValid( curTitan ) )
+			continue
+
+		int curSegmentsLost = minint( 4, ( titan.GetMaxHealth() - titan.GetHealth() ) / segmentHealth )
+		if ( soul.IsDoomed() )
+			curSegmentsLost = 4
+
+		if ( curSegmentsLost != prevSegmentsLost )
+		{
+			StatusEffect_Stop( soul, slowID )
+			StatusEffect_Stop( soul, dashID )
+			StatusEffect_AddEndless( soul, eStatusEffect.move_slow, curSegmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW )
+			StatusEffect_AddEndless( soul, eStatusEffect.move_slow, curSegmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW )
+			prevSegmentsLost = curSegmentsLost
+		}
+	}
 }
 
 var function OnWeaponNpcPrimaryAttack_Meteor( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -321,8 +400,14 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 
 	//EmitSoundAtPosition( owner.GetTeam(), origin, "Explo_MeteorGun_Impact_3P" )
 
-	float thermiteLifetimeMin = 1.9 * GetThermiteDurationBonus( owner )
-	float thermiteLifetimeMax = 2.3 * GetThermiteDurationBonus( owner )
+	float thermiteLifetimeMin = 2
+	float thermiteLifetimeMax = 2.5
+
+	if ( LTSRebalance_Enabled() )
+	{
+		thermiteLifetimeMin = 1.9 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMax = 2.3 * GetThermiteDurationBonus( owner )
+	}
 
 	if ( IsSingleplayer() )
 	{
@@ -333,8 +418,11 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 		}
 	}
 
-	entity inflictor = CreateOncePerTickDamageInflictorHelper( thermiteLifetimeMax )
-	entity base = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, velocity, thermiteLifetimeMax, METEOR_FX_BASE, eDamageSourceId.mp_titanweapon_meteor_thermite )
+	array<string> mods = projectile.ProjectileGetMods()
+
+	bool PerfectKits_wildfire = ( PerfectKits_Enabled() && mods.contains( "pas_scorch_weapon" ) )
+	entity inflictor = CreateOncePerTickDamageInflictorHelper( thermiteLifetimeMax * float( PerfectKits_wildfire ? PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT + 1 : 1 ))
+	entity base = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, velocity, thermiteLifetimeMax, METEOR_FX_BASE, eDamageSourceId.mp_titanweapon_meteor_thermite, PerfectKits_wildfire ? 0 : -1 )
 
 	base.SetAngles( AnglesCompose( angles, <90,0,0> ) )
 
@@ -344,10 +432,9 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	int fireCount
 	float fireSpeed
 
-	array<string> mods = projectile.ProjectileGetMods()
 	if ( mods.contains( "pas_scorch_weapon" ) )
 	{
-		fireCount = 8
+		fireCount = PerfectKits_wildfire ? 1 : 8
 		fireSpeed = 200
 	}
 	else
@@ -361,7 +448,32 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 		vector forward = AnglesToForward( trailAngles )
 		vector up = AnglesToUp( trailAngles )
 		vector v = velocity + forward * fireSpeed + up * fireSpeed
-		entity prop = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, v, RandomFloatRange( thermiteLifetimeMin, thermiteLifetimeMax ), METEOR_FX_TRAIL, eDamageSourceId.mp_titanweapon_meteor_thermite )
+		entity prop = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, v, RandomFloatRange( thermiteLifetimeMin, thermiteLifetimeMax ), METEOR_FX_TRAIL, eDamageSourceId.mp_titanweapon_meteor_thermite, PerfectKits_wildfire ? 0 : -1 )
+
+		trailAngles = VectorToAngles( v )
+		prop.SetAngles( trailAngles )
+	}
+}
+
+void function PerfectKits_Proto_SplitThermite( vector origin, entity inflictor, entity owner, int splitCount, int damageSourceId )
+{
+	float thermiteLifetimeMin = 2
+	float thermiteLifetimeMax = 2.5
+
+	if ( LTSRebalance_Enabled() )
+	{
+		thermiteLifetimeMin = 1.9 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMax = 2.3 * GetThermiteDurationBonus( owner )
+	}
+	
+	const float range = 360
+	for ( int i = 0; i < 2; i++ )
+	{
+		vector trailAngles = <RandomFloatRange( 0, range ), RandomFloatRange( -range, range ), RandomFloatRange( -range, range )>
+		vector forward = AnglesToForward( trailAngles )
+		vector up = AnglesToUp( trailAngles )
+		vector v = forward * 200 + up * 200 + < 0, 0, 200 > // Add a bit of vertical jump
+		entity prop = CreatePhysicsThermiteTrail( origin, owner, inflictor, null, v, RandomFloatRange( thermiteLifetimeMin, thermiteLifetimeMax ), METEOR_FX_TRAIL, damageSourceId, splitCount + 1 )
 
 		trailAngles = VectorToAngles( v )
 		prop.SetAngles( trailAngles )
@@ -396,7 +508,7 @@ float function GetThermiteDurationBonus ( entity owner ) {
     return ( ordnance.HasMod( "pas_scorch_flamecore" ) ? PAS_SCORCH_FLAMECORE_MOD : 1.0 )
 }
 
-void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor, int damageSourceId = eDamageSourceId.mp_titanweapon_meteor_thermite )
+void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor, int damageSourceId = eDamageSourceId.mp_titanweapon_meteor_thermite, int splitCount = -1)
 {
 	entity owner = trail.GetOwner()
 	Assert( IsValid( owner ) )
@@ -411,8 +523,11 @@ void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor,
 	array<entity> fxArray = trail.e.fxArray
 
 	OnThreadEnd(
-	function() : ( fxArray )
+	function() : ( trail, fxArray, inflictor, owner, splitCount, damageSourceId )
 		{
+			if ( IsValid( fxArray[0] ) && splitCount >= 0 && splitCount < PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT && IsValid( owner ) )
+				PerfectKits_Proto_SplitThermite( fxArray[0].GetOrigin(), inflictor, owner, splitCount, damageSourceId )
+
 			foreach ( fx in fxArray )
 			{
 				if ( IsValid( fx ) )
@@ -422,9 +537,7 @@ void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor,
 	)
 
 	wait 0.2 // thermite falls and ignites
-
 	vector originLastFrame = trail.GetOrigin()
-
 	for ( ;; )
 	{
 		vector moveVec = originLastFrame - trail.GetOrigin()
@@ -479,6 +592,14 @@ void function PROTO_ThermiteCausesDamage( entity trail, entity owner, entity inf
 	float radius = METEOR_THERMITE_DAMAGE_RADIUS_DEF
 	if ( damageSourceId == eDamageSourceId.mp_titanweapon_flame_wall )
 		radius = FLAME_WALL_DAMAGE_RADIUS_DEF
+	if ( PerfectKits_Enabled() && damageSourceId == eDamageSourceId.mp_titancore_flame_wave_secondary )
+	{
+		if ( !IsAlive( owner ) )
+			return
+		svGlobal.levelEnt.EndSignal( "ClearedPlayers" )
+		METEOR_DAMAGE_TICK_PILOT *= 0.7
+		METEOR_DAMAGE_TICK *= 0.7
+	}
 
 	for ( ;; )
 	{
@@ -501,7 +622,7 @@ void function PROTO_ThermiteCausesDamage( entity trail, entity owner, entity inf
 	}
 }
 
-entity function CreatePhysicsThermiteTrail( vector origin, entity owner, entity inflictor, entity projectile, vector velocity, float killDelay, asset overrideFX = METEOR_FX_TRAIL, int damageSourceId = eDamageSourceId.mp_titanweapon_meteor_thermite )
+entity function CreatePhysicsThermiteTrail( vector origin, entity owner, entity inflictor, entity projectile, vector velocity, float killDelay, asset overrideFX = METEOR_FX_TRAIL, int damageSourceId = eDamageSourceId.mp_titanweapon_meteor_thermite, int splitCount = -1 )
 {
 	Assert( IsValid( owner ) )
 	entity prop_physics = CreateEntity( "prop_physics" )
@@ -536,7 +657,7 @@ entity function CreatePhysicsThermiteTrail( vector origin, entity owner, entity 
 	prop_physics.SetOwner( owner )
 	AI_CreateDangerousArea( prop_physics, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, TEAM_INVALID, true, false )
 
-	thread PROTO_PhysicsThermiteCausesDamage( prop_physics, inflictor, damageSourceId )
+	thread PROTO_PhysicsThermiteCausesDamage( prop_physics, inflictor, damageSourceId, splitCount )
 
 	return prop_physics
 }
