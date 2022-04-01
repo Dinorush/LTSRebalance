@@ -460,7 +460,7 @@ void function OnTitanDoomed( entity titan, var damageInfo )
 
 	if ( titan.IsPlayer() )
 	{
-		if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+		if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) && !PerfectKits_Enabled() && !LTSRebalance_Enabled() )
 			PhaseShift( titan, 0, 3.0 )
 
  		if ( !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
@@ -487,6 +487,22 @@ void function OnTitanDoomed( entity titan, var damageInfo )
 
 	if ( NoWeaponDoomState() )
 		TakeAllWeapons( titan )
+}
+
+void function PerfectKits_PhaseReflexDamage( entity player )
+{
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "StopPhaseShift" )
+	wait 15.0
+
+	float damage = 100
+	while(1)
+	{
+		player.TakeDamage( damage, null, null, { scriptType = DF_DOOMED_HEALTH_LOSS, damageSourceId = damagedef_suicide } )
+		damage += 50
+		wait 1.0
+	}
 }
 
 void function OnTitanDeath( entity titan, var damageInfo )
