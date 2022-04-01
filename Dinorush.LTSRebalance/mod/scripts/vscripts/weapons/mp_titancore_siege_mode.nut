@@ -148,6 +148,12 @@ void function GiveSmartCoreMod( entity player )
 	entity weapon = weapons[0]
 	array<string> mods = weapon.GetMods()
 	mods.append( "Smart_Core" )
+	if ( PerfectKits_Enabled() )
+	{
+		entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+		if ( IsValid( core ) && core.HasMod( "pas_legion_smartcore" ) )
+			mods.append( "PerfectKits_Smart_Core" )
+	}
     if ( LTSRebalance_Enabled() && !mods.contains("BasePowerShot") )
         mods.append( "Smart_Core_Spread" )
 	weapon.SetMods( mods )
@@ -164,6 +170,12 @@ void function TakeSmartCoreMod( entity player )
 	entity weapon = weapons[0]
 	array<string> mods = weapon.GetMods()
 	mods.fastremovebyvalue( "Smart_Core" )
+	if ( PerfectKits_Enabled() )
+	{
+		entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+		if ( IsValid( core ) && core.HasMod( "pas_legion_smartcore" ) )
+			mods.fastremovebyvalue( "PerfectKits_Smart_Core" )
+	}
     if ( LTSRebalance_Enabled() && mods.contains("Smart_Core_Spread") ) //may not have it, if ended on a Power Shot
         mods.fastremovebyvalue( "Smart_Core_Spread" )
 	weapon.SetMods( mods )
