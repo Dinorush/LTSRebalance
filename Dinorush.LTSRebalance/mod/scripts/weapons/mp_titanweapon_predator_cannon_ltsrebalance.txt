@@ -701,7 +701,7 @@ WeaponData
 		}
 		PerfectKits_Smart_Core
 		{
-			"burst_fire_delay"								"0.01"
+			"burst_fire_delay"								"0.033"
 			"fire_rate"						"15"
 			"fire_rate_max"					"30"
 			"fire_rate_max_time_speedup"	"3.0"
