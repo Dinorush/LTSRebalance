@@ -355,7 +355,7 @@ void function PerfectKits_TemperedPlating_SlowThink( entity soul )
 			StatusEffect_Stop( soul, slowID )
 			StatusEffect_Stop( soul, dashID )
 			StatusEffect_AddEndless( soul, eStatusEffect.move_slow, curSegmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW )
-			StatusEffect_AddEndless( soul, eStatusEffect.move_slow, curSegmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW )
+			StatusEffect_AddEndless( soul, eStatusEffect.dodge_speed_slow, curSegmentsLost * PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW )
 			prevSegmentsLost = curSegmentsLost
 		}
 	}
