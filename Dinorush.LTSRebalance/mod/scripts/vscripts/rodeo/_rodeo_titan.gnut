@@ -1798,8 +1798,9 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		int shieldHealth = soul.GetShieldHealth()
 		int shieldMaxHealth = soul.GetShieldHealthMax()
 
-		int shieldDifference = shieldMaxHealth - shieldHealth
-        StunLaser_HandleTempShieldChange( soul, shieldMaxHealth ) // For Siphon temporary shield purposes
+		int perfectKitsShieldsTaken = PerfectKits_EnergyThiefConvert( titan, shieldMaxHealth )
+		int shielding = minint( shieldMaxHealth - perfectKitsShieldsTaken, shieldMaxHealth - shieldHealth )
+		StunLaser_HandleTempShieldChange( soul, shielding ) // For Siphon temporary shield purposes
 
 		bool batteryIsAmped = IsAmpedBattery( battery )
 		float frac = batteryIsAmped ? ampedHealthSegmentFrac : healthSegmentFrac
@@ -1811,18 +1812,13 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		{
 			UndoomTitan( titan, 1 )
 			titan.SetHealth( trgtHealth - totalHealth )
-            soul.SetShieldHealth( soul.GetShieldHealthMax() )
 		}
 		else if ( soul.IsDoomed() && batteryIsAmped )
-		{
 			UndoomTitan( titan, 1 )
-			soul.SetShieldHealth( soul.GetShieldHealthMax() )
-		}
 		else
-		{
 			titan.SetHealth( totalHealth )
-			soul.SetShieldHealth( soul.GetShieldHealthMax() )
-		}
+		
+		soul.SetShieldHealth( shielding + shieldHealth )
 	}
 
 	if ( battery != null )

@@ -41,8 +41,15 @@ var function OnWeaponPrimaryAttack_particle_wall( entity weapon, WeaponPrimaryAt
 
 	entity particleWall = CreateParticleWallFromOwner( weapon.GetWeaponOwner(), duration, attackParams )
     entity soul = weaponOwner.GetTitanSoul()
-
-    if ( LTSRebalance_Enabled() && IsValid( particleWall ) && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
+	if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ))
+	{
+		CreateParticleWallFromOwner( weapon.GetWeaponOwner(), duration, attackParams )
+		vector dir = AnglesToForward( particleWall.GetAngles() )
+		dir *= -1
+		particleWall.SetOrigin( particleWall.GetOrigin() - dir * ( SHIELD_WALL_RADIUS * 2 + 20 ) )
+		particleWall.SetAngles( VectorToAngles( dir ) )
+	}
+    else if ( LTSRebalance_Enabled() && IsValid( particleWall ) && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
         thread PasToneWallWatchForEnd( weapon, particleWall )
 #endif
 	return weapon.GetWeaponInfoFileKeyField( "ammo_per_shot" )

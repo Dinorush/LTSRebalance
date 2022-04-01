@@ -10,5 +10,9 @@ WeaponData
         {
            	"regen_ammo_refill_rate"						"0.0"
         }
+		PerfectKits_pas_legion_chargeshot
+		{
+			"regen_ammo_refill_rate"						"*2.5"
+		}
 	}
 }

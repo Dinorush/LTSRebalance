@@ -12,5 +12,11 @@ WeaponData
 			"holster_time"									"0.5"
 			"deploy_time" 									"0.52"
 		}
+		PerfectKits_refrac_balance
+		{
+			"damage_near_value_titanarmor"					"*0.5"
+			"damage_far_value_titanarmor" 					"*0.5"
+			"explosion_damage_heavy_armor"					"*0.5"
+		}
     }
 }

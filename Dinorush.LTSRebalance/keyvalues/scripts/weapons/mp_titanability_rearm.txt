@@ -1,0 +1,12 @@
+WeaponData
+{
+	Mods
+	{
+		PerfectKits_pas_vanguard_rearm
+		{
+			"deploy_time"									"0.01"
+			"charge_time"									"*0.01"
+			"holster_time"									"0.01"
+		}
+	}
+}

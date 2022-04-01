@@ -58,30 +58,34 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
     #if SERVER
     if ( primaryWeapon.HasMod( "Smart_Core_Spread" ) )
         primaryWeapon.RemoveMod( "Smart_Core_Spread" )
-        
+
 	if ( primaryWeapon.HasMod( "LongRangeAmmo" ) )
 	{
         array<string> mods = primaryWeapon.GetMods()
 		mods.fastremovebyvalue( "LongRangeAmmo" )
-		if( LTSRebalance_Enabled() )
+		if( LTSRebalance_Enabled() || PerfectKits_Enabled() )
         	mods.append( "BasePowerShot" )
 		mods.append( "LongRangePowerShot" )
 		if ( mods.contains( "fd_longrange_helper" ) )
 			mods.append( "fd_LongRangePowerShot" )
 		if ( weapon.HasMod( "pas_legion_chargeshot" ) )
 			mods.append( "pas_LongRangePowerShot" )
+		if ( weapon.HasMod( "PerfectKits_pas_legion_chargeshot" ) )
+			mods.append( "PerfectKits_pas_PowerShot" )
 		primaryWeapon.SetMods( mods )
 	}
 	else
 	{
         array<string> mods = primaryWeapon.GetMods()
-        if( LTSRebalance_Enabled() )
+        if( LTSRebalance_Enabled() || PerfectKits_Enabled() )
         	mods.append( "BasePowerShot" )
 		mods.append( "CloseRangePowerShot" )
 		if ( mods.contains( "fd_closerange_helper" ) )
 			mods.append( "fd_CloseRangePowerShot" )
 		if ( weapon.HasMod( "pas_legion_chargeshot" ) )
 			mods.append( "pas_CloseRangePowerShot" )
+		if ( weapon.HasMod( "PerfectKits_pas_legion_chargeshot" ) )
+			mods.append( "PerfectKits_pas_PowerShot" )
 		primaryWeapon.SetMods( mods )
 	}
     
@@ -176,12 +180,15 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
 		#if SERVER
 		array<string> mods = weapon.GetMods()
         mods.fastremovebyvalue( "BasePowerShot" )
+		if ( weapon.HasMod( "PerfectKits_pas_PowerShot" ) )
+			mods.fastremovebyvalue( "PerfectKits_pas_PowerShot" )
 		foreach( modName in modNames )
 			mods.fastremovebyvalue( modName )
 		foreach( mod in modsToAdd )
 			mods.append( mod )
         if( LTSRebalance_Enabled() && weapon.HasMod( "Smart_Core" ) )
             mods.append( "Smart_Core_Spread" )
+
 		weapon.SetMods( mods )
 		#endif
 	}
@@ -215,12 +222,26 @@ void function GiveCloseRangeMod( entity weapon, entity weaponOwner )
 void function PowerShot_DamagedEntity( entity victim, var damageInfo )
 {
 	int scriptDamageType = DamageInfo_GetCustomDamageType( damageInfo )
+	
 	if ( scriptDamageType & DF_KNOCK_BACK && !IsHumanSized( victim ) )
 	{
 		entity attacker = DamageInfo_GetAttacker( damageInfo )
+		if ( !IsValid( attacker ) || attacker.IsProjectile() ) // Need to check for PerfectKits since LR Power Shot can trigger this
+			return
+
 		float distance = Distance( victim.GetOrigin(), attacker.GetOrigin() )
 		vector pushback = Normalize( victim.GetOrigin() - attacker.GetOrigin() )
 		pushback *= 500 * 1.0 - StatusEffect_Get( victim, eStatusEffect.pushback_dampen ) * GraphCapped( distance, 0, 1200, 1.0, 0.25 )
+		
+		entity offhand = attacker.GetOffhandWeapon( OFFHAND_RIGHT )
+		if ( IsValid( offhand ) && offhand.HasMod( "PerfectKits_pas_legion_chargeshot" ) )
+		{
+			entity inflictor = DamageInfo_GetInflictor( damageInfo )
+			if ( IsValid( inflictor ) && inflictor.IsProjectile() )
+				pushback *= -4
+			else
+				pushback *= 100
+		}
 		PushPlayerAway( victim, pushback )
 	}
 }

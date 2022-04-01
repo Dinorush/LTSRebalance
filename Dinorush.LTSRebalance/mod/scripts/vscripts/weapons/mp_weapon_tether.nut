@@ -332,6 +332,9 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 				StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.5, 0.5 )
 				StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.5, 0.5 )
 			}
+			if ( PerfectKits_Enabled() && titan.IsPlayer() && projectile.ProjectileGetMods().contains( "pas_northstar_trap" ) )
+				thread PerfectKits_TetherEMP( projectile, titan )
+
 			if ( titan.IsPlayer() )
 				thread TetherFlyIn( projectile, tetherEndEntForPlayer, tetherRopeForPlayer, owner )
 			thread TetherFlyIn( projectile, tetherEndEntForOthers, tetherRopeForOthers, owner )
@@ -383,4 +386,26 @@ float function GetTetherRopeLength( vector a, vector b )
 	return sqrt( HorzLength*HorzLength + distZ*distZ )
 }
 
+// Assumes the player passed in is a titan.
+void function PerfectKits_TetherEMP( entity projectile, entity player )
+{
+	projectile.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnSyncedMelee" )
+	Remote_CallFunction_Replay( player, "ServerCallback_TitanEMP", 1, 10.0, 0.5 )
+	if ( !( "perfectKitsTetherCount" in player.s ) )
+		player.s.perfectKitsTetherCount <- 1
+	else
+		player.s.perfectKitsTetherCount += 1
+
+	OnThreadEnd(
+		function() : ( player )
+		{
+			player.s.perfectKitsTetherCount -= 1
+			if ( IsValid( player ) && player.s.perfectKitsTetherCount == 0 )
+				Remote_CallFunction_Replay( player, "ServerCallback_TitanEMP", 1, 0.0, 0.5 )
+		}
+	)
+	WaitForever()
+}
 #endif

@@ -69,7 +69,7 @@ void function LaserCore_OnPlayedOrNPCKilled( entity victim, entity attacker, var
 
 	float remainingTime = laserCoreBonus + soul.GetCoreChargeExpireTime() - curTime
 	float duration
-	if ( weapon.HasMod( "pas_ion_lasercannon") )
+	if ( weapon.HasMod( "pas_ion_lasercannon") || weapon.HasMod( "PerfectKitsReplace_pas_ion_lasercannon" ) )
 		duration = 5.0
 	else if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
 		duration = 1.2

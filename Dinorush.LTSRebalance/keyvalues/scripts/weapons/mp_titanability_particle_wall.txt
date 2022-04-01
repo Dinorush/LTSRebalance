@@ -10,5 +10,9 @@ WeaponData
 			"ammo_per_shot"									"90"
 			"ammo_stockpile_max"							"90"
 		}
+		PerfectKits_pas_tone_wall
+		{
+			"regen_ammo_refill_rate"						"*2"
+		}
 	}
 }

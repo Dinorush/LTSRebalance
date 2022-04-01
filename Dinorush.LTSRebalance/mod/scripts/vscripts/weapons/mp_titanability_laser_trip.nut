@@ -137,14 +137,22 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_trip( entity weapon, Weapon
 
 	dir.z = min( dir.z, -0.2 )
 
-	attackParams.dir = dir - right
-	deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_SIDE_POWER, OnLaserPylonPlanted ) )
+	bool perfectZPT = PerfectKits_Enabled() && ( weapon.HasMod( "pas_ion_tripwire" ) || weapon.HasMod( "LTSRebalance_pas_ion_tripwire" ) )
+
+	if ( !perfectZPT )
+	{
+		attackParams.dir = dir - right
+		deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_SIDE_POWER, OnLaserPylonPlanted ) )
+	}
 
 	attackParams.dir = dir
 	deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_POWER, OnLaserPylonPlanted ) )
 
-	attackParams.dir = dir + right
-	deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_SIDE_POWER, OnLaserPylonPlanted ) )
+	if ( !perfectZPT )
+	{
+		attackParams.dir = dir + right
+		deployables.append( ThrowDeployable( weapon, attackParams, LASER_TRIP_DEPLOY_SIDE_POWER, OnLaserPylonPlanted ) )
+	}
 
 	#if SERVER
 	foreach ( i, deployable in deployables )
@@ -220,7 +228,16 @@ function DeployLaserPylon( entity projectile )
 		tower.SetParent( attachparent )
 
 	float lifetime = LASER_TRIP_LIFETIME
-	bool hasRebalZPT = projectile.ProjectileGetMods().contains( "LTSRebalance_pas_ion_tripwire" )
+	array<string> mods = projectile.ProjectileGetMods()
+	bool hasRebalZPT = mods.contains( "LTSRebalance_pas_ion_tripwire" )
+	bool perfectZPT = PerfectKits_Enabled() && ( mods.contains( "pas_ion_tripwire" ) || mods.contains( "LTSRebalance_pas_ion_tripwire" ) )
+	if ( perfectZPT )
+	{
+		tower.SetMaxHealth( 2000 )
+		tower.SetHealth( 2000 )
+		hasRebalZPT = false
+	}
+
 	if ( LTSRebalance_Enabled() )
 		lifetime = hasRebalZPT ? PAS_ION_LASER_TRIP_LIFETIME : LTSREBALANCE_LASER_TRIP_LIFETIME
 	// hijacking this int so we don't create a new one
@@ -280,7 +297,7 @@ function DeployLaserPylon( entity projectile )
 
 	vector pylonOrigin = pylon.GetOrigin()
 	OnThreadEnd(
-	function() : ( projectile, inflictor, tower, pylon, noSpawnIdx, team, pylonOrigin )
+	function() : ( projectile, inflictor, tower, pylon, noSpawnIdx, team, pylonOrigin, perfectZPT )
 		{
 			PlayFX( LASER_TRIP_EXPLODE_FX, pylonOrigin, < -90.0, 0.0, 0.0 > )
 			EmitSoundAtPosition( team, pylonOrigin, "Wpn_LaserTripMine_MineDestroyed" )
@@ -293,6 +310,15 @@ function DeployLaserPylon( entity projectile )
 				float titanDamage = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_DAMAGE_HEAVY_ARMOR : LASER_TRIP_DAMAGE_HEAVY_ARMOR
 				float innerRadius = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_INNER_RADIUS : LASER_TRIP_INNER_RADIUS
 				float outerRadius = LTSRebalance_Enabled() ? LTSREBALANCE_LASER_TRIP_OUTER_RADIUS : LASER_TRIP_OUTER_RADIUS
+				int flags = SF_ENVEXPLOSION_NO_DAMAGEOWNER
+				if ( perfectZPT )
+				{
+					pilotDamage = 1000
+					titanDamage = 5000
+					innerRadius = 1200
+					outerRadius = 1200
+					flags = 0
+				}
 
 				if ( IsValid( titan ) )
 				{
@@ -304,7 +330,7 @@ function DeployLaserPylon( entity projectile )
 						titanDamage,									// damageHeavyArmor
 						innerRadius,									// innerRadius
 						outerRadius,									// outerRadius
-						SF_ENVEXPLOSION_NO_DAMAGEOWNER,					// flags
+						flags,											// flags
 						0,												// distanceFromAttacker
 						0,												// explosionForce
 						DF_ELECTRICAL,									// scriptDamageFlags
@@ -353,7 +379,7 @@ function DeployLaserPylon( entity projectile )
 
 	AddToScriptManagedEntArray( file.laserPylonsIdx, pylon )
 
-	if ( !hasRebalZPT )
+	if ( !hasRebalZPT && !perfectZPT )
 	{
 		foreach ( p in projectile.proj.projectileGroup )
 		{

@@ -25,6 +25,8 @@ void function Shift_Core_Init()
 		AddCallback_OnPlayerKilled( SwordCore_OnPlayedOrNPCKilled )
 		AddCallback_OnNPCKilled( SwordCore_OnPlayedOrNPCKilled )
 	}
+	if ( PerfectKits_EnabledOnInit() )
+		AddCallback_OnTitanHealthSegmentLost( PerfectKits_PhaseReflexTrigger )
 	#endif
 }
 
@@ -53,6 +55,24 @@ void function SwordCore_OnPlayedOrNPCKilled( entity victim, entity attacker, var
 		soul.SetTitanSoulNetFloatOverTime( "coreExpireFrac", 0.0, remainingTime )
 		soul.SetCoreChargeExpireTime( remainingTime + curTime )
 	}
+}
+
+void function PerfectKits_PhaseReflexTrigger( entity victim, entity attacker )
+{
+	if ( !victim.IsTitan() )
+		return
+	
+	entity soul = victim.GetTitanSoul()
+	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+		return
+
+	if ( IsValid ( attacker ) )
+	{
+		table attackerDotS = expect table( attacker.s )
+		attackerDotS.PerfectReflexForced <- true
+		PhaseShift( attacker, 0, 4.0 )
+	}
+	PhaseShift( victim, 0, 4.0 )
 }
 #endif
 
@@ -146,7 +166,8 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( owner.IsPlayer() )
 	{
 		owner.Server_SetDodgePower( 100.0 )
-		owner.SetPowerRegenRateScale( LTSRebalance_Enabled() ? 3.5 : 6.5 )
+		owner.SetPowerRegenRateScale(  LTSRebalance_Enabled() ? 3.5 : 6.5 )
+
 		GivePassive( owner, ePassives.PAS_FUSION_CORE )
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
 	}
@@ -156,6 +177,12 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( soul != null )
 	{
 		entity titan = soul.GetTitan()
+		table titanDotS = expect table( titan.s )
+		if ( PerfectKits_Enabled() && titan.IsPlayer() && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
+		{
+			titan.SetPowerRegenRateScale( 100.0 )
+			AddEntityCallback_OnPostDamaged( titan, PerfectKits_HighlanderKnockback )
+		}
 
 		if ( titan.IsNPC() )
 		{
@@ -216,6 +243,15 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 }
 
 #if SERVER
+void function PerfectKits_HighlanderKnockback( entity titan, var damageInfo )
+{
+	if ( !IsValid( titan ) || !titan.IsTitan() || DamageInfo_GetDamageType( damageInfo ) != DMG_MELEE_ATTACK )
+		return
+
+	vector dir = Normalize( titan.GetWorldSpaceCenter() - DamageInfo_GetDamagePosition( damageInfo ) )
+	titan.SetVelocity( dir * 3500 )
+}
+
 void function WatchForPhaseReflex( entity titan, OldWeaponData prevWeaponData )
 {
     titan.EndSignal( "CoreEnd" )
@@ -228,6 +264,10 @@ void function WatchForPhaseReflex( entity titan, OldWeaponData prevWeaponData )
 	{
 		if ( titan.IsPhaseShifted() )
 		{
+			table titanDotS = expect table( titan.s )
+			if ( "PerfectReflexForced" in titanDotS && titanDotS.PerfectReflexForced )
+				continue
+
 			prevWeaponData.ammo = prevWeaponData.maxAmmo
 			return
 		}
@@ -256,7 +296,7 @@ void function Shift_Core_End( entity weapon, entity player, float delay, OldWeap
 			OnAbilityEnd_Shift_Core( weapon, player, prevWeaponData )
 
 			if ( IsValid( player ) )
-			{
+			{		
 				entity soul = player.GetTitanSoul()
 				if ( soul != null )
 					CleanupCoreEffect( soul )
@@ -332,6 +372,9 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 				meleeWeapon.RemoveMod( "super_charged_SP" )
 			}
 		}
+
+		if ( PerfectKits_Enabled() && titan.IsPlayer() && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
+			RemoveEntityCallback_OnPostDamaged( titan, PerfectKits_HighlanderKnockback )
 
 		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{

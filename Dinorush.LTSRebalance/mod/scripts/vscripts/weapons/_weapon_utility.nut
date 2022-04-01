@@ -1551,7 +1551,7 @@ function MissileControlledDrift( timeElapsed, timeStep, windiness, intensity, pa
 */
 
 #if SERVER
-function ClusterRocket_Detonate( entity rocket, vector normal )
+function ClusterRocket_Detonate( entity rocket, vector normal, entity stickEnt = null )
 {
 	entity owner = rocket.GetOwner()
 	if ( !IsValid( owner ) )
@@ -1600,11 +1600,11 @@ function ClusterRocket_Detonate( entity rocket, vector normal )
 	popcornInfo.groupSize = CLUSTER_ROCKET_BURST_GROUP_SIZE
 	popcornInfo.hasBase = true
 
-	thread StartClusterExplosions( rocket, owner, popcornInfo, CLUSTER_ROCKET_FX_TABLE )
+	thread StartClusterExplosions( rocket, owner, popcornInfo, CLUSTER_ROCKET_FX_TABLE, stickEnt )
 }
 
 
-function StartClusterExplosions( entity projectile, entity owner, PopcornInfo popcornInfo, customFxTable = null )
+function StartClusterExplosions( entity projectile, entity owner, PopcornInfo popcornInfo, customFxTable = null, entity stickEnt = null )
 {
 	Assert( IsValid( owner ) )
 	owner.EndSignal( "OnDestroy" )
@@ -1639,6 +1639,11 @@ function StartClusterExplosions( entity projectile, entity owner, PopcornInfo po
 	entity placementHelper = CreateScriptMover()
 	placementHelper.SetOrigin( origin )
 	placementHelper.SetAngles( VectorToAngles( popcornInfo.normal ) )
+	if ( stickEnt != null )
+	{
+		placementHelper.SetParent( stickEnt )
+		placementHelper.SetAbsOrigin( origin )
+	}
 	SetTeam( placementHelper, owner.GetTeam() )
 
 	array<entity> players = GetPlayerArray()
@@ -1669,7 +1674,7 @@ function StartClusterExplosions( entity projectile, entity owner, PopcornInfo po
 	if ( explosionDelay )
 		wait explosionDelay
 
-	waitthread ClusterRocketBursts( origin, explosionDamage, explosionDamageHeavyArmor, innerRadius, outerRadius, owner, popcornInfo, customFxTable )
+	waitthread ClusterRocketBursts( origin, explosionDamage, explosionDamageHeavyArmor, innerRadius, outerRadius, owner, popcornInfo, customFxTable, placementHelper, stickEnt != null )
 
 	if ( IsValid( projectile ) )
 		projectile.Destroy()
@@ -1680,7 +1685,7 @@ function StartClusterExplosions( entity projectile, entity owner, PopcornInfo po
 // ClusterRocketBurst() - does a "popcorn airburst" explosion effect over time around the origin. Total distance is based on popRangeBase
 // - returns the entity in case you want to parent it
 //------------------------------------------------------------
-function ClusterRocketBursts( vector origin, int damage, int damageHeavyArmor, float innerRadius, float outerRadius, entity owner, PopcornInfo popcornInfo, customFxTable = null )
+function ClusterRocketBursts( vector origin, int damage, int damageHeavyArmor, float innerRadius, float outerRadius, entity owner, PopcornInfo popcornInfo, customFxTable = null, entity placementHelper = null, bool stick = false )
 {
 	owner.EndSignal( "OnDestroy" )
 
@@ -1713,14 +1718,14 @@ function ClusterRocketBursts( vector origin, int damage, int damageHeavyArmor, f
 	int count = popcornInfo.groupSize
 	for ( int index = 0; index < count; index++ )
 	{
-		thread ClusterRocketBurst( clusterExplosionEnt, origin, damage, damageHeavyArmor, innerRadius, outerRadius, owner, popcornInfo, customFxTable )
+		thread ClusterRocketBurst( clusterExplosionEnt, origin, damage, damageHeavyArmor, innerRadius, outerRadius, owner, popcornInfo, customFxTable, placementHelper, stick )
 		WaitFrame()
 	}
 
 	wait ( LTSRebalance_Enabled() ? popcornInfo.duration : CLUSTER_ROCKET_DURATION )
 }
 
-function ClusterRocketBurst( entity clusterExplosionEnt, vector origin, damage, damageHeavyArmor, innerRadius, outerRadius, entity owner, PopcornInfo popcornInfo, customFxTable = null )
+function ClusterRocketBurst( entity clusterExplosionEnt, vector origin, damage, damageHeavyArmor, innerRadius, outerRadius, entity owner, PopcornInfo popcornInfo, customFxTable = null, entity placementHelper = null, bool stick = false )
 {
 	clusterExplosionEnt.EndSignal( "OnDestroy" )
 	Assert( IsValid( owner ), "ClusterRocketBurst had invalid owner" )
@@ -1763,8 +1768,14 @@ function ClusterRocketBurst( entity clusterExplosionEnt, vector origin, damage, 
 		}
 	)
 
+	if ( stick )
+		placementHelper.EndSignal( "OnDestroy" )
+
 	while ( IsValid( clusterBurstEnt ) && counter <= numBursts / popcornInfo.groupSize )
 	{
+		if ( stick )
+			origin = placementHelper.GetOrigin()
+
 		randVec = RandomVecInDome( popcornInfo.normal )
 		randRangeMod = RandomFloat( 1.0 )
 		popRange = popRangeBase * randRangeMod
@@ -2788,6 +2799,8 @@ void function PAS_CooldownReduction_OnKill( entity victim, entity attacker, var 
 	if ( GetCurrentPlaylistVarInt( "featured_mode_tactikill", 0 ) > 0 )
 	{
 		entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
+		if ( !IsValid(weapon) )
+			return
 
 		switch ( GetWeaponInfoFileKeyField_Global( weapon.GetWeaponClassName(), "cooldown_type" ) )
 		{
@@ -2821,6 +2834,8 @@ void function PAS_CooldownReduction_OnKill( entity victim, entity attacker, var 
 			return
 
 		entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
+		if ( !IsValid(weapon) )
+			return
 
 		switch ( GetWeaponInfoFileKeyField_Global( weapon.GetWeaponClassName(), "cooldown_type" ) )
 		{

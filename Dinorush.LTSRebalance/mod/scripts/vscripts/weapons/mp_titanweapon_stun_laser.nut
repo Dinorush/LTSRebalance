@@ -22,7 +22,7 @@ const float TEMP_SHIELD_DECAY_RATE = STUN_LASER_TEMP_SHIELD / 4.0
 const float PAS_VANGUARD_SHIELD_DECAY_MOD = 1.75
 const float TEMP_SHIELD_TICK_RATE = 0.1
 const int STUN_LASER_TRANSFER_PERM_SHIELD = 750
-
+const int PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD = 250
 
 struct
 {
@@ -76,7 +76,7 @@ void function StunLaser_MonitorTempShieldsThink( entity soul )
 				StunLaser_HandleTempShieldChange( soul, -damage )
 
 			// Decay temp shields over time
-			float mod = SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) ? 1.5 : 1.0
+			float mod = SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) ? PAS_VANGUARD_SHIELD_DECAY_MOD : 1.0
 			int decayAmt = int( TEMP_SHIELD_DECAY_RATE * ( Time() - lastTime ) / mod + 0.5 )
 			StunLaser_DecayTempShields( soul, decayAmt )
 		}
@@ -178,6 +178,13 @@ var function OnWeaponPrimaryAttack_titanweapon_stun_laser( entity weapon, Weapon
 			return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 	#endif
 
+	if ( weapon.HasMod( "PerfectKits_pas_vanguard_shield" ) && attackParams.burstIndex == 0 )
+	{
+		int count = weapon.GetWeaponChargeLevel() + 1
+		weapon.SetWeaponBurstFireCount( count )
+		weapon.s.burstFireCount <- count
+	}
+
 	weapon.s.entitiesHit <- []
 
 	entity weaponOwner = weapon.GetWeaponOwner()
@@ -187,7 +194,11 @@ var function OnWeaponPrimaryAttack_titanweapon_stun_laser( entity weapon, Weapon
 	ShotgunBlast( weapon, attackParams.pos, attackParams.dir, 1, DF_GIB | DF_EXPLOSION )
 	weapon.EmitWeaponNpcSound( LOUD_WEAPON_AI_SOUND_RADIUS_MP, 0.2 )
 	weapon.SetWeaponChargeFractionForced(1.0)
-	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
+	int ammoCost = weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
+
+	if ( weapon.GetWeaponBurstFireCount() > 0 )
+		ammoCost /= weapon.GetWeaponBurstFireCount()
+	return ammoCost
 }
 #if SERVER
 var function OnWeaponNPCPrimaryAttack_titanweapon_stun_laser( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -208,7 +219,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 
 	if ( LTSRebalance_Enabled() )
 	{
-		if ( !(target in weapon.s.entitiesHit) )
+		if ( !weapon.s.entitiesHit.contains( target ) )
 			weapon.s.entitiesHit.append( target )
 		else
 		{
@@ -216,6 +227,8 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 			return
 		}
 	}
+
+	float mod = "burstFireCount" in weapon.s ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.15 ) / float( weapon.s.burstFireCount ) : 1.0
 
 	if ( attacker.GetTeam() == target.GetTeam() )
 	{
@@ -233,7 +246,9 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 				int shieldRestoreAmount = LTSRebalance_Enabled() ? STUN_LASER_TRANSFER_PERM_SHIELD : 750
 				if ( SoulHasPassive( LTSRebalance_Enabled() ? attackerSoul : soul, ePassives.PAS_VANGUARD_SHIELD ) )
 					shieldRestoreAmount = int( 1.25 * shieldRestoreAmount )
+				shieldRestoreAmount = int( shieldRestoreAmount * mod )
 
+				shieldRestoreAmount -= PerfectKits_EnergyThiefConvert( target, shieldRestoreAmount )
 				StunLaser_HandleTempShieldChange( soul, shieldRestoreAmount )
 				float shieldAmount = min( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() )
 				shieldRestoreAmount = soul.GetShieldHealthMax() - int( shieldAmount )
@@ -249,6 +264,10 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 				int shieldRestoreAmount = STUN_LASER_PERM_SHIELD
 				if ( SoulHasPassive( attackerSoul, ePassives.PAS_VANGUARD_SHIELD ) )
 					shieldRestoreAmount = int( 1.25 * shieldRestoreAmount )
+				shieldRestoreAmount = int( shieldRestoreAmount * mod )
+
+				shieldRestoreAmount -= PerfectKits_EnergyThiefConvert( attacker, shieldRestoreAmount )
+				
 				StunLaser_HandleTempShieldChange( attackerSoul, shieldRestoreAmount )
 				attackerSoul.SetShieldHealth( min( attackerSoul.GetShieldHealth() + shieldRestoreAmount, attackerSoul.GetShieldHealthMax() ) )
 
@@ -282,18 +301,26 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		entity soul = attacker.GetTitanSoul()
 		if ( IsValid( soul ) )
 		{
-			int permRestoreAmount = ( target.GetArmorType() == ARMOR_TYPE_HEAVY ? ( LTSRebalance_Enabled() ? STUN_LASER_PERM_SHIELD : 750 ) : 250 )
+			int permRestoreAmount = target.GetArmorType() == ARMOR_TYPE_HEAVY ? ( LTSRebalance_Enabled() ? STUN_LASER_PERM_SHIELD : 750 ) : 250
 			if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) )
 				permRestoreAmount = int( 1.25 * permRestoreAmount )
+			permRestoreAmount = int( permRestoreAmount * mod )
+			
+			permRestoreAmount -= PerfectKits_EnergyThiefConvert( attacker, permRestoreAmount )
 
 			StunLaser_HandleTempShieldChange( soul, permRestoreAmount )
 			int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + permRestoreAmount )
 			soul.SetShieldHealth( newShield )
 			if ( LTSRebalance_Enabled() && target.GetArmorType() == ARMOR_TYPE_HEAVY && newShield < soul.GetShieldHealthMax() )
 			{
-				int tempShieldAmount = minint( soul.GetShieldHealthMax() - soul.GetShieldHealth(), STUN_LASER_TEMP_SHIELD )
-				soul.SetShieldHealth( soul.GetShieldHealth() + tempShieldAmount )
-				soul.s.tempShields.append( { shield = tempShieldAmount, overflow = STUN_LASER_TEMP_SHIELD - tempShieldAmount } )
+				int tempShieldAmount = int( STUN_LASER_TEMP_SHIELD * mod )
+				int perfectShieldsTaken = PerfectKits_EnergyThiefTake( attacker, tempShieldAmount )
+				tempShieldAmount -= perfectShieldsTaken
+				PerfectKits_EnergyThiefConvert( attacker, PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD ) // Bonus shield to compensate for not using temp shields
+
+				int shieldRestore = minint( soul.GetShieldHealthMax() - soul.GetShieldHealth(), tempShieldAmount )
+				soul.SetShieldHealth( soul.GetShieldHealth() + shieldRestore )
+				soul.s.tempShields.append( { shield = tempShieldAmount, overflow = maxint( 0, tempShieldAmount - shieldRestore ) + perfectShieldsTaken } )
 			}
 		}
 		if ( attacker.IsPlayer() )

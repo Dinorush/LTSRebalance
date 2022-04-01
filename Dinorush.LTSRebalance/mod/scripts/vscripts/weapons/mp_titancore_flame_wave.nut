@@ -107,7 +107,9 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
 	//This wave attack is spawning 3 waves, and we want them all to only do damage once to any individual target.
 	entity inflictor = CreateDamageInflictorHelper( 10.0 )
     inflictor.s.soulsHit <- []
-	entity scorchedEarthInflictor = CreateOncePerTickDamageInflictorHelper( 10.0 )
+
+	entity scorchedEarthInflictor = CreateOncePerTickDamageInflictorHelper( ( PerfectKits_Enabled() && weapon.HasMod( "pas_scorch_flamecore" ) ) ? 300.0 : 10.0 )
+	thread PerfectKits_CleanupScorchedInflictor( scorchedEarthInflictor )
 	#endif
 
 	array<float> offsets = [ -1.0, 0.0, 1.0 ]
@@ -147,6 +149,20 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
 }
 
 #if SERVER
+void function PerfectKits_CleanupScorchedInflictor( entity inflictor )
+{
+	inflictor.EndSignal( "OnDestroy" )
+	svGlobal.levelEnt.EndSignal( "OnDestroy" )
+	OnThreadEnd(
+		function() : ( inflictor )
+		{
+			if ( IsValid( inflictor ) )
+				inflictor.Destroy()
+		}
+	)
+	WaitForever()
+}
+
 void function BeginFlameWave( entity projectile, int projectileCount, entity inflictor, vector pos, vector dir )
 {
 	projectile.EndSignal( "OnDestroy" )
@@ -245,7 +261,7 @@ void function FlameWave_DamagedPlayerOrNPC( entity ent, var damageInfo )
     {
         entity soul = ent.GetTitanSoul()
         entity projectile = DamageInfo_GetInflictor( damageInfo )
-        if ( !(soul in projectile.s.soulsHit ) )
+        if ( !projectile.s.soulsHit.contains( soul ) )
             projectile.s.soulsHit.append( soul )
         else
         {
@@ -303,11 +319,11 @@ void function FlameWave_DamagedPlayerOrNPC( entity ent, var damageInfo )
 
 void function ZeroDamageAndClearInflictorArray( entity ent, var damageInfo )
 {
-		DamageInfo_SetDamage( damageInfo, 0 )
+	DamageInfo_SetDamage( damageInfo, 0 )
 
-		//This only works because Flame Wave doesn't leave lingering effects.
-		entity inflictor = DamageInfo_GetInflictor( damageInfo )
-		if ( inflictor.e.damagedEntities.contains( ent ) )
-			inflictor.e.damagedEntities.fastremovebyvalue( ent )
+	//This only works because Flame Wave doesn't leave lingering effects.
+	entity inflictor = DamageInfo_GetInflictor( damageInfo )
+	if ( inflictor.e.damagedEntities.contains( ent ) )
+		inflictor.e.damagedEntities.fastremovebyvalue( ent )
 }
 #endif

@@ -21,6 +21,9 @@ const SNIPER_PROJECTILE_SPEED			= 10000
 const float THREAT_OPTICS_SONARMIN      = 0.85
 const float THREAT_OPTICS_SONARCHARGE   = 0.15
 
+const float PERFECTKITS_VIPER_HEIGHT_MIN = 750
+const float PERFECTKITS_VIPER_HEIGHT_CONV = 0.0005
+
 struct {
 	float chargeDownSoundDuration = 1.0 //"charge_cooldown_time"
 } file
@@ -39,6 +42,8 @@ void function MpTitanWeapon_SniperInit()
 {
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_sniper, OnHit_TitanWeaponSniper )
+	if ( PerfectKits_EnabledOnInit() )
+		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_flightcore_rockets, PerfectKits_ApplyHeightDamage )
 	#endif
 }
 #if SERVER
@@ -65,10 +70,12 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 
 	if ( isCritical )
 	{
+		float critMod = expect float( inflictor.ProjectileGetWeaponInfoFileKeyField( "critical_hit_damage_scale" ) )
 		if ( projectileMods.contains( "fd_upgrade_crit" ) )
-			f_extraDamage *= 2.0
-		else
-			f_extraDamage *= expect float( inflictor.ProjectileGetWeaponInfoFileKeyField( "critical_hit_damage_scale" ) )
+			critMod = 2.0
+		if ( projectileMods.contains( "PerfectKits_pas_northstar_optics" ) )
+			critMod += 1.0
+		f_extraDamage *= critMod
 	}
 
 	//Check to see if damage has been see to zero so we don't override it.
@@ -83,16 +90,37 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 	float nearScale = 0.5
 	float farScale = 0
 
+	bool perfectPush = false
+	if ( damage > 0 && PerfectKits_Enabled() && projectileMods.contains( "pas_northstar_weapon" ) )
+	{
+		damage = 900.0
+		nearScale = 0
+		if ( "bulletsToFire" in inflictor.s && inflictor.s.bulletsToFire > 1 )
+		{
+			damage = 10.0
+			if ( expect int( inflictor.s.bulletsToFire ) == 6 )
+			{
+				perfectPush = true
+			}
+		}
+
+		DamageInfo_SetDamage( damageInfo, damage )
+	}
+
+	PerfectKits_ApplyHeightDamage( victim, damageInfo )
+
 	if ( victim.IsTitan() )
     {
-		PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
-
         if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_optics" ) && "bulletsToFire" in inflictor.s )
         {
             thread OnHit_ThreatOpticsSonarThink ( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), expect int( inflictor.s.bulletsToFire ) )
         }
-    }
 
+		PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
+    }
+	
+	if ( perfectPush )
+		victim.SetVelocity( Normalize( inflictor.GetVelocity() ) * 10000 )
 }
 
 void function OnHit_ThreatOpticsSonarThink ( entity enemy, vector position, entity owner, int chargeLevel )
@@ -115,6 +143,21 @@ void function OnHit_ThreatOpticsSonarThink ( entity enemy, vector position, enti
 
     float duration = THREAT_OPTICS_SONARMIN + THREAT_OPTICS_SONARCHARGE * chargeLevel
 	wait duration
+}
+
+void function PerfectKits_ApplyHeightDamage( entity victim, var damageInfo )
+{
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	if ( !IsValid( attacker ) || !attacker.IsTitan() )
+		return
+	
+	entity soul = attacker.GetTitanSoul()
+	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
+		return
+	
+	float downDist = TraceLine( attacker.GetOrigin(), attacker.GetOrigin() + <0, 0, -1>*5000, null, TRACE_MASK_SOLID_BRUSHONLY, TRACE_COLLISION_GROUP_DEBRIS ).fraction * 5000
+	float bonus = 1.0 + max( 0, downDist - PERFECTKITS_VIPER_HEIGHT_MIN ) * PERFECTKITS_VIPER_HEIGHT_CONV
+	DamageInfo_ScaleDamage( damageInfo, bonus )
 }
 
 var function OnWeaponNpcPrimaryAttack_titanweapon_sniper( entity weapon, WeaponPrimaryAttackParams attackParams )

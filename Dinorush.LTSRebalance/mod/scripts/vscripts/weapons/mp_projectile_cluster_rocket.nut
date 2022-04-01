@@ -11,7 +11,7 @@ void function OnProjectileCollision_ClusterRocket( entity projectile, vector pos
 	#if SERVER
 		float explosionDelay = expect float( projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_explosion_delay" ) )
 
-		ClusterRocket_Detonate( projectile, normal )
+		ClusterRocket_Detonate( projectile, normal, ( PerfectKits_Enabled() && enhanced && hitEnt.IsTitan() ) ? hitEnt : null )
 		if( LTSRebalance_Enabled() )
 			CreateNoSpawnArea( TEAM_INVALID, TEAM_INVALID, pos, duration + explosionDelay, range + 300 )
 		else

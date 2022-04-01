@@ -20,7 +20,6 @@ struct
 	int sphereClientFXHandle = -1
 } file
 #endif
-
 void function MpTitanAbilityGunShield_Init()
 {
 	PrecacheParticleSystem( FX_TITAN_GUN_SHIELD_WALL )
@@ -114,7 +113,10 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	}
 
 	#if SERVER
-		thread Sv_CreateGunShield( owner, weapon, shieldWeapon, duration )
+		if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) )
+			thread Sv_CreateGunShields( owner, weapon, shieldWeapon, duration )
+		else
+			thread Sv_CreateGunShield( owner, weapon, shieldWeapon, duration )
 	#endif
 
 	if ( duration > 0 )
@@ -149,6 +151,130 @@ var function OnWeaponNpcPrimaryAttack_gun_shield( entity weapon, WeaponPrimaryAt
 #endif
 
 #if SERVER
+void function Sv_CreateGunShields( entity titan, entity weapon, entity shieldWeapon, float duration )
+{
+	titan.EndSignal( "OnDeath" )
+	titan.EndSignal( "OnDestroy" )
+	titan.EndSignal( "DisembarkingTitan" )
+	titan.EndSignal( "TitanEjectionStarted" )
+	titan.EndSignal( "ContextAction_SetBusy" )
+
+	entity vortexWeapon = weapon
+	entity centerHelper = CreateEntity( "info_placement_helper" )
+	centerHelper.SetParent( weapon, "gun_shield" )
+	DispatchSpawn( centerHelper )
+
+	array<entity> vortexSpheres = [ CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon ) ]
+	vortexSpheres.extend( 
+		[ 	CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < 170, 0, 0 >, centerHelper ),
+			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -170, 0, 0 >, centerHelper ),
+			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < 85, 170, 0 >, centerHelper ),
+			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -85, 170, 0 >, centerHelper ),
+			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < 85, -170, 0 >, centerHelper ),
+			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -85, -170, 0 >, centerHelper ) 
+		] 
+	)
+	int weaponEHandle = vortexWeapon.GetEncodedEHandle()
+	int shieldEHandle = vortexSpheres[0].GetEncodedEHandle()
+	array<entity> shieldWallFXs
+	foreach ( vortexSphere in vortexSpheres )
+		shieldWallFXs.append( vortexSphere.e.shieldWallFX )
+
+	if ( titan.IsPlayer() )
+	{
+		Remote_CallFunction_Replay( titan, "ServerCallback_PilotCreatedGunShield", weaponEHandle, shieldEHandle )
+		EmitSoundOnEntityOnlyToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_start_1p" )
+		EmitSoundOnEntityExceptToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_start_3p" )
+	}
+	else
+	{
+		EmitSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
+	}
+
+	OnThreadEnd(
+		function() : ( titan, vortexSpheres, vortexWeapon, shieldWallFXs, centerHelper )
+		{
+			if ( IsValid( vortexWeapon ) )
+			{
+                // Remove Shield debuffs when it breaks
+				if ( LTSRebalance_Enabled() )
+				{
+					if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
+					{
+						while( vortexWeapon.GetForcedADS() )
+							vortexWeapon.ClearForcedADS()
+					}
+
+					entity owner = vortexWeapon.GetWeaponOwner()
+					if ( IsValid( owner ) )
+					{
+						if ( owner.IsPlayer() )
+							owner.ClearMeleeDisabled()
+						owner.Signal( "GunShieldEnd" )
+					}
+
+					vortexWeapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
+					vortexWeapon.e.gunShieldActive = false
+				}
+
+				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_1p" )
+				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
+				if ( IsValid( titan ) && titan.IsPlayer() )
+				{
+					EmitSoundOnEntityOnlyToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_1p" )
+					EmitSoundOnEntityExceptToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_3p" )
+				}
+				else
+				{
+					EmitSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_stop_3p" )
+				}
+				vortexWeapon.SetWeaponUtilityEntity( null )
+			}
+
+			foreach ( shieldWallFX in shieldWallFXs )
+				if ( IsValid( shieldWallFX ) )
+					EffectStop( shieldWallFX )
+
+			bool hadSphere = false
+			foreach ( vortexSphere in vortexSpheres )
+			{
+				if ( IsValid( vortexSphere ) )
+				{
+					vortexSphere.Destroy()
+					hadSphere = true
+				}
+			}
+
+			if ( IsValid( centerHelper ) )
+				centerHelper.Destroy()
+
+			if ( !hadSphere && IsValid( titan ) )
+			{
+				EmitSoundOnEntity( titan, "titan_energyshield_down" )
+				PlayFXOnEntity( FX_TITAN_GUN_SHIELD_BREAK, titan, "PROPGUN" )
+			}
+		}
+	)
+
+	float endTime = Time() + duration
+	while ( endTime > Time() )
+	{
+		bool good = false
+		foreach( vortexSphere in vortexSpheres )
+		{
+			if ( IsValid( vortexSphere ) )
+			{
+				good = true
+				break
+			}
+		}
+		if ( !good )
+			return
+			
+		WaitFrame()	
+	}
+}
+
 void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeapon, float duration )
 {
 	titan.EndSignal( "OnDeath" )
@@ -237,7 +363,7 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 		WaitForever()
 }
 
-entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon, entity shieldWeapon )
+entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon, entity shieldWeapon, vector offset = < 0, 0, 0 > , entity centerHelper = null )
 {
 	int attachmentID = vortexWeapon.LookupAttachment( "gun_shield" )
 	float sphereRadius = TITAN_GUN_SHIELD_RADIUS
@@ -290,8 +416,13 @@ entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon,
 
 	vortexSphere.SetOwner( player )
 	vortexSphere.SetOwnerWeapon( vortexWeapon )
-	vortexSphere.SetParent( vortexWeapon, "gun_shield" )
-	vortexWeapon.SetWeaponUtilityEntity( vortexSphere )
+	if ( centerHelper != null )
+		vortexSphere.SetParent( centerHelper )
+	else
+	{
+		vortexSphere.SetParent( vortexWeapon, "gun_shield" )
+		vortexWeapon.SetWeaponUtilityEntity( vortexSphere )
+	}
 
 	EntFireByHandle( vortexSphere, "Enable", "", 0, null, null )
 
@@ -311,11 +442,17 @@ entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon,
 	shieldWallFX.kv.cpoint1 = cpoint.GetTargetName()
 	shieldWallFX.SetStopType( "destroyImmediately" )
 	shieldWallFX.DisableHibernation()
-	shieldWallFX.SetLocalOrigin( < 0, 0, 0 > )
+	shieldWallFX.SetOrigin( offset )
 
-	vortexSphere.SetGunVortexAngles( < 0, 0, 180 > )
-	vortexSphere.SetGunVortexAttachment( "gun_shield" )
-	vortexSphere.SetVortexEffect( shieldWallFX)
+	if ( centerHelper != null )
+		vortexSphere.SetAngles( <180, 0, 0> )
+	else
+	{
+		vortexSphere.SetGunVortexAngles( < 0, 0, 180 > )
+		vortexSphere.SetGunVortexAttachment( "gun_shield" )
+	}
+	vortexSphere.SetVortexEffect( shieldWallFX )
+	vortexSphere.SetOrigin( offset )
 
 	DispatchSpawn( shieldWallFX )
 

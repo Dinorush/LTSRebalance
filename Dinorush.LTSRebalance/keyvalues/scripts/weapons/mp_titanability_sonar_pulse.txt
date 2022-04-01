@@ -7,5 +7,10 @@ WeaponData
 			"charge_cooldown_time"							"0.0"
     		"deploy_time" 									"0.4"
 		}
+		PerfectKits_pas_tone_sonar
+		{
+			"projectile_launch_speed"						"*0.01"
+			"projectile_gravity_scale"						"*.07"
+		}
 	}	
 }

@@ -268,6 +268,10 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 						teleFragTarget.TakeDamage( teleFragTarget.GetHealth() + 1, ent, ent, { damageSourceId = eDamageSourceId.phase_shift, scriptType = DF_GIB | DF_BYPASS_SHIELD | DF_SKIPS_DOOMED_STATE } );
 					}
 				}
+
+				table entDotS = expect table( ent.s )
+				if ( "PerfectReflexForced" in entDotS )
+					entDotS.PerfectReflexForced = false
 			}
 		}
 	)
@@ -518,6 +522,10 @@ void function PhaseReflexReloadMain( entity titan )
 {
 	if ( LTSRebalance_Enabled() && SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_RONIN_AUTOSHIFT ) )
 	{
+		table titanDotS = expect table( titan.s )
+		if ( "PerfectReflexForced" in titanDotS && expect bool( titanDotS.PerfectReflexForced ) )
+			return
+
 		array<entity> weapons = titan.GetMainWeapons()
 		if( weapons.len() > 0 ) // During Sword Core, Leadwall doesn't exist
 		{

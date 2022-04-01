@@ -10,5 +10,13 @@ WeaponData
 			"charge_cooldown_time"							"*0.5"
 			"charge_cooldown_delay"   						"*0.5"
 		}
+		PerfectKitsReplace_pas_ion_lasercannon
+		{
+			"core_duration"									"5.0"
+			"sustained_discharge_duration"					"5.0" // core duration
+			"sustained_laser_radius"						"300"
+			"sustained_laser_radial_iterations"				"6"
+			"sustained_laser_radial_step"					"2"
+		}
 	}
 }

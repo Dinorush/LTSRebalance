@@ -38,5 +38,14 @@ WeaponData
 
 			"hud_icon"										"rui/titan_loadout/passive/monarch_core_energy_transfer"
 		}
+
+		PerfectKits_pas_vanguard_shield
+		{
+			"charge_levels"									"4"
+			"fire_rate"   									"10"
+			"burst_fire_count"								"1"
+			"burst_fire_delay"								"0.65"
+			"charge_remain_full_when_fired"					"0"
+		}
 	}
 }

@@ -67,6 +67,14 @@ var function OnWeaponPrimaryAttack_titanweapon_arc_wave( entity weapon, WeaponPr
 			return 1
 	#endif
 
+	if ( PerfectKits_Enabled() && weapon.HasMod( "pas_ronin_arcwave" ) )
+	{
+		vector attackDir = attackParams.dir
+		attackDir.x *= -1
+		attackDir.y *= -1
+		attackParams.dir = attackDir
+	}
+
 	const float FUSE_TIME = 99.0
 	entity projectile = weapon.FireWeaponGrenade( attackParams.pos, attackParams.dir, < 0,0,0 >, FUSE_TIME, damageTypes.projectileImpact, damageTypes.explosive, shouldPredict, true, true )
 	if ( IsValid( projectile ) )
@@ -169,11 +177,11 @@ const FX_EMP_BODY_TITAN			= $"P_emp_body_titan"
 void function ArcWaveOnDamage( entity ent, var damageInfo )
 {
     // Bug fix: can hit both player titan and the auto titan if hitting as disembark/embark ends
+	entity projectile = DamageInfo_GetInflictor( damageInfo )
     if( LTSRebalance_Enabled() && ent.IsTitan() )
     {
         entity soul = ent.GetTitanSoul()
-        entity projectile = DamageInfo_GetInflictor( damageInfo )
-        if ( !(soul in projectile.s.soulsHit ) )
+        if ( !projectile.s.soulsHit.contains( soul ) )
             projectile.s.soulsHit.append( soul )
         else
         {
@@ -187,6 +195,7 @@ void function ArcWaveOnDamage( entity ent, var damageInfo )
 
 	EmitSoundOnEntity( ent, ARC_CANNON_TITAN_SCREEN_SFX )
 
+	float duration = ( PerfectKits_Enabled() && projectile.ProjectileGetMods().contains( "pas_ronin_arcwave" ) ) ? 6.0 : 2.0
 	if ( ent.IsPlayer() || ent.IsNPC() )
 	{
 		//Run any custom callbacks for arc wave damage.
@@ -201,8 +210,8 @@ void function ArcWaveOnDamage( entity ent, var damageInfo )
 		if ( soul != null )
 			entToSlow = soul
 
-		StatusEffect_AddTimed( entToSlow, eStatusEffect.move_slow, 0.5, 2.0, 1.0 )
-		StatusEffect_AddTimed( entToSlow, eStatusEffect.dodge_speed_slow, 0.5, 2.0, 1.0 )
+		StatusEffect_AddTimed( entToSlow, eStatusEffect.move_slow, 0.5, duration, 1.0 )
+		StatusEffect_AddTimed( entToSlow, eStatusEffect.dodge_speed_slow, 0.5, duration, 1.0 )
 	}
 
 	string tag = ""
@@ -231,7 +240,6 @@ void function ArcWaveOnDamage( entity ent, var damageInfo )
 
 	if ( tag != "" )
 	{
-		float duration = 2.0
 		thread EMP_FX( effect, ent, tag, duration )
 	}
 
