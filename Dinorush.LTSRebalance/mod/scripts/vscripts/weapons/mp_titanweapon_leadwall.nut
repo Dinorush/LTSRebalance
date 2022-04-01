@@ -64,6 +64,7 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 		else
 			adsMultiplier = 1.0
 
+		bool perfectRicochet = PerfectKits_Enabled() && weapon.HasMod( "PerfectKitsReplace_pas_ronin_weapon" )
 		float spreadFrac = LTSRebalance_Enabled() ? 0.043 : 0.05
 		for ( int index = 0; index < numProjectiles; index++ )
 		{
@@ -86,6 +87,13 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 
 				if ( weapon.GetWeaponClassName() == "mp_weapon_shotgun_doublebarrel" )
 					bolt.SetProjectileLifetime( RandomFloatRange( 1.0, 1.3 ) )
+				else if ( perfectRicochet )
+				{
+					bolt.SetProjectileLifetime( 30.0 )
+					#if SERVER
+					thread PerfectKits_RicochetLeadwallThink( bolt )
+					#endif
+				}
 				else
 				    bolt.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) ) 
 
@@ -97,8 +105,39 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 	return 1
 }
 
+#if SERVER
+void function PerfectKits_RicochetLeadwallThink( entity projectile )
+{
+	projectile.EndSignal( "OnDestroy" )
+	float speed = Length( projectile.GetVelocity() )
+	wait RandomFloatRange(0.3, 0.35)
+	if ( projectile.IsSolid() )
+	{
+		projectile.SetVelocity( projectile.GetVelocity() * .03 )
+		projectile.NotSolid()
+		projectile.s.hasBoomeranged <- true
+	}
+	wait 5.0
+	projectile.Solid()
+	float accelSpeed = speed * -.07
+	float endTime = Time() + 2
+	while( endTime > Time() )
+	{
+		vector curVel = projectile.GetVelocity()
+		projectile.SetVelocity( projectile.GetVelocity() + Normalize( projectile.GetVelocity() ) * accelSpeed )
+		if ( curVel.Dot( projectile.GetVelocity() ) < 0 )
+			accelSpeed *= -1
+
+		WaitFrame()
+	}
+
+	projectile.Destroy()
+}
+#endif
+
 void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vector pos, vector normal, entity hitEnt, int hitbox, bool isCritical )
 {
+
 	#if SERVER
 		int bounceCount = projectile.GetProjectileWeaponSettingInt( eWeaponVar.projectile_ricochet_max_count )
 
@@ -107,9 +146,18 @@ void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vec
 
 		if ( hitEnt == svGlobal.worldspawn )
 			EmitSoundAtPosition( TEAM_UNASSIGNED, pos, "Bullets.DefaultNearmiss" )
-
-		if ( LTSRebalance_Enabled() )
-        	projectile.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) ) 
+		
+		if ( PerfectKits_Enabled() )
+		{
+			if ( !( "hasBoomeranged" in projectile.s ) )
+			{
+				projectile.SetVelocity( projectile.GetVelocity() * .03 )
+				projectile.NotSolid()
+				projectile.s.hasBoomeranged <- true
+			}
+		}
+		else if ( LTSRebalance_Enabled() )
+        	projectile.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) )
 		projectile.proj.projectileBounceCount++
 	#endif
 }

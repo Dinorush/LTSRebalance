@@ -8,14 +8,20 @@ WeaponData
 			"damage_far_distance" 							"1200"
 
 			"lower_time"  									"0.01"
-
-			"projectile_damage_reduction_per_bounce"		"-25"
-			"projectile_damages_owner"						"0"
-			"projectile_speed_reduction_factor"				"0.0"
 		}
 		LTSRebalance_pas_ronin_weapon
 		{
 			"projectile_ricochet_max_count"					"2"
+			"projectile_damage_reduction_per_bounce"		"-25"
+			"projectile_damages_owner"						"0"
+			"projectile_speed_reduction_factor"				"0.0"
+		}
+		PerfectKitsReplace_pas_ronin_weapon
+		{
+			"projectile_ricochet_max_count"					"100"
+			"projectile_damage_reduction_per_bounce"		"-50"
+			"projectile_speed_reduction_factor"				"0.0"
+			"projectile_damages_owner"						"1"
 		}
 	}
 }

@@ -99,7 +99,12 @@ entity function CreateParticleWallForOwnerFromDirection( entity weaponOwner, flo
     if ( SoulHasPassive( titanSoul, ePassives.PAS_TONE_WALL )  )
 	{
 		health = LTSRebalance_Enabled() ? LTSREBALANCE_PAS_TONE_WALL_HEALTH : PAS_TONE_WALL_HEALTH
-		duration *= LTSRebalance_Enabled() ? 1.0 : PAS_TONE_WALL_DURATION_MULTIPLIER
+		duration *= ( LTSRebalance_Enabled() || PerfectKits_Enabled() ) ? 1.0 : PAS_TONE_WALL_DURATION_MULTIPLIER
+		if ( PerfectKits_Enabled() )
+		{
+			duration *= 2
+			health = 100000
+		}
 	}
 	else
 	{

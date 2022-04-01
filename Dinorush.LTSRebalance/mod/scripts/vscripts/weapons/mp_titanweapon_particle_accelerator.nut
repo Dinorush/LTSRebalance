@@ -16,6 +16,7 @@ global function OnWeaponNpcPrimaryAttack_titanweapon_particle_accelerator
 
 const ADS_SHOT_COUNT_NORMAL = 3
 const ADS_SHOT_COUNT_UPGRADE = 5
+const PERFECTKITS_ADS_SHOT_COUNT_UPGRADE = 7
 const TPAC_PROJECTILE_SPEED = 8000
 const TPAC_PROJECTILE_SPEED_NPC = 5000
 const LSTAR_LOW_AMMO_WARNING_FRAC = 0.25
@@ -34,20 +35,24 @@ const LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT = 25
 const LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 7
 
 struct {
-	float[ADS_SHOT_COUNT_UPGRADE] boltOffsets = [
+	float[PERFECTKITS_ADS_SHOT_COUNT_UPGRADE] boltOffsets = [
 		0.0,
 		0.022,
 		-0.022,
 		0.044,
 		-0.044,
+		0.066,
+		-0.066
 	]
 
-	float[ADS_SHOT_COUNT_UPGRADE] LTSRebalance_boltOffsets = [
+	float[PERFECTKITS_ADS_SHOT_COUNT_UPGRADE] LTSRebalance_boltOffsets = [
 		0.0,
 		0.02,
 		-0.02,
 		0.04,
 		-0.04,
+		0.06,
+		-0.06
 	]
 } file
 
@@ -83,6 +88,17 @@ void function OnWeaponStartZoomIn_titanweapon_particle_accelerator( entity weapo
 			mods.append( "proto_particle_accelerator" )
 	}
 
+	if ( weapon.HasMod( "PerfectKits_pas_ion_weapon_ads" ) )
+		mods.append( "PerfectKits_pas_ion_weapon_ads_helper" )
+	#if SERVER
+	else if ( PerfectKits_Enabled() )
+	{
+		entity owner = weapon.GetWeaponOwner()
+		if ( owner.IsTitan() && IsValid( owner.GetTitanSoul() ) && SoulHasPassive( owner.GetTitanSoul(), ePassives.PAS_ION_WEAPON ) )
+			mods.append( "PerfectKits_pas_ion_weapon_helper" )
+	}
+	#endif
+
 	weapon.SetMods( mods )
 
 	#if CLIENT
@@ -100,6 +116,8 @@ void function OnWeaponStartZoomOut_titanweapon_particle_accelerator( entity weap
 	array<string> mods = weapon.GetMods()
 	mods.fastremovebyvalue( "proto_particle_accelerator" )
 	mods.fastremovebyvalue( "proto_particle_accelerator_pas" )
+	mods.fastremovebyvalue( "PerfectKits_pas_ion_weapon_ads_helper" )
+	mods.fastremovebyvalue( "PerfectKits_pas_ion_weapon_helper" )
 	weapon.SetMods( mods )
 	//weapon.StopWeaponEffect( $"wpn_arc_cannon_charge_fp", $"wpn_arc_cannon_charge" )
 	weapon.StopWeaponEffect( TPA_ADS_EFFECT_1P, TPA_ADS_EFFECT_3P )
@@ -154,7 +172,6 @@ function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams attack
 	entity owner = weapon.GetWeaponOwner()
     bool inADS = weapon.IsWeaponInAds()
 	int ADS_SHOT_COUNT = ( weapon.HasMod( "pas_ion_weapon_ads" ) || weapon.HasMod( "LTSRebalance_pas_ion_weapon_ads" ) ) ? ADS_SHOT_COUNT_UPGRADE : ADS_SHOT_COUNT_NORMAL
-
 	if ( shouldCreateProjectile )
 	{
 	    int shotCount = inADS ? ADS_SHOT_COUNT : 1
@@ -181,9 +198,17 @@ function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams attack
 			weapon.EmitWeaponSound_1p3p( "Weapon_Particle_Accelerator_AltFire_1P", "Weapon_Particle_Accelerator_AltFire_SecondShot_3P" )
 		}
 
+		if ( PerfectKits_Enabled() )
+		{
+			if ( shotCount == 1 && weapon.HasMod( "PerfectKits_pas_ion_weapon_ads" ) )
+				shotCount = 3
+			else if ( shotCount == ADS_SHOT_COUNT_UPGRADE && PerfectKits_Enabled() )
+				shotCount = PERFECTKITS_ADS_SHOT_COUNT_UPGRADE
+		}
+
 		vector attackAngles = VectorToAngles( attackParams.dir )
 		vector baseRightVec = AnglesToRight( attackAngles )
-		float[ADS_SHOT_COUNT_UPGRADE] boltOffsets = LTSRebalance_Enabled() ? file.LTSRebalance_boltOffsets : file.boltOffsets
+		float[PERFECTKITS_ADS_SHOT_COUNT_UPGRADE] boltOffsets = LTSRebalance_Enabled() ? file.LTSRebalance_boltOffsets : file.boltOffsets
 		for ( int index = 0; index < shotCount; index++ )
 		{
 			vector attackVec = attackParams.dir + baseRightVec * boltOffsets[index]
@@ -255,7 +280,13 @@ void function OnHit_TitanWeaponParticleAccelerator( entity victim, var damageInf
 	if ( !IsValid( soul ) )
 		return
 
-	if ( ( IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) ) && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
+	if ( PerfectKits_Enabled() && SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) )
+	{
+		array<string> mods = inflictor.ProjectileGetMods()
+		if ( mods.contains( "proto_particle_accelerator" ) )
+			StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 1.0, 0.25, 0.1 )
+	}
+	else if ( ( IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) ) && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
 	{
 			array<string> mods = inflictor.ProjectileGetMods()
 			var energyGain = 0

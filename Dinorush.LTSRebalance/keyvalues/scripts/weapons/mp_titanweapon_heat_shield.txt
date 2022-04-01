@@ -17,5 +17,11 @@ WeaponData
 			"damage_near_value_titanarmor"					"*1.2"
 			"damage_far_value_titanarmor" 					"*1.2"
 		}
+		PerfectKitsReplace_pas_scorch_shield
+		{
+			"offhand_blocks_sprint"							"0"
+			"charge_time" 									"*1.5"
+			"charge_cooldown_time"							"*1.5"
+		}
 	}
 }

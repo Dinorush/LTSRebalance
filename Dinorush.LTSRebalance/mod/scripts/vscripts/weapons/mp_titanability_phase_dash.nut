@@ -12,7 +12,14 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 	//PlayWeaponSound( "fire" )
 	entity player = weapon.GetWeaponOwner()
 
-	float shiftTime =  1.0
+	float shiftTime = 1.0
+	// float phaseTime = 1.0 // Separate so the slow doesn't last the whole dash for Phase Reflex
+	// if ( LTSRebalance_Enabled() && player.IsTitan() )
+	// {
+	// 	entity soul = player.GetTitanSoul()
+	// 	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+	// 		phaseTime = 2.0
+	// }
 
 	if ( IsAlive( player ) )
 	{
@@ -62,17 +69,35 @@ void function PhaseDash( entity weapon, entity player )
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect * 1.5
 	else
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect
-	SetPlayerVelocityFromInput( player, moveSpeed, <0,0,200> )
+	bool perfectPhase = PerfectKits_Enabled() && weapon.HasMod( "pas_ronin_phase" )
+	SetPlayerVelocityFromInput( player, moveSpeed, <0,0,200>, perfectPhase )
+	if ( perfectPhase )
+		thread PerfectKits_DelayedPhaseDrop( player, moveSpeed )
 }
 
-void function SetPlayerVelocityFromInput( entity player, float scale, vector baseVel = < 0,0,0 > )
+void function SetPlayerVelocityFromInput( entity player, float scale, vector baseVel = < 0,0,0 >, bool perfectPhase = false )
 {
 	vector angles = player.EyeAngles()
 	float xAxis = player.GetInputAxisRight()
 	float yAxis = player.GetInputAxisForward()
 	vector directionForward = GetDirectionFromInput( angles, xAxis, yAxis )
 
+	if ( perfectPhase )
+	{
+		directionForward.z = max( 0.0, directionForward.z )
+		baseVel = < 0, 0, PHASE_DASH_SPEED >
+	}
+
 	player.SetVelocity( directionForward * scale + baseVel )
+}
+
+void function PerfectKits_DelayedPhaseDrop( entity player, float moveSpeed )
+{
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDeath" )
+	player.WaitSignal( "StopPhaseShift" )
+
+	player.SetVelocity( < 0, 0, -moveSpeed > )
 }
 #endif
 

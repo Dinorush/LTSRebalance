@@ -141,6 +141,8 @@ bool function CreateThermiteWallSegment( entity projectile, int projectileCount,
 		{
 			damageSource = eDamageSourceId.mp_titancore_flame_wave_secondary
 			duration = 1.5 * GetThermiteDurationBonus( owner )
+			if ( PerfectKits_Enabled() )
+				duration = 300.0
 		}
 		else
 		{

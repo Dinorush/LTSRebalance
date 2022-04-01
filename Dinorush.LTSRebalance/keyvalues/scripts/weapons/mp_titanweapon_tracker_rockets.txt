@@ -19,5 +19,10 @@ WeaponData
 			"smart_ammo_max_targeted_burst"					"7"
 			"fire_rate"									 	"8.6"
 		}
+
+		PerfectKits_pas_tone_rockets
+		{
+			"fire_rate"										"*100"
+		}
 	}
 }

@@ -4,11 +4,14 @@ global function LTSRebalance_Init
 global function LTSRebalance_Enabled
 global function LTSRebalance_EnabledOnInit
 global function LTSRebalance_Precache
+global function PerfectKits_Enabled
+global function PerfectKits_EnabledOnInit
 global function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse
 global function WeaponHasAmmoToUse
 
 struct {
 	bool ltsrebalance_enabled = false
+	bool perfectkits_enabled = false
 } file
 
 void function LTSRebalance_PreInit()
@@ -23,11 +26,23 @@ void function LTSRebalance_RegisterRemote()
 
 void function LTSRebalance_Init()
 {
-	
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
+	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "perfectkits_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	LTSRebalance_Precache()
 
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
+	file.perfectkits_enabled = PerfectKits_EnabledOnInit()
+
+	// If spawn callbacks call LTSRebalance first, it will mess up kit checks, so call it in Rebalance if both are on
+	if ( file.perfectkits_enabled )
+	{
+
+		#if SERVER
+		if ( !file.ltsrebalance_enabled )
+			AddSpawnCallback( "npc_titan", PerfectKits_HandleAttachments )
+		#endif
+	}
+
 	if ( !file.ltsrebalance_enabled )
 		return
 
@@ -56,12 +71,24 @@ bool function LTSRebalance_Enabled()
 	return file.ltsrebalance_enabled
 }
 
+bool function PerfectKits_EnabledOnInit()
+{
+	return GetCurrentPlaylistVarInt( "perfectkits_enable", 0 ) == 1
+}
+
+bool function PerfectKits_Enabled() 
+{
+	return file.perfectkits_enabled
+}
+
 void function LTSRebalance_Precache()
 {
 	PrecacheWeapon( "mp_titanweapon_shift_core_sword" )
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
+	PrecacheWeapon( "mp_titanweapon_predator_cannon_perfectkits" )
 	table damageSourceTable = expect table( getconsttable()["eDamageSourceId"] )
 	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
+	damageSourceTable.mp_titanweapon_predator_cannon_perfectkits <- eDamageSourceId.mp_titanweapon_predator_cannon
 }
 
 void function LTSRebalance_WeaponInit()
@@ -117,6 +144,59 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 	}
 }
 
+void function PerfectKits_HandleAttachments( entity titan )
+{
+	entity soul = titan.GetTitanSoul()
+	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
+		soul.s.energy_thief_dash_scale <- 1.0
+
+	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
+		thread PerfectKits_TemperedPlating_SlowThink( soul )
+
+	array<entity> weapons = titan.GetMainWeapons()
+	if ( weapons.len() > 0 ) // We replace certain weapons that would cause errors in vanilla or need new files for other reasons
+	{
+		string weaponName = weapons[0].GetWeaponClassName()
+		switch ( weaponName )
+		{
+			case "mp_titanweapon_predator_cannon":
+				array<string> mods = weapons[0].GetMods()
+				titan.TakeWeaponNow( weaponName )
+				titan.GiveWeapon( weaponName + "_perfectkits", mods )
+		}
+		weapons = titan.GetMainWeapons()
+	}
+	weapons.extend( titan.GetOffhandWeapons() )
+
+	foreach ( weapon in weapons )
+	{
+		array<string> weaponMods = weapon.GetMods()
+		array<string> globalMods = GetWeaponMods_Global( weapon.GetWeaponClassName() )
+		for ( int i = weaponMods.len() - 1; i >= 0; i-- )
+		{
+			string replaceMod = "PerfectKitsReplace_" + weaponMods[i]
+			string perfectMod = "PerfectKits_" + weaponMods[i]
+			if ( globalMods.contains( replaceMod ) )
+			{
+				weaponMods.remove(i)
+				weaponMods.append( replaceMod )
+			}
+			else if ( globalMods.contains( perfectMod ) )
+				weaponMods.append( perfectMod )
+		}
+
+		if ( weapon.GetWeaponClassName() == "mp_titanability_particle_wall" && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
+			weaponMods.append( "PerfectKits_pas_tone_wall" )
+
+		if ( weapon.GetWeaponClassName() == "mp_titanweapon_stun_laser" && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) )
+			weaponMods.append( "PerfectKits_pas_vanguard_shield" )
+
+		weapon.SetMods( weaponMods )
+		if( weapon.GetWeaponPrimaryClipCountMax() > 0 )
+			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() )
+	}
+}
+
 void function LTSRebalance_HandleAttachments( entity titan )
 {
 	array<entity> weapons = titan.GetMainWeapons()
@@ -130,11 +210,14 @@ void function LTSRebalance_HandleAttachments( entity titan )
 				titan.TakeWeaponNow( weaponName )
 				titan.GiveWeapon( weaponName + "_ltsrebalance", mods )
 		}
+		weapons = titan.GetMainWeapons()
 	}
+	if ( file.perfectkits_enabled )
+		PerfectKits_HandleAttachments( titan )
+
 	weapons.extend( titan.GetOffhandWeapons() )
 
 	string prefix = "LTSRebalance_"
-	int prefixLen = prefix.len()
 	foreach ( weapon in weapons )
 	{
 		array<string> weaponMods = weapon.GetMods()
@@ -147,6 +230,13 @@ void function LTSRebalance_HandleAttachments( entity titan )
 				weaponMods.remove(i)
 				weaponMods.append( rebalMod )
 			}
+		}
+
+		if ( weaponMods.contains( "PerfectKits_pas_ion_weapon_ads" ) )
+		{
+			entity laser = titan.GetOffhandWeapon( OFFHAND_RIGHT )
+			if ( IsValid( laser ) && laser.GetWeaponClassName() == "mp_titanweapon_laser_lite" )
+				laser.AddMod( "PerfectKits_refrac_balance" )
 		}
 
 		if ( weaponMods.contains( "LTSRebalance_arc_rounds" ) ) // Specific case for Aegis Monarch

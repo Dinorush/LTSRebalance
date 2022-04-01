@@ -593,6 +593,9 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 	if ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_heat_shield" )
 		return true
 
+	if ( PerfectKits_Enabled() && ( vortexWeapon.HasMod( "LTSRebalance_pas_ion_vortex" ) || vortexWeapon.HasMod( "pas_ion_vortex" ) ) )
+		return true
+
 	if ( !Vortex_ScriptCanHandleImpactEvent( impactData ) )
 		return false
 

@@ -79,6 +79,8 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 	    player.kv.gravity = 0.0
 	}
 
+	bool perfectViper = PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE )
+
 	if ( soul == null )
 		soul = player
 
@@ -162,6 +164,8 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 		float height
         if ( stallHover )
             height = 70
+		else if ( perfectViper )
+			height = RISE_VEL
         else
         {
             if ( timePassed < LERP_IN_FLOAT )

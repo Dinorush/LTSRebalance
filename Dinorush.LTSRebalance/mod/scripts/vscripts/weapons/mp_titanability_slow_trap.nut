@@ -65,6 +65,27 @@ var function OnWeaponPrimaryAttack_titanweapon_slow_trap( entity weapon, WeaponP
 		PlayerUsedOffhand( weaponOwner, weapon )
 
 	ThrowDeployable( weapon, attackParams, LTSRebalance_Enabled() ? 2000.0 : 1500.0, OnSlowTrapPlanted, <0,0,0> )
+	if ( PerfectKits_Enabled() )
+	{
+		#if CLIENT
+		entity firewall = weaponOwner.GetOffhandWeapon( OFFHAND_RIGHT )
+		// Client can't check titan passives, so check mod on RH weapon instead (we want client to throw the deployables)
+		if ( IsValid( firewall ) && ( firewall.HasMod( "pas_scorch_firewall" ) || firewall.HasMod( "LTSRebalance_pas_scorch_firewall" ) ) )
+		#else
+		if ( weaponOwner.IsTitan() && IsValid( weaponOwner.GetTitanSoul() ) && SoulHasPassive( weaponOwner.GetTitanSoul(), ePassives.PAS_SCORCH_FIREWALL ) )
+		#endif
+		{
+			vector angles = VectorToAngles( attackParams.dir )
+			angles.x = 240.0 // Static upwards arc
+			angles.y += 45.0
+			for ( int i = 0; i < 4; i++ )
+			{
+				angles.y += 90.0
+				attackParams.dir  = AnglesToForward( angles + < 0, RandomFloatRange( -20, 20), 0 > )
+				ThrowDeployable( weapon, attackParams, 1000.0, OnSlowTrapPlanted, <0,0,0> )
+			}
+		}
+	}
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
 

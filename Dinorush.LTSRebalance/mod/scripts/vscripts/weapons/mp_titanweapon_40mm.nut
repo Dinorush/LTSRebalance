@@ -68,7 +68,25 @@ var function OnWeaponNpcPrimaryAttack_titanweapon_40mm( entity weapon, WeaponPri
 int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool playerFired, entity weapon )
 {
 	entity owner = weapon.GetWeaponOwner()
-	if ( weapon.HasMod( "pas_tone_burst" ) || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
+	if ( weapon.HasMod( "PerfectKitsReplace_pas_tone_burst" ) )
+	{
+		if ( attackParams.burstIndex == 0 )
+		{
+			int level = weapon.GetWeaponChargeLevel()
+			if ( level == 3 )
+			{
+				weapon.AddMod( "PerfectKits_burst_helper" )
+				weapon.SetWeaponBurstFireCount( weapon.GetWeaponPrimaryClipCount() )
+			}
+			else
+			{
+				if ( weapon.HasMod( "PerfectKits_burst_helper" ) )
+					weapon.RemoveMod( "PerfectKits_burst_helper" )
+				weapon.SetWeaponBurstFireCount( 1 )
+			}
+		}
+	}
+	else if ( weapon.HasMod( "pas_tone_burst" ) || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
 	{
 		if ( attackParams.burstIndex == 0 )
 		{
@@ -120,6 +138,10 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 	}
 
 	weapon.w.lastFireTime = Time()
+
+	if ( weapon.HasMod( "PerfectKitsReplace_pas_tone_burst" ) && weapon.GetBurstFireShotsPending() == 1 )
+		return 5
+
 	return 1
 }
 
@@ -201,9 +223,14 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
     if ( mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
         EmitSoundAtPosition( TEAM_UNASSIGNED, projectile.GetOrigin(), "explo_40mm_splashed_impact_3p")
 	
+	#if SERVER
+
+	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) )
+		Tracker40mmSmokescreen( projectile ) 	
+
 	if ( LTSRebalance_Enabled() ) // Remove crit lock effect of enhanced tracker rounds
 		return
-	#if SERVER
+
 	entity owner = projectile.GetOwner()
 	if ( !IsAlive( owner ) )
 		return
@@ -375,12 +402,16 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 
  	ApplyTrackerMark( attacker, ent )
 
+    entity projectile = DamageInfo_GetInflictor( damageInfo )
+	array<string> mods = projectile.ProjectileGetMods()
+
+	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) )
+		thread PerfectKits_EnhancedTrackerSonarThink(  ent, projectile.GetOrigin(), attacker )
+
 	if ( !LTSRebalance_Enabled() )
 		return
 
-    entity projectile = DamageInfo_GetInflictor( damageInfo )
     int flags = DamageInfo_GetCustomDamageType( damageInfo )
-	array<string> mods = projectile.ProjectileGetMods()
 
     if ( mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
 	{
@@ -393,6 +424,61 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 		if ( IsValid( weapon ) )
 			weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
 	}
+}
+
+void function PerfectKits_EnhancedTrackerSonarThink( entity enemy, vector position, entity owner )
+{
+    enemy.EndSignal( "OnDeath" )
+	enemy.EndSignal( "OnDestroy" )
+
+    int team = owner.GetTeam()
+	SonarStart( enemy, position, team, owner )
+	IncrementSonarPerTeam( team )
+
+	OnThreadEnd(
+	function() : ( enemy, team )
+		{
+			DecrementSonarPerTeam( team )
+			if ( IsValid( enemy ) )
+				SonarEnd( enemy, team )
+		}
+	)
+
+    float duration = 1.0
+	wait duration
+}
+
+void function Tracker40mmSmokescreen( entity projectile )
+{
+	entity owner = projectile.GetOwner()
+
+	if ( !IsValid( owner ) )
+		return
+		
+	SmokescreenStruct smokescreen
+	smokescreen.smokescreenFX = FX_GRENADE_SMOKESCREEN
+	smokescreen.ownerTeam = owner.GetTeam()
+	smokescreen.damageSource = eDamageSourceId.mp_weapon_grenade_electric_smoke
+	smokescreen.deploySound1p = "explo_electric_smoke_impact"
+	smokescreen.deploySound3p = "explo_electric_smoke_impact"
+	smokescreen.attacker = owner
+	smokescreen.inflictor = owner
+	smokescreen.weaponOrProjectile = projectile
+	smokescreen.isElectric = false
+	// smokescreen.damageInnerRadius = 50
+	// smokescreen.damageOuterRadius = 210
+	// smokescreen.dangerousAreaRadius = 0
+	// smokescreen.damageDelay = 1.0
+	// smokescreen.dpsPilot = 60
+	// smokescreen.dpsTitan = 400
+	smokescreen.lifetime = 3.0
+
+	smokescreen.origin = projectile.GetOrigin()
+	smokescreen.angles = projectile.GetAngles()
+	smokescreen.fxUseWeaponOrProjectileAngles = false
+	smokescreen.fxOffsets = [ <0.0, 0.0, 2.0> ]
+
+	Smokescreen( smokescreen )
 }
 #endif
 

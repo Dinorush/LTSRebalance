@@ -423,6 +423,15 @@ void function CodeCallback_OnMeleePressed_InternalThread( entity player )
 {
 	if ( player.IsTitan() )
 	{
+		#if SERVER
+		entity soul = player.GetTitanSoul()
+		if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) && 
+			player.IsPhaseShifted() && ( !( "PerfectReflexForced" in player.s ) || !player.s.PerfectReflexForced ) )
+		{
+			CancelPhaseShift( player )
+		}
+		#endif
+			
 		TitanUnsyncedMelee( player )
 	}
 	else if ( player.IsHuman() )

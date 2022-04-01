@@ -70,20 +70,48 @@ void function OnProjectileCollision_titanability_sonar_pulse( entity projectile,
 		array<string> mods = projectile.ProjectileGetMods()
 		bool hasIncreasedDuration = mods.contains( "fd_sonar_duration" )
 		bool hasDamageAmp = mods.contains( "fd_sonar_damage_amp" )
-		PulseLocation( owner, team, pos, hasIncreasedDuration, hasDamageAmp )
-		if ( mods.contains( "pas_tone_sonar" ) )
-			thread DelayedPulseLocation( owner, team, pos, hasIncreasedDuration, hasDamageAmp )
-
+		if ( mods.contains( "PerfectKits_pas_tone_sonar" ) )
+			thread SpamPulseLocation( owner, team, pos, hasDamageAmp )
+		else {
+			PulseLocation( owner, team, pos, hasIncreasedDuration, hasDamageAmp )
+			if ( mods.contains( "pas_tone_sonar" ) )
+				thread DelayedPulseLocation( owner, team, pos, hasIncreasedDuration, hasDamageAmp )
+		}
 	#endif
 }
 
 #if SERVER
-void function DelayedPulseLocation( entity owner, int team, vector pos, bool hasIncreasedDuration, bool hasDamageAmp )
+void function SpamPulseLocation( entity owner, int team, vector pos, bool hasDamageAmp )
+{
+	owner.EndSignal( "OnDestroy" )
+
+	entity offhand = owner.GetOffhandWeapon( OFFHAND_ANTIRODEO )
+	float endTime = Time() + 4.0
+	while ( endTime > Time() )
+	{
+		WaitFrame()
+		PulseLocation( owner, team, pos, false, hasDamageAmp, 0.2 )
+		if ( owner.IsPlayer() )
+		{
+			EmitSoundAtPositionExceptToPlayer( TEAM_UNASSIGNED, pos, owner, "Titan_Tone_SonarLock_Impact_Pulse_3P" )
+			EmitSoundAtPositionOnlyToPlayer( TEAM_UNASSIGNED, pos, owner, "Titan_Tone_SonarLock_Impact_Pulse_1P" )
+		}
+		else
+		{
+			EmitSoundAtPosition( TEAM_UNASSIGNED, pos, "Titan_Tone_SonarLock_Impact_Pulse_3P" )
+		}
+		
+		if ( IsValid( offhand ) )
+			offhand.SetWeaponPrimaryClipCount( 1 )
+	}
+}
+
+void function DelayedPulseLocation( entity owner, int team, vector pos, bool hasIncreasedDuration, bool hasDamageAmp, float duration = -1 )
 {
 	wait 2.0
 	if ( !IsValid( owner ) )
 		return
-	PulseLocation( owner, team, pos, hasIncreasedDuration, hasDamageAmp )
+	PulseLocation( owner, team, pos, hasIncreasedDuration, hasDamageAmp, duration )
 	if ( owner.IsPlayer() )
 	{
 		EmitSoundAtPositionExceptToPlayer( TEAM_UNASSIGNED, pos, owner, "Titan_Tone_SonarLock_Impact_Pulse_3P" )
@@ -96,12 +124,12 @@ void function DelayedPulseLocation( entity owner, int team, vector pos, bool has
 
 }
 
-void function PulseLocation( entity owner, int team, vector pos, bool hasIncreasedDuration, bool hasDamageAmp )
+void function PulseLocation( entity owner, int team, vector pos, bool hasIncreasedDuration, bool hasDamageAmp, float duration = -1 )
 {
 	array<entity> nearbyEnemies = GetNearbyEnemiesForSonarPulse( team, pos )
 	foreach( enemy in nearbyEnemies )
 	{
-		thread SonarPulseThink( enemy, pos, team, owner, hasIncreasedDuration, hasDamageAmp )
+		thread SonarPulseThink( enemy, pos, team, owner, hasIncreasedDuration, hasDamageAmp, duration )
 		ApplyTrackerMark( owner, enemy )
 	}
 	array<entity> players = GetPlayerArray()
@@ -111,7 +139,7 @@ void function PulseLocation( entity owner, int team, vector pos, bool hasIncreas
 	}
 }
 
-void function SonarPulseThink( entity enemy, vector position, int team, entity sonarOwner, bool hasIncreasedDuration, bool hasDamageAmp )
+void function SonarPulseThink( entity enemy, vector position, int team, entity sonarOwner, bool hasIncreasedDuration, bool hasDamageAmp, float newDuration = -1.0 )
 {
 	enemy.EndSignal( "OnDeath" )
 	enemy.EndSignal( "OnDestroy" )
@@ -138,7 +166,9 @@ void function SonarPulseThink( entity enemy, vector position, int team, entity s
 	)
 
 	float duration
-	if ( hasIncreasedDuration )
+	if ( newDuration > 0 )
+		duration = newDuration
+	else if ( hasIncreasedDuration )
 		duration = FD_SONAR_PULSE_DURATION
 	else
 		duration = SONAR_PULSE_DURATION

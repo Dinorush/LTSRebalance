@@ -24,5 +24,11 @@ WeaponData
 			"lower_time"  									".01"
 			"raise_time"  									".2"
 		}
+		PerfectKits_pas_northstar_optics
+		{
+			"zoom_fov"										"5"
+			"zoom_toggle_fov"								"2"
+			"critical_hit_damage_scale"						"++1.0"
+		}
 	}
 }

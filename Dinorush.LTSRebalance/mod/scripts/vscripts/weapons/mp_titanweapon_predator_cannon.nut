@@ -21,6 +21,7 @@ const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 const float PAS_LEGION_SMARTCORE_MAX_MOD = 0.5 // added to 1
 const float PAS_LEGION_SMARTCORE_MAX_TIME = 3.0
 const float PAS_LEGION_WEAPON_RESTORE_FRAC = 0.7
+const float PERFECTKITS_PAS_LEGION_SPINUP_BONUS = 0.5
 
 void function MpTitanWeaponpredatorcannon_Init()
 {
@@ -258,11 +259,12 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 			else
 				EmitSoundAtPosition( TEAM_UNASSIGNED, attackParams.pos, "Weapon_Predator_Powershot_LongRange_3P" )
 
+			int PerfectKits_knockback = weapon.HasMod( "PerfectKits_pas_PowerShot" ) ? DF_KNOCK_BACK : 0
 			entity bolt
 			#if CLIENT
 			if ( weapon.ShouldPredictProjectiles() )
 			#endif
-			bolt = weapon.FireWeaponBolt( attackParams.pos, attackParams.dir, 10000, damageTypes.gibBullet | DF_IMPACT | DF_EXPLOSION , DF_EXPLOSION | DF_RAGDOLL , PROJECTILE_NOT_PREDICTED, 0 )
+			bolt = weapon.FireWeaponBolt( attackParams.pos, attackParams.dir, 10000, damageTypes.gibBullet | DF_IMPACT | DF_EXPLOSION | PerfectKits_knockback , DF_EXPLOSION | DF_RAGDOLL | PerfectKits_knockback, PROJECTILE_NOT_PREDICTED, 0 )
 			if ( bolt )
 			{
 				bolt.kv.gravity = -0.1
@@ -362,6 +364,9 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
 	}
 	else
 	{
+		if ( weapon.HasMod( "PerfectKits_pas_legion_weapon" ) )
+			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() )
+			
 		weapon.FireWeaponBullet( attackParams.pos, attackParams.dir, 1, damageType )
 		if ( weapon.HasMod( "LongRangeAmmo" ) )
 			return 2
@@ -398,12 +403,24 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
     int flags = DamageInfo_GetCustomDamageType( damageInfo )
 	if ( !IsValid( target ) )
 		return
+
+	if ( target.IsTitan() && ( flags & DF_SKIPS_DOOMED_STATE ) && GetDoomedState( target ) )
+		DamageInfo_SetDamage( damageInfo, target.GetHealth() + 1 )
 	
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	if ( !IsValid( attacker ) || attacker.GetMainWeapons().len() == 0 )
+		return
+
+	entity weapon = attacker.GetMainWeapons()[0]
+	if ( weapon.HasMod( "PerfectKits_pas_legion_spinup" ) )
+	{
+		// 50% damage bonus for each sprinting speed we are moving above dashing speed
+		float bonus = 1.0 + PERFECTKITS_PAS_LEGION_SPINUP_BONUS * max( 0.0, Length( attacker.GetVelocity() ) / 600.0 - 1.0 ) // 600 is Ogre dashing speed
+		DamageInfo_ScaleDamage( damageInfo, bonus )
+	}
+
 	if ( LTSRebalance_Enabled() )
 	{
-		entity attacker = DamageInfo_GetAttacker( damageInfo )
-		entity weapon = attacker.GetMainWeapons()[0]
-
 		// Smart array bonus damage for normal shots
 		if ( !( flags & DF_KNOCK_BACK || DamageInfo_GetInflictor( damageInfo ).IsProjectile() ) && weapon.s.smartArrayTargets.len() > 0 )
 		{
@@ -430,14 +447,5 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 			}
 		}
 	}
-
-	if ( !target.IsTitan() )
-			return
-
-	if ( !( flags & DF_SKIPS_DOOMED_STATE ) )
-		return
-
-	if ( GetDoomedState( target ) )
-		DamageInfo_SetDamage( damageInfo, target.GetHealth() + 1 )
 }
 #endif
