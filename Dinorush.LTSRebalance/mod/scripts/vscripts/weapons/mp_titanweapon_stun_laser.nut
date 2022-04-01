@@ -18,8 +18,8 @@ const SHIELD_BODY_FX			= $"P_xo_armor_body_CP"
 
 const int STUN_LASER_PERM_SHIELD = 500
 const int STUN_LASER_TEMP_SHIELD = 900
-const float TEMP_SHIELD_DECAY_RATE = STUN_LASER_TEMP_SHIELD / 4.0
-const float PAS_VANGUARD_SHIELD_DECAY_MOD = 1.75
+const float TEMP_SHIELD_DECAY_TIME = 4.0
+const float PAS_VANGUARD_SHIELD_DECAY_TIME = 7.0
 const float TEMP_SHIELD_TICK_RATE = 0.1
 const int STUN_LASER_TRANSFER_PERM_SHIELD = 750
 const int PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD = 250
@@ -61,6 +61,11 @@ void function OnWeaponActivate_titanweapon_stun_laser( entity weapon )
 }
 
 #if SERVER
+void function StunLaser_AddTempShields( entity soul, int tempShields, int tempOverflow )
+{
+	soul.s.tempShields.append( { shield = tempShields, overflow = tempOverflow, total = tempShields + tempOverflow } )
+}
+
 void function StunLaser_MonitorTempShieldsThink( entity soul )
 {
 	soul.EndSignal( "OnDestroy" )
@@ -76,21 +81,20 @@ void function StunLaser_MonitorTempShieldsThink( entity soul )
 				StunLaser_HandleTempShieldChange( soul, -damage )
 
 			// Decay temp shields over time
-			float mod = SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) ? PAS_VANGUARD_SHIELD_DECAY_MOD : 1.0
-			int decayAmt = int( TEMP_SHIELD_DECAY_RATE * ( Time() - lastTime ) / mod + 0.5 )
-			StunLaser_DecayTempShields( soul, decayAmt )
+			float mod = SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) ? PAS_VANGUARD_SHIELD_DECAY_TIME : TEMP_SHIELD_DECAY_TIME
+			StunLaser_DecayTempShields( soul, ( Time() - lastTime ) / mod )
 		}
 		soul.s.trackedShieldHealth = soul.GetShieldHealth()
 		lastTime = Time()
 	}
 }
 
-void function StunLaser_DecayTempShields( entity soul, int decayAmt )
+void function StunLaser_DecayTempShields( entity soul, float decayTime )
 {
 	array tempShields = expect array( soul.s.tempShields )
 	for( int i = tempShields.len() - 1; i >= 0; i-- )
 	{
-		int decay = decayAmt
+		int decay = int( tempShields[i].total * decayTime + 0.5 )
 		if ( tempShields[i].overflow > 0 )
 		{
 			tempShields[i].overflow -= decay
@@ -311,16 +315,18 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 			StunLaser_HandleTempShieldChange( soul, permRestoreAmount )
 			int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + permRestoreAmount )
 			soul.SetShieldHealth( newShield )
-			if ( LTSRebalance_Enabled() && target.GetArmorType() == ARMOR_TYPE_HEAVY && newShield < soul.GetShieldHealthMax() )
+			if ( LTSRebalance_Enabled() && target.GetArmorType() == ARMOR_TYPE_HEAVY )
 			{
 				int tempShieldAmount = int( STUN_LASER_TEMP_SHIELD * mod )
-				int perfectShieldsTaken = PerfectKits_EnergyThiefTake( attacker, tempShieldAmount )
-				tempShieldAmount -= perfectShieldsTaken
+				tempShieldAmount -= PerfectKits_EnergyThiefTake( attacker, tempShieldAmount )
 				PerfectKits_EnergyThiefConvert( attacker, PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD ) // Bonus shield to compensate for not using temp shields
 
-				int shieldRestore = minint( soul.GetShieldHealthMax() - soul.GetShieldHealth(), tempShieldAmount )
-				soul.SetShieldHealth( soul.GetShieldHealth() + shieldRestore )
-				soul.s.tempShields.append( { shield = tempShieldAmount, overflow = maxint( 0, tempShieldAmount - shieldRestore ) + perfectShieldsTaken } )
+				if ( newShield < soul.GetShieldHealthMax() )
+				{
+					int shieldRestore = minint( soul.GetShieldHealthMax() - soul.GetShieldHealth(), tempShieldAmount )
+					soul.SetShieldHealth( soul.GetShieldHealth() + shieldRestore )
+					StunLaser_AddTempShields( soul, tempShieldAmount, maxint( 0, tempShieldAmount - shieldRestore ) )
+				}
 			}
 		}
 		if ( attacker.IsPlayer() )
