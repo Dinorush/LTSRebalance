@@ -1,6 +1,8 @@
 global function UpgradeCore_Init
 global function OnWeaponPrimaryAttack_UpgradeCore
 #if SERVER
+global function PerfectKits_EnergyThiefConvert
+global function PerfectKits_EnergyThiefTake
 global function OnWeaponNpcPrimaryAttack_UpgradeCore
 #endif
 #if CLIENT
@@ -13,7 +15,11 @@ const FX_SHIELD_GAIN_SCREEN		= $"P_xo_shield_up"
 const int SUPERIOR_CHASSIS_HEALTH_AMOUNT = 2500
 const int SUPERIOR_CHASSIS_SHIELD_AMOUNT = 1875
 const int PAS_VANGUARD_COREMETER_SHIELD = 500
-const int PAS_VANGUARD_DOOM_HEAL = 1000
+const int PAS_VANGUARD_DOOM_HEAL = 1100
+const float PAS_VANGUARD_DOOM_DIMINISH = 0.3
+const float PERFECTKITS_ENERGY_THIEF_DELAY_BASE = 5.0
+const float PERFECTKITS_ENERGY_THIEF_CONV = 0.002 // Amount of dash regen per shield taken
+const float PERFECTKITS_ENERGY_THIEF_TAKE = 0.6 // Amount of shield taken from shield gain
 
 void function UpgradeCore_Init()
 {
@@ -24,6 +30,12 @@ void function UpgradeCore_Init()
 	PrecacheParticleSystem( LASER_CHAGE_FX_3P )
 
     #if SERVER
+	if ( PerfectKits_EnabledOnInit() )
+	{
+		AddCallback_OnPilotBecomesTitan( PerfectKits_TransferEnergyThiefSpeed )
+		AddCallback_OnTitanBecomesPilot( PerfectKits_TransferEnergyThiefSpeed )
+		AddCallback_OnTitanHealthSegmentLost( PerfectKits_SurvivalTradeoff )
+	}
 	if ( !LTSRebalance_EnabledOnInit() )
 		return
 	AddCallback_OnTitanHealthSegmentLost( EnergyThief_OnSegmentLost )
@@ -52,9 +64,89 @@ void function EnergyThief_GrantShield( entity victim, entity attacker )
 	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
 		return
 
-	StunLaser_HandleTempShieldChange( soul, PAS_VANGUARD_COREMETER_SHIELD )
-    int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + PAS_VANGUARD_COREMETER_SHIELD )
+	int amount = PAS_VANGUARD_COREMETER_SHIELD - PerfectKits_EnergyThiefConvert( attacker, PAS_VANGUARD_COREMETER_SHIELD )
+	StunLaser_HandleTempShieldChange( soul, amount )
+    int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + amount )
     soul.SetShieldHealth( newShield )
+}
+
+int function PerfectKits_EnergyThiefConvert( entity titan, int shieldAmount )
+{
+	shieldAmount = PerfectKits_EnergyThiefTake( titan, shieldAmount )
+	if ( shieldAmount <= 0 )
+		return 0
+
+	entity soul = titan.GetTitanSoul()
+	float boost = float( shieldAmount ) * PERFECTKITS_ENERGY_THIEF_CONV
+
+	table soulDotS = expect table( soul.s )
+	soulDotS.energy_thief_dash_scale += boost
+	float scale = expect float ( soulDotS.energy_thief_dash_scale )
+	titan.SetPowerRegenRateScale( scale )
+	titan.SetDodgePowerDelayScale( min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
+	print( "Boost: " + scale )
+	print( "Delay: " + min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
+	return shieldAmount
+}
+
+int function PerfectKits_EnergyThiefTake( entity titan, int shieldAmount )
+{
+	if ( !PerfectKits_Enabled() )
+		return 0
+
+	if ( !titan.IsTitan() )
+		return 0
+
+	entity soul = titan.GetTitanSoul()
+	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
+		return 0
+
+	return int( float( shieldAmount ) * PERFECTKITS_ENERGY_THIEF_TAKE + 0.5 )
+}
+
+void function PerfectKits_TransferEnergyThiefSpeed( entity player, entity titan )
+{
+	entity soul = player.IsTitan() ? player.GetTitanSoul() : titan.GetTitanSoul()
+	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
+		return
+
+	if ( player.IsTitan() )
+	{
+		player.SetPowerRegenRateScale( 1.0 )
+		player.SetDodgePowerDelayScale( 1.0 )
+	}
+	else
+	{
+		table soulDotS = expect table( soul.s )
+		float scale = expect float ( soulDotS.energy_thief_dash_scale )
+		player.SetPowerRegenRateScale( scale )
+		player.SetDodgePowerDelayScale( max( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
+	}
+}
+
+void function PerfectKits_SurvivalTradeoff( entity victim, entity attacker )
+{
+	if ( !IsValid( victim ) || !IsValid( attacker ) || victim == attacker )
+		return
+	
+	if ( !victim.IsTitan() || !attacker.IsTitan() )
+		return
+
+	entity attackerSoul = attacker.GetTitanSoul()
+	entity victimSoul = victim.GetTitanSoul()
+	if ( !IsValid( victimSoul ) || !IsValid( attackerSoul ) )
+		return
+
+	if ( SoulHasPassive( victimSoul, ePassives.PAS_VANGUARD_DOOM ) )
+	{
+		int shieldRestore = attackerSoul.GetShieldHealthMax()
+		shieldRestore -= PerfectKits_EnergyThiefConvert( attacker, shieldRestore )
+		StunLaser_HandleTempShieldChange( attackerSoul, shieldRestore )
+		attackerSoul.SetShieldHealth( minint( attackerSoul.GetShieldHealthMax(), shieldRestore + attackerSoul.GetShieldHealth() ) )
+	}
+	
+	if ( SoulHasPassive( attackerSoul, ePassives.PAS_VANGUARD_DOOM ) )
+		AddCreditToTitanCoreBuilder( attacker, 0.5 )
 }
 
 
@@ -388,9 +480,14 @@ void function PasVanguardDoom_HealOnCore ( entity owner, entity soul  )
 {
     if( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) )
     {
+		table soulDotS = expect table( soul.s )
+		if ( !( "pas_vanguard_doom_heal" in soulDotS ) )
+			soulDotS.pas_vanguard_doom_heal <- PAS_VANGUARD_DOOM_HEAL
+		int amount = expect int( soulDotS.pas_vanguard_doom_heal )
+
         if( soul.IsDoomed() )
-        {
-            int trgtHealth = PAS_VANGUARD_DOOM_HEAL + owner.GetHealth()
+        {			
+            int trgtHealth = amount + owner.GetHealth()
             int maxHealth = owner.GetMaxHealth()
             if ( trgtHealth > maxHealth )
             {
@@ -403,7 +500,11 @@ void function PasVanguardDoom_HealOnCore ( entity owner, entity soul  )
                 owner.SetHealth( trgtHealth )
         }
         else if ( owner.GetHealth() < PAS_VANGUARD_DOOM_HEAL )
-            owner.SetHealth( PAS_VANGUARD_DOOM_HEAL )
+		{
+			amount = minint( PAS_VANGUARD_DOOM_HEAL - owner.GetHealth(), amount )
+            owner.SetHealth( owner.GetHealth() + amount )
+		}
+		soulDotS.pas_vanguard_doom_heal -= int( amount * PAS_VANGUARD_DOOM_DIMINISH )
     }
 }
 void function UpgradeCoreThink( entity weapon, float coreDuration )
@@ -422,10 +523,13 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 	int shieldAmount = soul.GetShieldHealthMax()
     if ( LTSRebalance_Enabled() )
 		shieldAmount = ( weapon.HasMod( "LTSRebalance_superior_chassis" ) ? SUPERIOR_CHASSIS_SHIELD_AMOUNT : soul.GetShieldHealthMax() / 2 )
-    StunLaser_HandleTempShieldChange( soul, shieldAmount )
-    int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
-	soul.SetShieldHealth( newShield )
 
+	shieldAmount -= PerfectKits_EnergyThiefConvert( owner, shieldAmount )
+
+	StunLaser_HandleTempShieldChange( soul, shieldAmount )
+	int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
+	soul.SetShieldHealth( newShield )
+	
 	OnThreadEnd(
 	function() : ( weapon, owner, soul )
 		{
