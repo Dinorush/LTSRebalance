@@ -160,7 +160,8 @@ void function PerfectKits_CleanupScorchedInflictor( entity inflictor )
 				inflictor.Destroy()
 		}
 	)
-	WaitForever()
+	
+	wait 310.0 // Trails last 300.0
 }
 
 void function BeginFlameWave( entity projectile, int projectileCount, entity inflictor, vector pos, vector dir )
