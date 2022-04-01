@@ -84,8 +84,6 @@ int function PerfectKits_EnergyThiefConvert( entity titan, int shieldAmount )
 	float scale = expect float ( soulDotS.energy_thief_dash_scale )
 	titan.SetPowerRegenRateScale( scale )
 	titan.SetDodgePowerDelayScale( min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
-	print( "Boost: " + scale )
-	print( "Delay: " + min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
 	return shieldAmount
 }
 
@@ -110,7 +108,7 @@ void function PerfectKits_TransferEnergyThiefSpeed( entity player, entity titan 
 	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
 		return
 
-	if ( player.IsTitan() )
+	if ( !player.IsTitan() )
 	{
 		player.SetPowerRegenRateScale( 1.0 )
 		player.SetDodgePowerDelayScale( 1.0 )
