@@ -226,7 +226,7 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
 	#if SERVER
 
 	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) )
-		Tracker40mmSmokescreen( projectile ) 	
+		Tracker40mmSmokescreen( projectile, hitEnt.IsWorld() ? FX_ELECTRIC_SMOKESCREEN_PILOT : FX_ELECTRIC_SMOKESCREEN_PILOT_AIR ) 	
 
 	if ( LTSRebalance_Enabled() ) // Remove crit lock effect of enhanced tracker rounds
 		return
@@ -405,7 +405,10 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
     entity projectile = DamageInfo_GetInflictor( damageInfo )
 	array<string> mods = projectile.ProjectileGetMods()
 
-	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) )
+	if ( DamageInfo_GetDamage( damageInfo ) == 0 )
+		return
+
+	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) && ( ent.IsPlayer() || ent.IsNPC() ) && IsAlive( ent ) )
 		thread PerfectKits_EnhancedTrackerSonarThink(  ent, projectile.GetOrigin(), attacker )
 
 	if ( !LTSRebalance_Enabled() )
@@ -448,7 +451,7 @@ void function PerfectKits_EnhancedTrackerSonarThink( entity enemy, vector positi
 	wait duration
 }
 
-void function Tracker40mmSmokescreen( entity projectile )
+void function Tracker40mmSmokescreen( entity projectile, asset fx )
 {
 	entity owner = projectile.GetOwner()
 
@@ -456,7 +459,7 @@ void function Tracker40mmSmokescreen( entity projectile )
 		return
 		
 	SmokescreenStruct smokescreen
-	smokescreen.smokescreenFX = FX_GRENADE_SMOKESCREEN
+	smokescreen.smokescreenFX = fx
 	smokescreen.ownerTeam = owner.GetTeam()
 	smokescreen.damageSource = eDamageSourceId.mp_weapon_grenade_electric_smoke
 	smokescreen.deploySound1p = "explo_electric_smoke_impact"
@@ -464,13 +467,12 @@ void function Tracker40mmSmokescreen( entity projectile )
 	smokescreen.attacker = owner
 	smokescreen.inflictor = owner
 	smokescreen.weaponOrProjectile = projectile
-	smokescreen.isElectric = false
-	// smokescreen.damageInnerRadius = 50
-	// smokescreen.damageOuterRadius = 210
-	// smokescreen.dangerousAreaRadius = 0
-	// smokescreen.damageDelay = 1.0
-	// smokescreen.dpsPilot = 60
-	// smokescreen.dpsTitan = 400
+	smokescreen.damageInnerRadius = 50
+	smokescreen.damageOuterRadius = 210
+	smokescreen.dangerousAreaRadius = smokescreen.damageOuterRadius
+	smokescreen.damageDelay = 1.0
+	smokescreen.dpsPilot = 40
+	smokescreen.dpsTitan = 300
 	smokescreen.lifetime = 3.0
 
 	smokescreen.origin = projectile.GetOrigin()
