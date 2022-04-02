@@ -33,7 +33,6 @@ void function UpgradeCore_Init()
 	if ( PerfectKits_EnabledOnInit() )
 	{
 		AddCallback_OnPilotBecomesTitan( PerfectKits_TransferEnergyThiefSpeed )
-		AddCallback_OnTitanBecomesPilot( PerfectKits_TransferEnergyThiefSpeed )
 		AddCallback_OnTitanHealthSegmentLost( PerfectKits_SurvivalTradeoff )
 	}
 	if ( !LTSRebalance_EnabledOnInit() )
@@ -104,22 +103,33 @@ int function PerfectKits_EnergyThiefTake( entity titan, int shieldAmount )
 
 void function PerfectKits_TransferEnergyThiefSpeed( entity player, entity titan )
 {
-	entity soul = player.IsTitan() ? player.GetTitanSoul() : titan.GetTitanSoul()
+	entity soul = player.GetTitanSoul()
 	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
 		return
 
-	if ( !player.IsTitan() )
-	{
-		player.SetPowerRegenRateScale( 1.0 )
-		player.SetDodgePowerDelayScale( 1.0 )
-	}
-	else
-	{
-		table soulDotS = expect table( soul.s )
-		float scale = expect float ( soulDotS.energy_thief_dash_scale )
-		player.SetPowerRegenRateScale( scale )
-		player.SetDodgePowerDelayScale( max( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
-	}
+	table soulDotS = expect table( soul.s )
+	float scale = expect float ( soulDotS.energy_thief_dash_scale )
+	player.SetPowerRegenRateScale( scale )
+	player.SetDodgePowerDelayScale( min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
+	thread PerfectKits_EnergyThiefSpeedThink( player )
+}
+
+void function PerfectKits_EnergyThiefSpeedThink( entity player )
+{
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "DisembarkingTitan" )
+	OnThreadEnd(
+		function() : ( player )
+		{
+			if ( IsValid( player ) )
+			{
+				player.SetPowerRegenRateScale( 1.0 )
+				player.SetDodgePowerDelayScale( 1.0 )
+			}
+		}
+	)
+	WaitForever()
 }
 
 void function PerfectKits_SurvivalTradeoff( entity victim, entity attacker )
