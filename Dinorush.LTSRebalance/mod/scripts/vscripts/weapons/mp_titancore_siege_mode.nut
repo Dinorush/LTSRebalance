@@ -103,16 +103,19 @@ void function SmartCoreThink( entity weapon, float coreDuration )
 	int statusEffectSmartCore
 	if ( owner.IsPlayer() )
 	{
-		HoverSounds soundInfo
-		soundInfo.liftoff_1p = "titan_core_flight_liftoff_1p"
-		soundInfo.liftoff_3p = "titan_core_flight_liftoff_3p"
-		soundInfo.hover_1p = "Titan_Core_Flight_Hover_1P"
-		soundInfo.hover_3p = "Titan_Core_Flight_Hover_3P"
-		soundInfo.descent_1p = "Titan_Core_Flight_Descent_1P"
-		soundInfo.descent_3p = "Titan_Core_Flight_Descent_3P"
-		soundInfo.landing_1p = "core_ability_land_1p"
-		soundInfo.landing_3p = "core_ability_land_3p"
-		thread FlyerHovers( owner, soundInfo, coreDuration )
+		if ( PerfectKits_Enabled() && weapon.HasMod( "pas_legion_smartcore" ) )
+		{
+			HoverSounds soundInfo
+			soundInfo.liftoff_1p = "titan_core_flight_liftoff_1p"
+			soundInfo.liftoff_3p = "titan_core_flight_liftoff_3p"
+			soundInfo.hover_1p = "Titan_Core_Flight_Hover_1P"
+			soundInfo.hover_3p = "Titan_Core_Flight_Hover_3P"
+			soundInfo.descent_1p = "Titan_Core_Flight_Descent_1P"
+			soundInfo.descent_3p = "Titan_Core_Flight_Descent_3P"
+			soundInfo.landing_1p = "core_ability_land_1p"
+			soundInfo.landing_3p = "core_ability_land_3p"
+			thread FlyerHovers( owner, soundInfo, coreDuration )
+		}
 		statusEffectSmartCore = StatusEffect_AddEndless( owner, eStatusEffect.smartCore, 1.00 )//StatusEffect_AddTimed( owner, eStatusEffect.smartCore, 1.0, coreDuration, 0.0 )
 		AddAmmoStatusEffect( owner )
 	}

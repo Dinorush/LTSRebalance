@@ -434,7 +434,7 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 
 	if ( mods.contains( "pas_scorch_weapon" ) )
 	{
-		fireCount = PerfectKits_wildfire ? 1 : 8
+		fireCount = PerfectKits_wildfire ? 2 : 8
 		fireSpeed = 200
 	}
 	else
