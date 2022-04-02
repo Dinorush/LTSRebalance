@@ -41,7 +41,7 @@ WeaponData
 		}
 		LTSRebalance_fd_wpn_upgrade_2
 		{
-			"ammo_clip_size"   								"3"
+			"ammo_clip_size"   								"++1"
 		}
 	}
 }
