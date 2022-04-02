@@ -70,9 +70,9 @@ void function PerfectKits_PhaseReflexTrigger( entity victim, entity attacker )
 	{
 		table attackerDotS = expect table( attacker.s )
 		attackerDotS.PerfectReflexForced <- true
-		PhaseShift( attacker, 0, 4.0 )
+		PhaseShift( attacker, 0, 6.0 )
 	}
-	PhaseShift( victim, 0, 4.0 )
+	PhaseShift( victim, 0, 6.0 )
 }
 #endif
 
