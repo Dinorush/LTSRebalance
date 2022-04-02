@@ -13,7 +13,7 @@ WeaponData
 		}
 		PerfectKits_pas_ion_tripwire
 		{
-			"shared_energy_cost"							"++1000"
+			"shared_energy_cost"							"++900"
 		}
 	}
 }
