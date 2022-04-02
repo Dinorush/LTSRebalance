@@ -232,7 +232,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		}
 	}
 
-	float mod = "burstFireCount" in weapon.s ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.15 ) / float( weapon.s.burstFireCount ) : 1.0
+	float mod = "burstFireCount" in weapon.s ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.25 ) / float( weapon.s.burstFireCount ) : 1.0
 
 	if ( attacker.GetTeam() == target.GetTeam() )
 	{
