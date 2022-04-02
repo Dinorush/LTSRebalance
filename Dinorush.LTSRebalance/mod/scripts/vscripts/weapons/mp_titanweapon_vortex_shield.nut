@@ -28,7 +28,7 @@ const int ION_MINIMUM_ENERGY = 150
 global const float PAS_ION_VORTEX_AMP = 1.5
 const float PAS_ION_VORTEX_AMP_ON_ENERGY = -0.5
 const float PAS_ION_VORTEX_AMP_OFF_ENERGY = 0.25
-const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.6
+const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.75
 
 function MpTitanweaponVortexShield_Init()
 {
