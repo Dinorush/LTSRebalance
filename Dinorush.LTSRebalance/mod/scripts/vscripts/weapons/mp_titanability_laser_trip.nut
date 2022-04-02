@@ -315,8 +315,8 @@ function DeployLaserPylon( entity projectile )
 				{
 					pilotDamage = 1000
 					titanDamage = 5000
-					innerRadius = 1200
-					outerRadius = 1200
+					innerRadius = 5000
+					outerRadius = 5000
 					flags = 0
 				}
 
