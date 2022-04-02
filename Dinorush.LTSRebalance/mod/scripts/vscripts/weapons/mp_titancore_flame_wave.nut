@@ -109,7 +109,7 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
     inflictor.s.soulsHit <- []
 
 	entity scorchedEarthInflictor = CreateOncePerTickDamageInflictorHelper( ( PerfectKits_Enabled() && weapon.HasMod( "pas_scorch_flamecore" ) ) ? 300.0 : 10.0 )
-	thread PerfectKits_CleanupScorchedInflictor( scorchedEarthInflictor )
+	thread PerfectKits_CleanupScorchedInflictor( scorchedEarthInflictor, weapon.GetWeaponOwner() )
 	#endif
 
 	array<float> offsets = [ -1.0, 0.0, 1.0 ]
@@ -149,10 +149,15 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
 }
 
 #if SERVER
-void function PerfectKits_CleanupScorchedInflictor( entity inflictor )
+void function PerfectKits_CleanupScorchedInflictor( entity inflictor, entity owner )
 {
+	if ( !IsValid( owner ) || !owner.IsPlayer() )
+		return
+
 	inflictor.EndSignal( "OnDestroy" )
-	svGlobal.levelEnt.EndSignal( "OnDestroy" )
+	WaitFrame()
+	AddToScriptManagedEntArray( owner.s.activeTrapArrayId, inflictor )
+
 	OnThreadEnd(
 		function() : ( inflictor )
 		{
