@@ -10,9 +10,9 @@ WeaponData
 		}
 		LTSRebalance_fd_duration
 		{
-			"core_duration"								"16" //Needs to match charge_cooldown_delay
-			"charge_cooldown_delay"   					"16"
-            "charge_cooldown_time"						"17.0"
+			"core_duration"								"*2.0" //Needs to match charge_cooldown_delay
+			"charge_cooldown_delay"   					"*2.0"
+            "charge_cooldown_time"						"*2.0"
 		}
 	}
 }
