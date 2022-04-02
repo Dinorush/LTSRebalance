@@ -690,22 +690,19 @@ WeaponData
 		}
 		PerfectKits_pas_legion_weapon
 		{
-			"damage_near_value"								"*0.75"
-			"damage_far_value"								"*0.75"
-			"damage_near_value_titanarmor"					"--25"
-			"damage_far_value_titanarmor"					"--18"
+			"damage_near_value"								"*0.85"
+			"damage_far_value"								"*0.85"
+			"damage_near_value_titanarmor"					"--15"
+			"damage_far_value_titanarmor"					"--11"
 		}
 		PerfectKits_pas_legion_spinup
 		{
 			"ads_move_speed_scale"							"++100"
+			"ammo_clip_size"								"--20"
 		}
 		PerfectKits_Smart_Core
 		{
-			"burst_fire_delay"								"0.033"
-			"fire_rate"						"15"
-			"fire_rate_max"					"30"
-			"fire_rate_max_time_speedup"	"3.0"
-			"fire_rate_max_time_cooldown"	"1.5"
+			"smart_ammo_search_distance"					"++10000"
 		}
 	}
 

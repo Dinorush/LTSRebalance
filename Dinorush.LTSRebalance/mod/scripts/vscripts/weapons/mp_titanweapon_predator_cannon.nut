@@ -21,7 +21,6 @@ const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 const float PAS_LEGION_SMARTCORE_MAX_MOD = 0.5 // added to 1
 const float PAS_LEGION_SMARTCORE_MAX_TIME = 3.0
 const float PAS_LEGION_WEAPON_RESTORE_FRAC = 0.7
-const float PERFECTKITS_PAS_LEGION_SPINUP_BONUS = 0.5
 
 void function MpTitanWeaponpredatorcannon_Init()
 {
@@ -412,13 +411,6 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 		return
 
 	entity weapon = attacker.GetMainWeapons()[0]
-	if ( weapon.HasMod( "PerfectKits_pas_legion_spinup" ) )
-	{
-		// 50% damage bonus for each sprinting speed we are moving above dashing speed
-		float bonus = 1.0 + PERFECTKITS_PAS_LEGION_SPINUP_BONUS * max( 0.0, Length( attacker.GetVelocity() ) / 600.0 - 1.0 ) // 600 is Ogre dashing speed
-		DamageInfo_ScaleDamage( damageInfo, bonus )
-	}
-
 	if ( LTSRebalance_Enabled() )
 	{
 		// Smart array bonus damage for normal shots
