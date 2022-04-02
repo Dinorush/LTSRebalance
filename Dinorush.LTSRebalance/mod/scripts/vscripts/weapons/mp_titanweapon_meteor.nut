@@ -30,8 +30,8 @@ global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.05
 global const float PAS_SCORCH_FLAMECORE_MOD = 1.25
 const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
-const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.2125
-global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.15
+const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.22
+global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.16
 
 const int PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT = 2
 
@@ -82,8 +82,8 @@ function MpTitanweaponMeteor_Init()
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_meteor_thermite, MeteorThermite_DamagedTarget )
 	if ( LTSRebalance_EnabledOnInit() )
 	{
-		AddDamageCallback( "player", TemperedPlating_DamageReduction )
-		AddDamageCallback( "npc_titan", TemperedPlating_DamageReduction )
+		AddDamageFinalCallback( "player", TemperedPlating_DamageReduction )
+		AddDamageFinalCallback( "npc_titan", TemperedPlating_DamageReduction )
 	}
 
 	PrecacheParticleSystem( THERMITE_GRENADE_FX )
@@ -594,9 +594,6 @@ void function PROTO_ThermiteCausesDamage( entity trail, entity owner, entity inf
 		radius = FLAME_WALL_DAMAGE_RADIUS_DEF
 	if ( PerfectKits_Enabled() && damageSourceId == eDamageSourceId.mp_titancore_flame_wave_secondary )
 	{
-		if ( !IsAlive( owner ) )
-			return
-		svGlobal.levelEnt.EndSignal( "ClearedPlayers" )
 		METEOR_DAMAGE_TICK_PILOT *= 0.7
 		METEOR_DAMAGE_TICK *= 0.7
 	}
