@@ -110,17 +110,20 @@ void function PerfectKits_RicochetLeadwallThink( entity projectile )
 {
 	projectile.EndSignal( "OnDestroy" )
 	float speed = Length( projectile.GetVelocity() )
+	var group = projectile.kv.CollisionGroup
 	wait RandomFloatRange(0.3, 0.35)
 	if ( projectile.IsSolid() )
 	{
+		projectile.kv.CollisionGroup = TRACE_COLLISION_GROUP_NONE
 		projectile.SetVelocity( projectile.GetVelocity() * .03 )
 		projectile.NotSolid()
 		projectile.s.hasBoomeranged <- true
 	}
-	wait 5.0
+	wait 3.0
+	projectile.kv.CollisionGroup = group
 	projectile.Solid()
 	float accelSpeed = speed * -.07
-	float endTime = Time() + 2
+	float endTime = Time() + 3
 	while( endTime > Time() )
 	{
 		vector curVel = projectile.GetVelocity()
@@ -151,6 +154,7 @@ void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vec
 		{
 			if ( !( "hasBoomeranged" in projectile.s ) )
 			{
+				projectile.kv.CollisionGroup = TRACE_COLLISION_GROUP_NONE
 				projectile.SetVelocity( projectile.GetVelocity() * .03 )
 				projectile.NotSolid()
 				projectile.s.hasBoomeranged <- true
