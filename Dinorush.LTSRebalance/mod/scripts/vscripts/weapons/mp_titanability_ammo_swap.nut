@@ -195,9 +195,13 @@ void function ToggleAmmoMods( entity weapon, entity primaryWeapon, entity weapon
 		entity viewModel = weaponOwner.GetViewModelEntity()
 		float animDuration = viewModel.GetSequenceDuration( "ammo_swap_seq" )
 
-        if( LTSRebalance_Enabled() && primaryWeapon.HasMod( "pas_legion_gunshield" ) )
+        if ( LTSRebalance_Enabled() && primaryWeapon.HasMod( "pas_legion_gunshield" ) )
             animDuration *= PAS_LEGION_GUNSHIELD_DURATION_MOD
 
+		entity powerShot = weaponOwner.GetOffhandWeapon( OFFHAND_RIGHT )
+		if ( PerfectKits_Enabled() && powerShot.HasMod( "PerfectKits_pas_legion_chargeshot" ) )
+			animDuration *= 0.5
+			
 		wait animDuration
 	}
 	if ( LTSRebalance_Enabled() )

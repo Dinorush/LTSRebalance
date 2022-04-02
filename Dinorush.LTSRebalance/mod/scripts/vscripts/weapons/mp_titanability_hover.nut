@@ -80,6 +80,7 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 	}
 
 	bool perfectViper = PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE )
+	bool perfectSmart = PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_SMARTCORE )
 
 	if ( soul == null )
 		soul = player
@@ -166,6 +167,8 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
             height = 70
 		else if ( perfectViper )
 			height = RISE_VEL
+		else if ( perfectSmart )
+			height = GraphCapped( timePassed, 0, LERP_IN_FLOAT, RISE_VEL, 200 )
         else
         {
             if ( timePassed < LERP_IN_FLOAT )
