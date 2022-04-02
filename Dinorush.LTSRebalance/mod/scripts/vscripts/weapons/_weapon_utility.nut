@@ -1667,7 +1667,8 @@ function StartClusterExplosions( entity projectile, entity owner, PopcornInfo po
 		{
 			if ( IsValid( fx ) )
 				EffectStop( fx )
-			placementHelper.Destroy()
+			if ( IsValid ( placementHelper ) )
+				placementHelper.Destroy()
 		}
 	)
 

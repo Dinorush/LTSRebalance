@@ -20,5 +20,9 @@ WeaponData
             "explosionradius"                               "290"
             "impact_effect_table" 							"40mm_splasher_rounds"
 		}
+		PerfectKits_pas_northstar_cluster
+		{
+			"regen_ammo_refill_rate"						"*2"
+		}
 	}
 }

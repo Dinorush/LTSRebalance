@@ -65,6 +65,17 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 
 	float f_extraDamage = float( extraDamage )
 
+	entity owner = inflictor.GetOwner()
+	if ( IsValid( owner ) && f_extraDamage > 0 )
+	{
+		entity dumbfire = owner.GetOffhandWeapon( OFFHAND_RIGHT )
+		if ( dumbfire.HasMod( "PerfectKits_pas_northstar_cluster" ) )
+		{
+			f_extraDamage /= 2.0
+			damage += float( victim.IsTitan() ? inflictor.s.extraDamagePerBullet_Titan : inflictor.s.extraDamagePerBullet ) / 2.0
+		}
+	}
+
 	bool isCritical = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), victim, DamageInfo_GetHitBox( damageInfo ), damage, DamageInfo_GetDamageType( damageInfo ) )
     array<string> projectileMods = inflictor.ProjectileGetMods()
 
@@ -74,7 +85,7 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 		if ( projectileMods.contains( "fd_upgrade_crit" ) )
 			critMod = 2.0
 		if ( projectileMods.contains( "PerfectKits_pas_northstar_optics" ) )
-			critMod += 1.0
+			critMod += 2.5
 		f_extraDamage *= critMod
 	}
 
