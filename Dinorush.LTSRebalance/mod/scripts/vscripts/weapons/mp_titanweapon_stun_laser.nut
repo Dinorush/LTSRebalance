@@ -189,7 +189,7 @@ var function OnWeaponPrimaryAttack_titanweapon_stun_laser( entity weapon, Weapon
 		weapon.s.burstFireCount <- count
 	}
 
-	weapon.s.entitiesHit <- []
+	weapon.s.entitiesHit <- {}
 
 	entity weaponOwner = weapon.GetWeaponOwner()
 	if ( weaponOwner.IsPlayer() )
@@ -223,8 +223,11 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 
 	if ( LTSRebalance_Enabled() )
 	{
-		if ( !weapon.s.entitiesHit.contains( target ) )
-			weapon.s.entitiesHit.append( target )
+		// Increment up to 2 per target since Siphon has two callbacks
+		if ( !( target in weapon.s.entitiesHit ) )
+			weapon.s.entitiesHit[target] <- 1
+		else if ( weapon.s.entitiesHit[target] < 2 )
+			weapon.s.entitiesHit[target] += 1
 		else
 		{
 			DamageInfo_SetDamage( damageInfo, 0 )
@@ -325,7 +328,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 				{
 					int shieldRestore = minint( soul.GetShieldHealthMax() - soul.GetShieldHealth(), tempShieldAmount )
 					soul.SetShieldHealth( soul.GetShieldHealth() + shieldRestore )
-					StunLaser_AddTempShields( soul, tempShieldAmount, maxint( 0, tempShieldAmount - shieldRestore ) )
+					StunLaser_AddTempShields( soul, shieldRestore, maxint( 0, tempShieldAmount - shieldRestore ) )
 				}
 			}
 		}
