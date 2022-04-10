@@ -26,6 +26,7 @@ const ACTIVATION_COST_FRAC = 0.05 //0.2 //R1 was 0.1
 const int ION_ACTIVATION_ENERGY_COST = 25
 const int ION_MINIMUM_ENERGY = 150
 global const float PAS_ION_VORTEX_AMP = 1.5
+const float LTSREBALANCE_VORTEX_COST = 102.0 // Per second
 const float PAS_ION_VORTEX_AMP_ON_ENERGY = -0.5
 const float PAS_ION_VORTEX_AMP_OFF_ENERGY = 0.25
 const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.75
@@ -124,7 +125,7 @@ void function PerfectKits_VortexAmpEnergyThink( entity weapon, entity owner )
 	}
 }
 
-void function LTSRebalance_VortexAmpEnergyThink( entity weapon, entity owner )
+void function LTSRebalance_VortexEnergyThink( entity weapon, entity owner )
 {
 	weapon.EndSignal( "OnDestroy" )
 	owner.EndSignal( "OnDestroy" )
@@ -133,7 +134,8 @@ void function LTSRebalance_VortexAmpEnergyThink( entity weapon, entity owner )
 	entity vortexSphere = weapon.GetWeaponUtilityEntity()
 	vortexSphere.EndSignal( "OnDestroy" )
 
-	float cost = float( weapon.GetWeaponSettingInt( eWeaponVar.shared_energy_charge_cost ) ) * 60 //Cost is per frame, we want it per second
+	bool isAmped = weapon.HasMod( "LTSRebalance_pas_ion_vortex" )
+	float vanillaCost = float( weapon.GetWeaponSettingInt( eWeaponVar.shared_energy_charge_cost ) ) * 60 //Cost is per frame, we want it per second
 	float accumulatedEnergy = 0
 	float lastTime = Time()
 	while(1)
@@ -141,7 +143,9 @@ void function LTSRebalance_VortexAmpEnergyThink( entity weapon, entity owner )
 		WaitFrame()
 		float passedTime = Time() - lastTime
 		bool hasCaught = vortexSphere.GetBulletAbsorbedCount() > 0 || vortexSphere.GetProjectileAbsorbedCount() > 0
-		accumulatedEnergy += passedTime * cost * ( hasCaught ? PAS_ION_VORTEX_AMP_ON_ENERGY : PAS_ION_VORTEX_AMP_OFF_ENERGY )
+		accumulatedEnergy += passedTime * ( vanillaCost - LTSREBALANCE_VORTEX_COST )
+		if ( isAmped )
+			accumulatedEnergy += passedTime * LTSREBALANCE_VORTEX_COST * ( hasCaught ? PAS_ION_VORTEX_AMP_ON_ENERGY : PAS_ION_VORTEX_AMP_OFF_ENERGY )
 
 		if ( accumulatedEnergy > 0 )
 			owner.AddSharedEnergy( int( accumulatedEnergy ) )
@@ -202,8 +206,8 @@ function StartVortex( entity weapon )
 		weapon.EmitWeaponSound_1p3p( "vortex_shield_loop_1P", "vortex_shield_loop_3P" )
 
 		#if SERVER
-		if ( weapon.HasMod( "LTSRebalance_pas_ion_vortex" ) && !PerfectKits_Enabled() )
-			thread LTSRebalance_VortexAmpEnergyThink( weapon, weaponOwner )
+		if ( LTSRebalance_Enabled() && !PerfectKits_Enabled() )
+			thread LTSRebalance_VortexEnergyThink( weapon, weaponOwner )
 		if ( PerfectKits_Enabled() && ( weapon.HasMod( "LTSRebalance_pas_ion_vortex" ) || weapon.HasMod( "pas_ion_vortex" ) ) )
 			thread PerfectKits_VortexAmpEnergyThink( weapon, weaponOwner )
 		#endif

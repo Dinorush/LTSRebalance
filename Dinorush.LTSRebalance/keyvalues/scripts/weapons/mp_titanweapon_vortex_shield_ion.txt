@@ -4,9 +4,9 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"fire_rate"   									"2.33"
+			"fire_rate"   									"2.25"
 
-			"deploy_time" 									".22"
+			"deploy_time" 									".2"
 		}
 		LTSRebalance_pas_ion_vortex
 		{
