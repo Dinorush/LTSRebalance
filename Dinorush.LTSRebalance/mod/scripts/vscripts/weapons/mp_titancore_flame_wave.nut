@@ -60,7 +60,11 @@ bool function OnAbilityCharge_FlameWave( entity weapon )
 		}
 
 		if ( owner.IsPlayer() )
+		{
 			owner.SetTitanDisembarkEnabled( false )
+			if ( PerfectKits_Enabled() && weapon.HasMod( "pas_scorch_flamecore" ) && !( "scorchEarthArray" in owner.s ) )
+				owner.s.scorchedEarthArray <- []
+		}
 		else
 			owner.Anim_ScriptedPlay( "at_antirodeo_anim_fast" )
 	#endif
@@ -107,9 +111,17 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
 	//This wave attack is spawning 3 waves, and we want them all to only do damage once to any individual target.
 	entity inflictor = CreateDamageInflictorHelper( 10.0 )
     inflictor.s.soulsHit <- []
-
-	entity scorchedEarthInflictor = CreateOncePerTickDamageInflictorHelper( ( PerfectKits_Enabled() && weapon.HasMod( "pas_scorch_flamecore" ) ) ? 300.0 : 10.0 )
-	thread PerfectKits_CleanupScorchedInflictor( scorchedEarthInflictor, weapon.GetWeaponOwner() )
+	entity scorchedEarthInflictor
+	if ( weapon.HasMod( "pas_scorch_flamecore" ) && IsValid( weapon.GetWeaponOwner() ) )
+	{
+		if ( PerfectKits_Enabled() )
+		{
+			scorchedEarthInflictor = CreateOncePerTickDamageInflictorHelper( 0.0 )
+			weapon.GetWeaponOwner().s.scorchedEarthArray.append( scorchedEarthInflictor )
+		}
+		else
+			scorchedEarthInflictor = CreateOncePerTickDamageInflictorHelper( 10.0 )
+	}
 	#endif
 
 	array<float> offsets = [ -1.0, 0.0, 1.0 ]
@@ -149,26 +161,6 @@ var function OnWeaponPrimaryAttack_titancore_flame_wave( entity weapon, WeaponPr
 }
 
 #if SERVER
-void function PerfectKits_CleanupScorchedInflictor( entity inflictor, entity owner )
-{
-	if ( !IsValid( owner ) || !owner.IsPlayer() )
-		return
-
-	inflictor.EndSignal( "OnDestroy" )
-	WaitFrame()
-	AddToScriptManagedEntArray( owner.s.activeTrapArrayId, inflictor )
-
-	OnThreadEnd(
-		function() : ( inflictor )
-		{
-			if ( IsValid( inflictor ) )
-				inflictor.Destroy()
-		}
-	)
-	
-	wait 310.0 // Trails last 300.0
-}
-
 void function BeginFlameWave( entity projectile, int projectileCount, entity inflictor, vector pos, vector dir )
 {
 	projectile.EndSignal( "OnDestroy" )
