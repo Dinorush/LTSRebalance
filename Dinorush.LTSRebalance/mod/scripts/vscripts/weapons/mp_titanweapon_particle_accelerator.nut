@@ -100,6 +100,7 @@ void function OnWeaponStartZoomIn_titanweapon_particle_accelerator( entity weapo
 	#endif
 
 	weapon.SetMods( mods )
+	weapon.s.zoomedIn = true
 
 	#if CLIENT
 		entity weaponOwner = weapon.GetWeaponOwner()
@@ -119,6 +120,7 @@ void function OnWeaponStartZoomOut_titanweapon_particle_accelerator( entity weap
 	mods.fastremovebyvalue( "PerfectKits_pas_ion_weapon_ads_helper" )
 	mods.fastremovebyvalue( "PerfectKits_pas_ion_weapon_helper" )
 	weapon.SetMods( mods )
+	weapon.s.zoomedIn = false
 	//weapon.StopWeaponEffect( $"wpn_arc_cannon_charge_fp", $"wpn_arc_cannon_charge" )
 	weapon.StopWeaponEffect( TPA_ADS_EFFECT_1P, TPA_ADS_EFFECT_3P )
 	weapon.StopWeaponSound( "arc_cannon_charged_loop" )
@@ -134,6 +136,7 @@ void function OnWeaponActivate_titanweapon_particle_accelerator( entity weapon )
 	
 	if ( !( "initialized" in weapon.s ) )
 	{
+		weapon.s.zoomedIn <- false
 		weapon.s.initialized <- true
 	}
 }
@@ -171,6 +174,9 @@ function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams attack
 
 	entity owner = weapon.GetWeaponOwner()
     bool inADS = weapon.IsWeaponInAds()
+	if ( LTSRebalance_Enabled() && inADS && !weapon.s.zoomedIn ) // Fix for Laser Shot -> Splitter not applying ADS attachments
+		OnWeaponStartZoomIn_titanweapon_particle_accelerator( weapon )
+
 	int ADS_SHOT_COUNT = ( weapon.HasMod( "pas_ion_weapon_ads" ) || weapon.HasMod( "LTSRebalance_pas_ion_weapon_ads" ) ) ? ADS_SHOT_COUNT_UPGRADE : ADS_SHOT_COUNT_NORMAL
 	if ( shouldCreateProjectile )
 	{
