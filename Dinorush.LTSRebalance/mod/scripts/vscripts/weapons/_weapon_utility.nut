@@ -2265,6 +2265,16 @@ function PROTO_CleanupTrackedProjectiles( entity player )
 	{
 		ent.Destroy()
 	}
+
+	if ( PerfectKits_Enabled() && "scorchedEarthArray" in player.s )
+	{
+		array scorchEarths = expect array( player.s.scorchedEarthArray )
+		for( int i = scorchEarths.len() - 1; i >= 0; i-- )
+		{
+			scorchEarths[i].Destroy()
+			scorchEarths.remove(i)
+		}
+	}
 }
 
 int function CompareCreation( entity a, entity b )
@@ -2921,6 +2931,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 	array<vector> positions = []
 	vector lastDownPos
     string passVortex = ""
+	string name = ""
 	bool firstTrace = true
 
 	dir = <dir.x, dir.y, 0.0>
@@ -2935,10 +2946,10 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			chargedPrefix = "charge_"
 
         if( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
-            passVortex = string( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
+            passVortex = expect string( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
 		maxCount = expect int( ent.ProjectileGetWeaponInfoFileKeyField( chargedPrefix + "wave_max_count" ) )
 		step = expect float( ent.ProjectileGetWeaponInfoFileKeyField( chargedPrefix + "wave_step_dist" ) )
-		string name = ent.ProjectileGetWeaponClassName()
+		name = ent.ProjectileGetWeaponClassName()
 		if ( LTSRebalance_Enabled() && name in WAVE_ATTACK_FIXES ) // Changed here since can't be changed via attachment
 		{
 			if ( "count" in WAVE_ATTACK_FIXES[name] )
@@ -2952,9 +2963,9 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 	else
 	{
 		weapon = ent
-
-        if( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
-            passVortex = string( ent.ProjectileGetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
+		name = weapon.GetWeaponClassName()
+        if( ent.GetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
+            passVortex = expect string( ent.GetWeaponInfoFileKeyField( "wave_pass_vortex" ) )
 		maxCount = expect int( ent.GetWeaponInfoFileKeyField( "wave_max_count" ) )
 		step = expect float( ent.GetWeaponInfoFileKeyField( "wave_step_dist" ) )
 		owner = ent.GetWeaponOwner()
@@ -3015,7 +3026,10 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			//DebugDrawLine( forwardTrace.endPos, forwardTrace.endPos + <0.0, 0.0, -1000.0>, 255, 0, 0, true, 25.0 )
 			TraceResults downTrace = TraceLine( forwardTrace.endPos, forwardTrace.endPos + <0.0, 0.0, -1000.0>, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 			if ( downTrace.fraction == 1.0 )
+			{
+				printt( "Attack wave", name, "ended on forward-down trace; unable to find ground" )
 				break
+			}
 
 			entity movingGeo = null
 			if ( downTrace.hitEnt && downTrace.hitEnt.HasPusherRootParent() && !downTrace.hitEnt.IsMarkedForDeletion() )
@@ -3032,7 +3046,10 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 		else
 		{
 			if ( IsValid( forwardTrace.hitEnt ) && (StatusEffect_Get( forwardTrace.hitEnt, eStatusEffect.pass_through_amps_weapon ) > 0) && !CheckPassThroughDir( forwardTrace.hitEnt, forwardTrace.surfaceNormal, forwardTrace.endPos ) )
+			{
+				printt( "Attack wave", name, "ended on forward trace (should be triggered on A-Walls only)" )
 				break;
+			}
 		}
 
 		TraceResults upwardTrace = TraceLine( traceStart, traceEndOver, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
@@ -3041,15 +3058,22 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 		{
 			if ( IsValid( upwardTrace.hitEnt ) )
 			{
+				
 				if ( upwardTrace.hitEnt.IsWorld() || upwardTrace.hitEnt.IsPlayer() || ( ( !LTSRebalance_Enabled() ||  passVortex == "" ) && upwardTrace.hitEnt.IsNPC() ) )
+				{
+					printt( "Attack wave", name, "despawned, hit ent:", upwardTrace.hitEnt )
 					break
+				}
 			}
 		}
 		else
 		{
 			TraceResults downTrace = TraceLine( upwardTrace.endPos, upwardTrace.endPos + <0.0, 0.0, -1000.0>, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 			if ( downTrace.fraction == 1.0 )
+			{
+				printt( "Attack wave", name, "ended on upward-down trace; failed to find ground" )
 				break
+			}
 
 			entity movingGeo = null
 			if ( downTrace.hitEnt && downTrace.hitEnt.HasPusherRootParent() && !downTrace.hitEnt.IsMarkedForDeletion() )
@@ -3090,6 +3114,9 @@ void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInf
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	if ( IsValid( attacker ) && attacker.GetTeam() == ent.GetTeam() )
+		return
+
+	if ( LTSRebalance_Enabled() && IsValid( attacker ) && attacker.GetOffhandWeapon( OFFHAND_LEFT ).s.entitiesHit.contains( ent ) )
 		return
 
 	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE )
