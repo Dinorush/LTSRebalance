@@ -166,7 +166,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( owner.IsPlayer() )
 	{
 		owner.Server_SetDodgePower( 100.0 )
-		owner.SetPowerRegenRateScale(  LTSRebalance_Enabled() ? 3.5 : 6.5 )
+		owner.SetPowerRegenRateScale(  LTSRebalance_Enabled() ? 4.5 : 6.5 )
 
 		GivePassive( owner, ePassives.PAS_FUSION_CORE )
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
