@@ -463,7 +463,7 @@ void function OnTitanDoomed( entity titan, var damageInfo )
 		if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) && !PerfectKits_Enabled() && !LTSRebalance_Enabled() )
 			PhaseShift( titan, 0, 3.0 )
 
- 		if ( !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
+ 		if ( SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
 			return
 	}
 

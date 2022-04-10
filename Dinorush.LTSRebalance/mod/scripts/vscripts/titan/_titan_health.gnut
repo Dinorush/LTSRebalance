@@ -511,9 +511,6 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 
 bool function PlayerHasAutoEject( entity player )
 {
-	if ( LTSRebalance_Enabled() )
-		return false
-
 	if ( player.IsBot() )
 		return false
 
@@ -662,7 +659,7 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 		{
 			HandleAutoEject( soulOwner, titanSoul )
 		}
-		else if ( !LTSRebalance_Enabled() )
+		else
 		{
 			//If it's an auto-titan with auto-eject, this just instantly kills it.
 			var attacker = ( "attacker" in titanSoul.lastAttackInfo ) ? expect table( titanSoul.lastAttackInfo ).attacker : null

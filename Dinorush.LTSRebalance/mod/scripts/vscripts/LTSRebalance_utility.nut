@@ -49,11 +49,13 @@ void function LTSRebalance_Init()
 	LTSRebalance_WeaponInit()
 	#if SERVER
 		AddSpawnCallback( "npc_titan", GiveLTSRebalanceTitanMod )
+		AddSoulTransferFunc( LTSRebalance_TransferSharedEnergy )
 		AddCallback_OnTitanHealthSegmentLost( UnstableReactor_OnSegmentLost )
 		AddCallback_OnPlayerKilled( UnstableReactor_OnDeath )
 		AddCallback_OnNPCKilled( UnstableReactor_OnDeath )
 		AddCallback_OnPlayerRespawned( GiveLTSRebalanceWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
+		AddCallback_OnTitanBecomesPilot( LTSRebalance_GiveBatteryOnEject )
 	#else
 		AddCallback_OnClientScriptInit( ClLTSRebalance_ClientScripts )
 	#endif
@@ -89,14 +91,26 @@ void function LTSRebalance_Precache()
 	table damageSourceTable = expect table( getconsttable()["eDamageSourceId"] )
 	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
 	damageSourceTable.mp_titanweapon_predator_cannon_perfectkits <- eDamageSourceId.mp_titanweapon_predator_cannon
+	LTSRebalance_AddPassive( "PAS_UNSTABLE_REACTOR" )
+	LTSRebalance_AddPassive( "PAS_BATTERY_EJECT" )
 }
 
+// Similar to Precache, called client & server. However, only occurs if Rebalance is on, which can mess some things up
 void function LTSRebalance_WeaponInit()
 {
 	MpTitanweaponShiftCoreSword_Init()
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 }
 
+void function LTSRebalance_AddPassive( string name )
+{
+	if ( name in ePassives )
+		return
+
+	table passives = expect table( getconsttable()["ePassives"] )
+	passives[name] <- passives.len() // ePassives starts at 0
+}
+ 
 #if SERVER
 void function GiveLTSRebalanceWeaponMod( entity player )
 {
@@ -110,6 +124,10 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 	entity soul = titan.GetTitanSoul()
 	if( !IsValid( soul ) )
 		return
+
+	// HACK - Extend passives array since we can't edit the method that returns the number of existing passives.
+	//        Need to add one for each new passive and one to account for PAS_NUMBER (as we need the array to align above it)
+	soul.passives.extend( [ false, false, false ] )
 
 	if ( SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO ) )
 		GiveOffhandElectricSmoke( titan )
@@ -136,11 +154,16 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 	}
 
 	entity owner = titan.GetBossPlayer()
-	if ( IsValid( owner ) && PlayerHasPassive( owner, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
+	if ( SoulHasPassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
 	{
-		TakePassive( owner, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) // We don't want normal nuke eject behavior
-		array passives = expect array( soul.passives )
-		passives[ ePassives.PAS_BUILD_UP_NUCLEAR_CORE ] = true
+		TakePassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE )
+		GivePassive( soul, ePassives.PAS_UNSTABLE_REACTOR )
+	}
+
+	if ( SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
+	{
+		TakePassive( soul, ePassives.PAS_AUTO_EJECT )
+		GivePassive( soul, ePassives.PAS_BATTERY_EJECT )
 	}
 }
 
@@ -266,6 +289,24 @@ void function LTSRebalance_HandleSetfiles( entity player, entity titan )
 	}
 }
 
+// We need to thread the shared energy transfer since the energy is set after transfer callbacks
+void function LTSRebalance_TransferSharedEnergy( entity soul, entity destEnt, entity srcEnt )
+{
+	if ( IsValid( srcEnt ) )
+    	thread TransferSharedEnergy_Think( destEnt, srcEnt )
+}
+
+void function TransferSharedEnergy_Think( entity destEnt, entity srcEnt )
+{
+	int energy = srcEnt.GetSharedEnergyCount()
+	WaitEndFrame()
+	if ( IsValid ( destEnt ) )
+	{
+		destEnt.TakeSharedEnergy( destEnt.GetSharedEnergyCount() )
+    	destEnt.AddSharedEnergy( energy )
+	}
+}
+
 void function UnstableReactor_Blast( entity titan )
 {
 	thread UnstableReactor_MakeFX( titan )
@@ -299,7 +340,7 @@ void function UnstableReactor_MakeFX( entity titan )
 
 void function UnstableReactor_OnSegmentLost( entity titan, entity attacker )
 {
-	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
+	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_UNSTABLE_REACTOR ) )
 		UnstableReactor_Blast( titan )
 }
 
@@ -309,8 +350,17 @@ void function UnstableReactor_OnDeath( entity titan, entity attacker, var damage
 		return
 
 	entity soul = titan.GetTitanSoul()
-	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
+	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_UNSTABLE_REACTOR ) )
 		UnstableReactor_Blast( titan )
+}
+
+void function LTSRebalance_GiveBatteryOnEject( entity player, entity titan )
+{
+	if ( player.p.lastEjectTime == Time() && SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_BATTERY_EJECT ) )
+	{
+		Rodeo_GiveBatteryToPlayer( player )
+		EnableCloak( player, 7.0 )
+	}
 }
 #else
 void function ClLTSRebalance_ClientScripts( entity player )
@@ -336,14 +386,7 @@ void function ClLTSRebalance_LightCannonUIThink()
 		if ( !ClLTSRebalance_ShouldRenderLightCannonUI( player ) )
 		{				
 			LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, 0.0 )
-
-			// Only clear background when the last core finishes
-			if ( IsValid( player ) )
-			{
-				entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
-				if ( !IsValid( core ) || !("laserCoreCount" in core.s) || core.s.laserCoreCount == 0 )
-					RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
-			}
+			RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
 			continue
 		}
 		
@@ -351,14 +394,14 @@ void function ClLTSRebalance_LightCannonUIThink()
 		entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
 		int count = LTSREBALANCE_PAS_ION_LASERCANNON_COUNT
 		if ( "laserCoreCount" in core.s )
-			count -= expect int( core.s.laserCoreCount )
+			count -= expect int( core.s.laserCoreCount + 1 ) / 2
 		LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, float( count ) / float( LTSREBALANCE_PAS_ION_LASERCANNON_COUNT ) )
 	}
 }
 
 bool function ClLTSRebalance_ShouldRenderLightCannonUI( entity player )
 {
-	if ( !IsValid( player ) || !player.IsTitan() )
+	if ( !IsValid( player ) || !player.IsTitan() || IsSpectating() )
 		return false
 
 	entity soul = player.GetTitanSoul()
@@ -371,7 +414,7 @@ bool function ClLTSRebalance_ShouldRenderLightCannonUI( entity player )
 
 	float coreAvailableFrac = soul.GetTitanSoulNetFloat( "coreAvailableFrac" )
 	if ( coreAvailableFrac < 1.0 )
-		return false
+		return soul.GetCoreChargeExpireTime() > Time() + 0.1
 
 	return true
 }
