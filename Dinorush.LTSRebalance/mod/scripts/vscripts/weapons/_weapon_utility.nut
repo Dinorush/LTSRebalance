@@ -3116,8 +3116,17 @@ void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInf
 	if ( IsValid( attacker ) && attacker.GetTeam() == ent.GetTeam() )
 		return
 
-	if ( LTSRebalance_Enabled() && IsValid( attacker ) && attacker.GetOffhandWeapon( OFFHAND_LEFT ).s.entitiesHit.contains( ent ) )
-		return
+	if ( LTSRebalance_Enabled() && IsValid ( attacker.GetOffhandWeapon( OFFHAND_LEFT ) ) )
+	{
+		// Increment up to 2 per target since Siphon has two callbacks
+		entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
+		if ( !( ent in weapon.s.entitiesHit ) )
+			weapon.s.entitiesHit[ent] <- 1
+		else if ( weapon.s.entitiesHit[ent] < 2 )
+			weapon.s.entitiesHit[ent] += 1
+		else
+			return
+	}
 
 	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE )
 }
