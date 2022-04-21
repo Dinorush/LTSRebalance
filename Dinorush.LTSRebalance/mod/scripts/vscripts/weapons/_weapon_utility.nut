@@ -3032,10 +3032,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			//DebugDrawLine( forwardTrace.endPos, forwardTrace.endPos + <0.0, 0.0, -1000.0>, 255, 0, 0, true, 25.0 )
 			TraceResults downTrace = TraceLine( forwardTrace.endPos, forwardTrace.endPos + <0.0, 0.0, -1000.0>, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 			if ( downTrace.fraction == 1.0 )
-			{
-				printt( "Attack wave", name, "ended on forward-down trace; unable to find ground" )
 				break
-			}
 
 			entity movingGeo = null
 			if ( downTrace.hitEnt && downTrace.hitEnt.HasPusherRootParent() && !downTrace.hitEnt.IsMarkedForDeletion() )
@@ -3049,14 +3046,8 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			WaitFrame()
 			continue
 		}
-		else
-		{
-			if ( IsValid( forwardTrace.hitEnt ) && (StatusEffect_Get( forwardTrace.hitEnt, eStatusEffect.pass_through_amps_weapon ) > 0) && !CheckPassThroughDir( forwardTrace.hitEnt, forwardTrace.surfaceNormal, forwardTrace.endPos ) )
-			{
-				printt( "Attack wave", name, "ended on forward trace (should be triggered on A-Walls only)" )
-				break;
-			}
-		}
+		else if ( IsValid( forwardTrace.hitEnt ) && (StatusEffect_Get( forwardTrace.hitEnt, eStatusEffect.pass_through_amps_weapon ) > 0) && !CheckPassThroughDir( forwardTrace.hitEnt, forwardTrace.surfaceNormal, forwardTrace.endPos ) )
+			break;
 
 		TraceResults upwardTrace = TraceLine( traceStart, traceEndOver, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 		//DebugDrawLine( traceStart, traceEndOver, 0, 0, 255, true, 25.0 )
@@ -3066,20 +3057,14 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			{
 				
 				if ( upwardTrace.hitEnt.IsWorld() || upwardTrace.hitEnt.IsPlayer() || ( ( !LTSRebalance_Enabled() ||  passVortex == "" ) && upwardTrace.hitEnt.IsNPC() ) )
-				{
-					printt( "Attack wave", name, "despawned, hit ent:", upwardTrace.hitEnt )
 					break
-				}
 			}
 		}
 		else
 		{
 			TraceResults downTrace = TraceLine( upwardTrace.endPos, upwardTrace.endPos + <0.0, 0.0, -1000.0>, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 			if ( downTrace.fraction == 1.0 )
-			{
-				printt( "Attack wave", name, "ended on upward-down trace; failed to find ground" )
 				break
-			}
 
 			entity movingGeo = null
 			if ( downTrace.hitEnt && downTrace.hitEnt.HasPusherRootParent() && !downTrace.hitEnt.IsMarkedForDeletion() )
