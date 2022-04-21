@@ -3019,6 +3019,12 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 		array ignoreArray = []
 		if ( IsValid( inflictor ) && inflictor.GetOwner() != null )
 			ignoreArray.append( inflictor.GetOwner() )
+		if ( vortexHit && vortexHit.vortex ) // Need to ignore vortex in line traces if we are here and hit Vortex. Only reached if we pass Vortex.
+			ignoreArray.append( vortexHit.vortex )
+
+		// Note that currently, wave attacks fail to damage/pass through multiple Vortex entities in one step.
+		// Would have to loop through trace lines until no vortexes have been hit, but that'd require changing the VortexHitCheck + TraceLines and I don't wanna do that.
+		// Until it's a problem, I won't touch it. 
 
 		TraceResults forwardTrace = TraceLine( traceStart, traceEndUnder, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 		if ( forwardTrace.fraction == 1.0 )
