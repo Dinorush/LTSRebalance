@@ -3108,13 +3108,13 @@ void function ArcBlast_DamagedPlayerOrNPC( entity ent, var damageInfo )
 void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInfo )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	entity weapon = DamageInfo_GetInflictor( damageInfo )
 	if ( IsValid( attacker ) && attacker.GetTeam() == ent.GetTeam() )
 		return
 
-	if ( LTSRebalance_Enabled() && IsValid ( attacker.GetOffhandWeapon( OFFHAND_LEFT ) ) )
+	if ( LTSRebalance_Enabled() && IsValid( weapon ) )
 	{
 		// Increment up to 2 per target since Siphon has two callbacks
-		entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
 		if ( !( ent in weapon.s.entitiesHit ) )
 			weapon.s.entitiesHit[ent] <- 1
 		else if ( weapon.s.entitiesHit[ent] < 2 )

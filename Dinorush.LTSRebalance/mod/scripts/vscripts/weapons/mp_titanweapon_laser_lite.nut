@@ -81,7 +81,7 @@ var function OnWeaponNPCPrimaryAttack_titanweapon_laser_lite( entity weapon, Wea
 
 void function LaserLite_DamagedTarget( entity target, var damageInfo )
 {
-	entity weapon = DamageInfo_GetWeapon( damageInfo )
+	entity weapon = DamageInfo_GetInflictor( damageInfo )
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 
 	if ( attacker == target )
