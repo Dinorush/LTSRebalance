@@ -213,7 +213,7 @@ var function OnWeaponNPCPrimaryAttack_titanweapon_stun_laser( entity weapon, Wea
 void function StunLaser_DamagedTarget( entity target, var damageInfo )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
-	entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
+	entity weapon = DamageInfo_GetInflictor( damageInfo )
 	
 	if ( attacker == target )
 	{
@@ -221,7 +221,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		return
 	}
 
-	if ( LTSRebalance_Enabled() )
+	if ( LTSRebalance_Enabled() && IsValid( weapon ) )
 	{
 		// Increment up to 2 per target since Siphon has two callbacks
 		if ( !( target in weapon.s.entitiesHit ) )
@@ -235,7 +235,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		}
 	}
 
-	float mod = "burstFireCount" in weapon.s ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.25 ) / float( weapon.s.burstFireCount ) : 1.0
+	float mod = ( IsValid( weapon ) && "burstFireCount" in weapon.s ) ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.25 ) / float( weapon.s.burstFireCount ) : 1.0
 
 	if ( attacker.GetTeam() == target.GetTeam() )
 	{
