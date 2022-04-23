@@ -2,7 +2,7 @@
 	"Name": "Dinorush's LTS Rebalance KV Fix",
 	"Description": "Do not disable (without good reason). Fixes KeyValue mismatches when enabling/disabling LTS Rebalance via the mod menu.",
 	"LoadPriority": 1,
-	"Version": "1.0",
+	"Version": "1.1",
 
 	"ConVars": [
 		{
@@ -14,9 +14,12 @@
 	"Scripts": [
 		{
 			"Path": "LTSRebalance_KVFixScript.nut",
-			"RunOn": "SERVER || UI",
+			"RunOn": "CLIENT || SERVER || UI",
 			"UICallback": {
 				"Before": "LTSRebalance_KVFixUI_Init"
+			},
+			"ClientCallback": {
+				"After": "LTSRebalance_KVFix_ClInit"
 			},
 			"ServerCallback": {
 				"After": "LTSRebalance_KVFix_Init"
