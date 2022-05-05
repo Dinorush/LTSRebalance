@@ -530,6 +530,12 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 			projectile.proj.hasBouncedOffVortex = true
 			return false
 		}
+		// Fix for wave attacks getting despawned by vortex/thermal when allowed to pass through them
+		else if ( LTSRebalance_Enabled() && projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_ignores_vortex" ) == "mirror" )
+		{
+			projectile.proj.hasBouncedOffVortex = true
+			return false
+		}
 
 		// if ( projectile.GetParent() == owner )
 		// 	return false
@@ -1310,7 +1316,7 @@ void function OnDamageAmpProjectile( entity victim, var damageInfo )
 {
     if ( !(DamageInfo_GetCustomDamageType( damageInfo ) & DF_VORTEX_REFIRE) )
         return
-    
+
     DamageInfo_ScaleDamage( damageInfo, PAS_ION_VORTEX_AMP )
 }
 
