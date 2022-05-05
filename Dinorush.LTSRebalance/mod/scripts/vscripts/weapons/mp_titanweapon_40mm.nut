@@ -27,6 +27,7 @@ global const MORTAR_SHOT_SFX_LOOP		= "Weapon_Sidwinder_Projectile"
 global const TRACKER_LIFETIME = 60.0
 #elseif MP
 global const TRACKER_LIFETIME = 15.0
+global const LTSREBALANCE_TRACKER_LIFETIME = 12.0
 #endif
 
 void function MpTitanweapon40mm_Init()
@@ -236,12 +237,17 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
 		return
 
 	if ( mods.contains( "pas_tone_weapon" ) && isCrit )
- 		ApplyTrackerMark( owner, hitEnt )
+ 		ApplyTrackerMark( owner, hitEnt, true )
 	#endif
 }
 
 #if SERVER
-void function ApplyTrackerMark( entity owner, entity hitEnt )
+float function GetTrackerLifetime()
+{
+	return LTSRebalance_Enabled() ? LTSREBALANCE_TRACKER_LIFETIME : TRACKER_LIFETIME
+}
+
+void function ApplyTrackerMark( entity owner, entity hitEnt, bool is40mm = false )
 {
 	if ( !IsAlive( hitEnt ) )
 		return
@@ -254,7 +260,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 		return
 
 	int oldCount = trackerRockets.SmartAmmo_GetNumTrackersOnEntity( hitEnt )
-	trackerRockets.SmartAmmo_TrackEntity( hitEnt, TRACKER_LIFETIME )
+	trackerRockets.SmartAmmo_TrackEntity( hitEnt, GetTrackerLifetime() )
 	int count = trackerRockets.SmartAmmo_GetNumTrackersOnEntity( hitEnt )
 
 	if ( oldCount == count )
@@ -265,7 +271,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 //		if ( hitEnt.IsPlayer() )
 //			EmitSoundOnEntityOnlyToPlayer( hitEnt, hitEnt, "HUD_40mm_TrackerBeep_Locked" )
         entity sonar = owner.GetOffhandWeapon( OFFHAND_ANTIRODEO )
-        if ( LTSRebalance_Enabled() && IsValid( sonar ) && sonar.HasMod( "pas_tone_sonar" ) )
+        if ( LTSRebalance_Enabled() && is40mm && IsValid( sonar ) && sonar.HasMod( "pas_tone_sonar" ) )
         {
             int maxAmmo = sonar.GetWeaponPrimaryClipCountMax()
             int newAmmo = minint( maxAmmo, sonar.GetWeaponPrimaryClipCount() + int( maxAmmo * PAS_TONE_SONAR_COOLDOWN ) )
@@ -279,7 +285,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 
 		if (hitEnt.IsPlayer())
 		{
-			int statusEffectID = StatusEffect_AddTimed( hitEnt, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
+			int statusEffectID = StatusEffect_AddTimed( hitEnt, eStatusEffect.lockon_detected_titan, 1.0, GetTrackerLifetime(), GetTrackerLifetime() )
 			if (hitEnt in trackerRockets.w.targetLockEntityStatusEffectID)
 				trackerRockets.w.targetLockEntityStatusEffectID[hitEnt] = statusEffectID
 			else
@@ -288,7 +294,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 			thread OnOwnerDeathOrDisembark( owner, hitEnt, trackerRockets, statusEffectID )
 
 			entity soul = hitEnt.GetTitanSoul()
-			int statusEffectIDSoul = StatusEffect_AddTimed( soul, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
+			int statusEffectIDSoul = StatusEffect_AddTimed( soul, eStatusEffect.lockon_detected_titan, 1.0, GetTrackerLifetime(), GetTrackerLifetime() )
 			if (soul in trackerRockets.w.targetLockEntityStatusEffectID)
 				trackerRockets.w.targetLockEntityStatusEffectID[soul] = statusEffectIDSoul
 			else
@@ -303,7 +309,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 
 			if (soul != null)
 			{
-				int statusEffectID = StatusEffect_AddTimed( soul, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
+				int statusEffectID = StatusEffect_AddTimed( soul, eStatusEffect.lockon_detected_titan, 1.0, GetTrackerLifetime(), GetTrackerLifetime() )
 				if ( soul in trackerRockets.w.targetLockEntityStatusEffectID )
 					trackerRockets.w.targetLockEntityStatusEffectID[soul] = statusEffectID
 				else
@@ -313,7 +319,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
 			}
 			else
 			{
-				int statusEffectID = StatusEffect_AddTimed( hitEnt, eStatusEffect.lockon_detected_titan, 1.0, TRACKER_LIFETIME, TRACKER_LIFETIME )
+				int statusEffectID = StatusEffect_AddTimed( hitEnt, eStatusEffect.lockon_detected_titan, 1.0, GetTrackerLifetime(), GetTrackerLifetime() )
 				if (hitEnt in trackerRockets.w.targetLockEntityStatusEffectID)
 					trackerRockets.w.targetLockEntityStatusEffectID[hitEnt] = statusEffectID
 				else
@@ -378,7 +384,7 @@ void function OnOwnerDeathOrDisembark(entity owner, entity hitEnt, entity tracke
 
 				trackedEntIsAlive = IsAlive(hitEnt)
 
-				if (timeWaitedWhileLocked >= TRACKER_LIFETIME)
+				if (timeWaitedWhileLocked >= GetTrackerLifetime())
 					return
 			}
 			else
@@ -400,7 +406,7 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 	if ( ent == attacker )
 		return
 
- 	ApplyTrackerMark( attacker, ent )
+ 	ApplyTrackerMark( attacker, ent, true )
 
     entity projectile = DamageInfo_GetInflictor( damageInfo )
 	array<string> mods = projectile.ProjectileGetMods()
@@ -419,7 +425,7 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
     if ( mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
 	{
 		if ( flags & DF_IMPACT )
-        	ApplyTrackerMark( attacker, ent )
+        	ApplyTrackerMark( attacker, ent, true )
 	}
 	else if ( mods.contains( "pas_tone_weapon" ) && attacker.GetMainWeapons().len() > 0 )
 	{

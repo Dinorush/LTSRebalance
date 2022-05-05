@@ -12,12 +12,12 @@ WeaponData
 			"deploy_time"								   	"0.35"
 			"projectile_lifetime"							"7.0"
 		}
-		
+
 		LTSRebalance_pas_tone_rockets
 		{
 			"burst_fire_count"								"7"
 			"smart_ammo_max_targeted_burst"					"7"
-			"fire_rate"									 	"8.6"
+			"fire_rate"									 	"9.8"
 		}
 
 		PerfectKits_pas_tone_rockets
