@@ -10,7 +10,7 @@ global function DelayedPulseLocation
 
 const int SONAR_PULSE_RADIUS = 1250
 const float SONAR_PULSE_DURATION = 5.0
-global const float PAS_TONE_SONAR_COOLDOWN = 0.15
+global const float PAS_TONE_SONAR_COOLDOWN = 0.12
 const float FD_SONAR_PULSE_DURATION = 10.0
 
 bool function OnWeaponAttemptOffhandSwitch_titanability_sonar_pulse( entity weapon )
@@ -100,7 +100,7 @@ void function SpamPulseLocation( entity owner, int team, vector pos, bool hasDam
 		{
 			EmitSoundAtPosition( TEAM_UNASSIGNED, pos, "Titan_Tone_SonarLock_Impact_Pulse_3P" )
 		}
-		
+
 		if ( IsValid( offhand ) )
 			offhand.SetWeaponPrimaryClipCount( 1 )
 	}
