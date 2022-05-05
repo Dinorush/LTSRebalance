@@ -20,7 +20,7 @@ bool function AllowShiftCoreMelee( entity player, array<string> args )
 	if ( !( "ShiftCore_HoldFire" in player.s ) )
 	{
 		player.s.ShiftCore_HoldFire <- false
-		AddButtonPressedPlayerInputCallback( player, IN_ATTACK, ShiftCore_Released )
+		AddButtonReleasedPlayerInputCallback( player, IN_ATTACK, ShiftCore_Released )
 	}
 	else
 		player.s.ShiftCore_HoldFire = false
@@ -45,8 +45,6 @@ void function Cl_ShiftCore_ReleasedThink( entity player, entity weapon )
 		}
 	)
 
-	bool pressed = false
-	bool nowPressed = false
 	while( player.IsInputCommandHeld( IN_ATTACK ) )
 		WaitFrame()
 }
@@ -59,13 +57,13 @@ void function OnWeaponActivate_titanweapon_shift_core_sword( entity weapon )
 	{
 		#if SERVER
 		owner.s.ShiftCore_HoldFire <- true
-		AddButtonPressedPlayerInputCallback( owner, IN_ATTACK, ShiftCore_Released )
+		AddButtonReleasedPlayerInputCallback( owner, IN_ATTACK, ShiftCore_Released )
 		#else
 		owner.s.ShiftCore_HoldFire <- false
 		owner.ClientCommand( "AllowShiftCoreMelee" )
 		#endif
 	}
-	
+
 	if ( weapon.HasMod( "modelset_prime" ) )
 		weapon.PlayWeaponEffectNoCull( SWORD_GLOW_PRIME_FP, SWORD_GLOW_PRIME, "sword_edge" )
 	else
@@ -84,8 +82,8 @@ var function OnWeaponPrimaryAttack_titanweapon_shift_core_sword( entity weapon, 
 {
 	entity owner = weapon.GetWeaponOwner()
 	if ( !( "ShiftCore_HoldFire" in owner.s ) || owner.s.ShiftCore_HoldFire )
-		return 0	
-	
+		return 0
+
 	owner.s.ShiftCore_HoldFire = true
 	#if CLIENT
 	thread Cl_ShiftCore_ReleasedThink( owner, weapon )
