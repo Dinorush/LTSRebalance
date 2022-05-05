@@ -92,9 +92,9 @@ void function LaserLite_DamagedTarget( entity target, var damageInfo )
 
 	if ( LTSRebalance_Enabled() )
 	{
-		if ( !IsValid( weapon ) )
+		if ( !IsValid( weapon ) || !( "entitiesHit" in weapon.s ) )
 			return
-			
+
 		if ( !weapon.s.entitiesHit.contains( target ) )
 			weapon.s.entitiesHit.append( target )
 		else
