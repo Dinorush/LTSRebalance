@@ -2458,7 +2458,7 @@ bool function PROTO_FlakCannon_HasNearbyEnemies( vector origin, int team, float 
 void function GiveEMPStunStatusEffects( entity ent, float duration, float fadeoutDuration = 0.5, float slowTurn = EMP_SEVERITY_SLOWTURN, float slowMove = EMP_SEVERITY_SLOWMOVE)
 {
 	entity target = ent.IsTitan() ? ent.GetTitanSoul() : ent
-	
+
 	int slowEffect = StatusEffect_AddTimed( target, eStatusEffect.turn_slow, slowTurn, duration, fadeoutDuration )
 	int turnEffect = StatusEffect_AddTimed( target, eStatusEffect.move_slow, slowMove, duration, fadeoutDuration )
 
@@ -2994,7 +2994,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 
 		VortexBulletHit ornull vortexHit = VortexBulletHitCheck( owner, traceStart, traceEndOver )
 
-        // "pass" behavior ignores Vortex; "damage" hits it, but doesn't stop.
+		// "pass" behavior ignores Vortex; "damage" hits it, but doesn't stop.
 		if ( ( !LTSRebalance_Enabled() || passVortex != "pass" ) && vortexHit )
 		{
 			expect VortexBulletHit( vortexHit )
@@ -3005,30 +3005,20 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			else if ( IsVortexSphere( vortexHit.vortex ) )
 				VortexSphereDrainHealthForDamage( vortexHit.vortex, damageNearValueTitanArmor )
 
-            // If passVortex has nothing, stop on Vortex (normal behavior)
-            if( !LTSRebalance_Enabled() || passVortex == "" )
-            {
-                WaitFrame()
-                continue
-            }
+			// If passVortex has nothing, stop on Vortex (normal behavior)
+			if ( !LTSRebalance_Enabled() || passVortex == "" )
+			{
+				WaitFrame()
+				continue
+			}
 		}
-        
+
         firstTrace = false
 
 		//DebugDrawLine( traceStart, traceEndUnder, 0, 255, 0, true, 25.0 )
 		array ignoreArray = []
 		if ( IsValid( inflictor ) && inflictor.GetOwner() != null )
 			ignoreArray.append( inflictor.GetOwner() )
-		if ( vortexHit )
-		{
-			// Need to ignore vortex in line traces if we are here and hit Vortex. Only reached if we pass Vortex.
-			expect VortexBulletHit( vortexHit )
-			ignoreArray.append( vortexHit.vortex )
-		}
-
-		// Note that currently, wave attacks fail to damage/pass through multiple Vortex entities in one step.
-		// Would have to loop through trace lines until no vortexes have been hit, but that'd require changing the VortexHitCheck + TraceLines and I don't wanna do that.
-		// Until it's a problem, I won't touch it. 
 
 		TraceResults forwardTrace = TraceLine( traceStart, traceEndUnder, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 		if ( forwardTrace.fraction == 1.0 )
@@ -3059,8 +3049,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 		{
 			if ( IsValid( upwardTrace.hitEnt ) )
 			{
-				
-				if ( upwardTrace.hitEnt.IsWorld() || upwardTrace.hitEnt.IsPlayer() || ( ( !LTSRebalance_Enabled() ||  passVortex == "" ) && upwardTrace.hitEnt.IsNPC() ) )
+				if ( upwardTrace.hitEnt.IsWorld() || upwardTrace.hitEnt.IsPlayer() || upwardTrace.hitEnt.IsNPC() )
 					break
 			}
 		}
