@@ -222,11 +222,11 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
 
     if ( mods.contains( "LTSRebalance_pas_tone_weapon_on" ) )
         EmitSoundAtPosition( TEAM_UNASSIGNED, projectile.GetOrigin(), "explo_40mm_splashed_impact_3p")
-	
+
 	#if SERVER
 
 	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) )
-		Tracker40mmSmokescreen( projectile, hitEnt.IsWorld() ? FX_ELECTRIC_SMOKESCREEN_PILOT : FX_ELECTRIC_SMOKESCREEN_PILOT_AIR ) 	
+		Tracker40mmSmokescreen( projectile, hitEnt.IsWorld() ? FX_ELECTRIC_SMOKESCREEN_PILOT : FX_ELECTRIC_SMOKESCREEN_PILOT_AIR )
 
 	if ( LTSRebalance_Enabled() ) // Remove crit lock effect of enhanced tracker rounds
 		return
@@ -271,7 +271,7 @@ void function ApplyTrackerMark( entity owner, entity hitEnt )
             int newAmmo = minint( maxAmmo, sonar.GetWeaponPrimaryClipCount() + int( maxAmmo * PAS_TONE_SONAR_COOLDOWN ) )
             sonar.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
         }
-        
+
 		if ( owner.IsPlayer() )
 			EmitSoundOnEntityOnlyToPlayer( owner, owner, "HUD_40mm_TrackerBeep_Locked" )
 
@@ -424,7 +424,7 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 	else if ( mods.contains( "pas_tone_weapon" ) && attacker.GetMainWeapons().len() > 0 )
 	{
 		entity weapon = attacker.GetMainWeapons()[0]
-		if ( IsValid( weapon ) )
+		if ( IsValid( weapon ) && ent.IsTitan() )
 			weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
 	}
 }
@@ -457,7 +457,7 @@ void function Tracker40mmSmokescreen( entity projectile, asset fx )
 
 	if ( !IsValid( owner ) )
 		return
-		
+
 	SmokescreenStruct smokescreen
 	smokescreen.smokescreenFX = fx
 	smokescreen.ownerTeam = owner.GetTeam()
