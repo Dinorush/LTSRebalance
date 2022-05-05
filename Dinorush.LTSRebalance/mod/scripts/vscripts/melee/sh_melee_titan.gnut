@@ -87,7 +87,7 @@ void function TitanMeleeAttack( entity titan )
 			return
     entity meleeWeapon = titan.GetMeleeWeapon()
 
-	if ( LTSRebalance_Enabled() )
+	if ( LTSRebalance_Enabled() && IsValid( meleeWeapon ) )
 	{
 		if ( !("didHit" in meleeWeapon.s) )
 			meleeWeapon.s.didHit <- false
@@ -164,14 +164,16 @@ void function TitanMeleeAttack( entity titan )
 
 			TitanAttackTitan( titan, meleeWeapon, targetEnt, damageOrigin )
 
-			if ( tryExecution && IsValid(targetEnt) && IsAlive( targetEnt ) )
+			tryExecution = tryExecution && CodeCallback_IsValidMeleeExecutionTarget( titan, targetEnt ) // Check again in case the melee results have invalidated some condition for the termination
+
+			if ( tryExecution && IsValid( targetEnt ) && IsAlive( targetEnt ) )
 			{
 				#if SERVER
 					AttemptScriptedExecution( titan, targetEnt )
 				#endif
 				return
 			}
-			
+
 			didHitAnEnemyTitan = true
 		}
 		else if ( ShouldMeleeDamage( targetEnt ) ) // Catches cases for dropships, turrets, etc
@@ -228,7 +230,7 @@ void function TitanMeleeAttack( entity titan )
 
 		meleeWeapon.DoMeleeHitConfirmation( severityScale )
 
-		if ( LTSRebalance_Enabled() )
+		if ( LTSRebalance_Enabled() && IsValid( meleeWeapon ) )
         	meleeWeapon.s.didHit = true
 	}
 }
@@ -316,7 +318,7 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 		{
 			pushBackScale = TITAN_PUNCH_KNOCKBACK_SCALE
 		}
-		
+
 		vector pushBackDir = Normalize( enemyTitan.GetOrigin() - titan.GetOrigin() )
 		vector pushBackVelocity = pushBackDir * pushBackScale
 
@@ -341,7 +343,7 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 		targetVelocity = enemyTitan.GetVelocity()
 		targetVelocity += pushBackVelocity
 
-		if ( meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
+		if ( IsValid( meleeWeapon ) && meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
 			targetVelocity *= TITAN_BIG_PUNCH_KNOCKBACK_MOD
 
 		// Put a floor on the targetVelocity: has to be at least 0.85 of the pushback velocity to be able to push back players far enough
