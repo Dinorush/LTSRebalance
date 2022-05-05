@@ -24,7 +24,7 @@ void function MpTitanWeaponSword_Init()
 	#if SERVER
 		if ( LTSRebalance_EnabledOnInit() )
        	 	AddDamageCallbackSourceID( eDamageSourceId.melee_titan_sword, Sword_DamagedTarget )
-				
+
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_shift_core, Sword_DamagedTarget )
 	#endif
 }
@@ -37,7 +37,7 @@ void function OnWeaponActivate_titanweapon_sword( entity weapon )
 			weapon.PlayWeaponEffectNoCull( SWORD_GLOW_PRIME_FP, SWORD_GLOW_PRIME, "sword_edge" )
 		else
 			weapon.PlayWeaponEffectNoCull( SWORD_GLOW_FP, SWORD_GLOW, "sword_edge" )
-        
+
 		#if SERVER
 		entity owner = weapon.GetWeaponOwner()
 		if ( LTSRebalance_Enabled() )
@@ -50,6 +50,7 @@ void function OnWeaponActivate_titanweapon_sword( entity weapon )
 void function WaitForMeleeAttack( entity weapon, entity titan )
 {
     weapon.EndSignal( "WeaponDeactivateEvent" )
+	weapon.EndSignal( "OnDestroy" )
     titan.EndSignal( "CoreEnd" )
     titan.EndSignal( "OnDestroy" )
 	titan.EndSignal( "OnDeath" )
@@ -61,16 +62,19 @@ void function WaitForMeleeAttack( entity weapon, entity titan )
     {
         titan.WaitSignal( "OnMelee" )
 
+		// Allow phase shift to prevent a melee being detected, so a melee coming out of phase will fire a wave without precise timing
+		if ( titan.IsPhaseShifted() )
+			continue
+
         // Still inside the same melee
         if(Time() - lastMeleeTime < 0.2)
         {
             lastMeleeTime = Time()
             continue
         }
-        
+
         lastMeleeTime = Time()
-		if ( !titan.IsPhaseShifted() )
-        	OnMeleeAttackCreateWave( weapon, titan )
+		OnMeleeAttackCreateWave( weapon, titan )
     }
 }
 
@@ -100,7 +104,7 @@ void function BeginSwordCoreWave( entity projectile, entity inflictor, vector po
     OnThreadEnd(
     function() : ( projectile )
         {
-            if(IsValid(projectile))
+            if( IsValid( projectile ) )
             {
                 StopSoundOnEntity( projectile, "arcwave_tail_3p" )
                 projectile.Destroy()
@@ -127,34 +131,19 @@ void function BeginSwordCoreWave( entity projectile, entity inflictor, vector po
 	if( !offset )
 	{
 		const float OFFSET = 11 // shifts some more since the high effect detail dot doesn't line up perfectly
-		vector halfOffset = right * ( explosionradius - OFFSET ) * 0.5 
+		vector halfOffset = right * ( explosionradius - OFFSET ) * 0.5
 		thread SwordCoreWave_ArcBeam( projectile, pos - halfOffset, right, ( explosionradius + OFFSET ) / 2.0, dir, step )
 		thread SwordCoreWave_ArcBeam( projectile, pos + halfOffset, right * -1, ( explosionradius + OFFSET ) / 2.0, dir, step )
 	}
 	else
 		thread SwordCoreWave_ArcBeam( projectile, pos, right * offset, explosionradius, dir, step )
-    
+
     for ( int i = 0; i < maxCount; i++ )
     {
         vector newPos = pos + dir * step
 
-        // Ignores vortex; may re-enable in future
-        // VortexBulletHit ornull vortexHit = VortexBulletHitCheck( owner, pos, newPos )
-		// if ( vortexHit )
-		// {
-		// 	expect VortexBulletHit( vortexHit )
-		// 	entity vortexWeapon = vortexHit.vortex.GetOwnerWeapon()
-
-		// 	if ( vortexWeapon && vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield" )
-		// 		VortexDrainedByImpact( vortexWeapon, null, projectile, null ) // drain the vortex shield
-		// 	else if ( IsVortexSphere( vortexHit.vortex ) )
-		// 		VortexSphereDrainHealthForDamage( vortexHit.vortex, titanDamage * VORTEX_DAMAGE_MOD )
-
-		// 	WaitFrame()
-		// 	continue
-		// }
-
         TraceResults forwardTrace = TraceLine( pos, newPos, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
+
         if( forwardTrace.fraction < 1 && forwardTrace.hitEnt.IsWorld() )
             break
 
@@ -182,7 +171,7 @@ void function BeginSwordCoreWave( entity projectile, entity inflictor, vector po
 void function SwordCoreWave_ArcBeam( entity projectile, vector pos, vector right, float halfdist, vector dir, float step )
 {
 	projectile.EndSignal( "OnDestroy" )
-	
+
     asset beamEffectName = $"P_wpn_charge_tool_beam"
     vector endPos = pos + right * halfdist
     vector startPos = pos - right * halfdist
@@ -255,18 +244,19 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
             offhand = attacker.GetOffhandWeapon( index )
             if ( !offhand )
                 continue
-            
+
             int maxAmmo = offhand.GetWeaponPrimaryClipCountMax()
             int newAmmo = minint( maxAmmo, offhand.GetWeaponPrimaryClipCount() + int( maxAmmo * PAS_RONIN_SWORDCORE_COOLDOWN ) )
             offhand.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
-        } 
+        }
     }
 
     if( DamageInfo_GetDamageSourceIdentifier( damageInfo ) != eDamageSourceId.mp_titancore_shift_core )
         return
 
     // Don't want sword core beams to give shields in Aegis
-    if( DamageInfo_GetInflictor( damageInfo ).IsProjectile() )
+	entity inflictor = DamageInfo_GetInflictor( damageInfo )
+    if( !IsValid( inflictor ) || inflictor.IsProjectile() )
         return
 
 	entity coreWeapon = attacker.GetOffhandWeapon( OFFHAND_EQUIPMENT )
