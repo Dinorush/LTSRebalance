@@ -9,7 +9,7 @@ WeaponData
     "charge_wave_step_dist"							"130.0"
     "wave_passes_vortex"                            "pass"
     "explosion_damage"                              "75"
-    "explosion_damage_heavy_armor"                  "900"
+    "explosion_damage_heavy_armor"                  "1000"
     "explosionradius"                               "100"
     "projectilemodel" 								"models/dev/empty_model.mdl"
 
@@ -18,7 +18,7 @@ WeaponData
 		LTSRebalance_super_charged
 		{
 			"melee_damage"										"++1400"
-			"melee_damage_heavyarmor"							"++300"
+			"melee_damage_heavyarmor"							"++200"
 			"melee_raise_recovery_animtime_normal"				"0.01"
 			"impact_effect_table"								"titan_sword"
 			"melee_rumble_on_hit"								"titan_melee_hit_swordcore"
