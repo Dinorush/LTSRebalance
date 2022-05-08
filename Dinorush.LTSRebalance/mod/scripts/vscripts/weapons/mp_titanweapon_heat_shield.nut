@@ -217,6 +217,9 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
         if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
             return false
 
+		if ( projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_ignores_vortex" ) == "mirror" )
+			return false
+
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
 
