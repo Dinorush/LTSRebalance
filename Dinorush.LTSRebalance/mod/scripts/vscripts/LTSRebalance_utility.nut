@@ -28,6 +28,11 @@ void function LTSRebalance_Init()
 {
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "perfectkits_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
+
+	#if CLIENT
+	AddServerToClientStringCommandCallback( "ltsrebalance_trigger_default_guard", LTSRebalance_TriggerDefaultGuard )
+	#endif
+
 	LTSRebalance_Precache()
 
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
@@ -68,7 +73,7 @@ bool function LTSRebalance_EnabledOnInit()
 }
 
 // For general use, since I dunno if getting the playlist var as many times as I need to is performant
-bool function LTSRebalance_Enabled() 
+bool function LTSRebalance_Enabled()
 {
 	return file.ltsrebalance_enabled
 }
@@ -78,7 +83,7 @@ bool function PerfectKits_EnabledOnInit()
 	return GetCurrentPlaylistVarInt( "perfectkits_enable", 0 ) == 1
 }
 
-bool function PerfectKits_Enabled() 
+bool function PerfectKits_Enabled()
 {
 	return file.perfectkits_enabled
 }
@@ -110,7 +115,7 @@ void function LTSRebalance_AddPassive( string name )
 	table passives = expect table( getconsttable()["ePassives"] )
 	passives[name] <- passives.len() // ePassives starts at 0
 }
- 
+
 #if SERVER
 void function GiveLTSRebalanceWeaponMod( entity player )
 {
@@ -120,6 +125,10 @@ void function GiveLTSRebalanceWeaponMod( entity player )
 void function GiveLTSRebalanceTitanMod( entity titan )
 {
 	LTSRebalance_HandleAttachments( titan )
+
+	entity playerOwner = GetPetTitanOwner( titan )
+	if ( IsValid( playerOwner ) )
+		ServerToClientStringCommand( playerOwner, "ltsrebalance_trigger_default_guard" )
 
 	entity soul = titan.GetTitanSoul()
 	if( !IsValid( soul ) )
@@ -153,7 +162,6 @@ void function GiveLTSRebalanceTitanMod( entity titan )
 		UpdateNPCForAILethality( titan ) // JFS - I don't know if AI lethality would get updated anyway
 	}
 
-	entity owner = titan.GetBossPlayer()
 	if ( SoulHasPassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
 	{
 		TakePassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE )
@@ -323,7 +331,7 @@ void function UnstableReactor_Blast( entity titan )
 		0,										// explosionForce
 		DF_EXPLOSION|DF_ELECTRICAL,				// scriptDamageFlags
 		eDamageSourceId.mp_weapon_arc_blast		// scriptDamageSourceIdentifier
-	)			
+	)
 }
 
 void function UnstableReactor_MakeFX( entity titan )
@@ -363,6 +371,21 @@ void function LTSRebalance_GiveBatteryOnEject( entity player, entity titan )
 	}
 }
 #else
+void function LTSRebalance_TriggerDefaultGuard( array<string> args )
+{
+	int cvMode = GetConVarInt( "ltsrebalance_default_guard" )
+	if ( cvMode == 0 || ( cvMode == 2 && GAMETYPE != LAST_TITAN_STANDING ) )
+		return
+
+	entity player = GetLocalClientPlayer()
+	if ( player.GetPetTitanMode() == eNPCTitanMode.STAY )
+		return
+
+	player.ClientCommand( "TitanNextMode" )
+
+	SetAutoTitanModeHudIndicator( player, eNPCTitanMode.STAY )
+}
+
 void function ClLTSRebalance_ClientScripts( entity player )
 {
 	thread ClLTSRebalance_LightCannonUIThink()
@@ -384,18 +407,22 @@ void function ClLTSRebalance_LightCannonUIThink()
 		entity player = GetLocalClientPlayer()
 
 		if ( !ClLTSRebalance_ShouldRenderLightCannonUI( player ) )
-		{				
+		{
 			LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, 0.0 )
 			RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
 			continue
 		}
-		
+
 		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.5 )
 		entity core = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
 		int count = LTSREBALANCE_PAS_ION_LASERCANNON_COUNT
 		if ( "laserCoreCount" in core.s )
 			count -= expect int( core.s.laserCoreCount + 1 ) / 2
+
+		if ( last == count )
+			continue
 		LTSRebalance_BasicImageBar_SetFillFrac( coreCharges, float( count ) / float( LTSREBALANCE_PAS_ION_LASERCANNON_COUNT ) )
+		last = count
 	}
 }
 
