@@ -5,6 +5,15 @@
 	"RequiredOnClient": true,
 	"Version": "0.9.7.3",
 
+	"ConVars": [
+		{
+			"Name": "ltsrebalance_default_guard",
+			"DefaultValue": "2",
+			"Description": "0 - Normal auto-titan mode behavior. 1 - Default to guard mode. 2 - Default to guard mode in LTS only.",
+			"Flags": 16777216
+		}
+	],
+
 	"Scripts": [
 		{
 			"Path": "client/LTSRebalance_basic_image_bar.gnut",
