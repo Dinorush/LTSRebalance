@@ -61,7 +61,7 @@ void function PerfectKits_PhaseReflexTrigger( entity victim, entity attacker )
 {
 	if ( !victim.IsTitan() )
 		return
-	
+
 	entity soul = victim.GetTitanSoul()
 	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
 		return
@@ -230,7 +230,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 		else
 		{
 			titan.SetActiveWeaponByName( "melee_titan_sword" )
-			
+
 			mainWeapon.AllowUse( false )
 		}
 	}
@@ -296,7 +296,7 @@ void function Shift_Core_End( entity weapon, entity player, float delay, OldWeap
 			OnAbilityEnd_Shift_Core( weapon, player, prevWeaponData )
 
 			if ( IsValid( player ) )
-			{		
+			{
 				entity soul = player.GetTitanSoul()
 				if ( soul != null )
 					CleanupCoreEffect( soul )
@@ -366,7 +366,7 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 				meleeWeapon.RemoveMod( "LTSRebalance_super_charged" )
 			else
 				meleeWeapon.RemoveMod( "super_charged" )
-				
+
 			if ( IsSingleplayer() )
 			{
 				meleeWeapon.RemoveMod( "super_charged_SP" )
@@ -388,10 +388,8 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
         	{
 				titan.GiveWeapon( prevWeaponData.name, prevWeaponData.mods )
 				titan.GetMainWeapons()[0].SetWeaponPrimaryClipCount( prevWeaponData.ammo )
-				if ( shouldSetActive )
-					titan.SetActiveWeaponByName( titan.GetMainWeapons()[0].GetWeaponClassName() )
 			}
-		} 
+		}
 		else if ( titan.GetMainWeapons().len() > 0 )
 			titan.GetMainWeapons()[0].AllowUse( true )
 
