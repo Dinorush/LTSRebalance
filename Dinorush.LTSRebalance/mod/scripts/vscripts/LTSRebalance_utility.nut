@@ -29,10 +29,6 @@ void function LTSRebalance_Init()
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "perfectkits_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 
-	#if CLIENT
-	AddServerToClientStringCommandCallback( "ltsrebalance_trigger_default_guard", LTSRebalance_TriggerDefaultGuard )
-	#endif
-
 	LTSRebalance_Precache()
 
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
@@ -125,10 +121,6 @@ void function GiveLTSRebalanceWeaponMod( entity player )
 void function GiveLTSRebalanceTitanMod( entity titan )
 {
 	LTSRebalance_HandleAttachments( titan )
-
-	entity playerOwner = GetPetTitanOwner( titan )
-	if ( IsValid( playerOwner ) )
-		ServerToClientStringCommand( playerOwner, "ltsrebalance_trigger_default_guard" )
 
 	entity soul = titan.GetTitanSoul()
 	if( !IsValid( soul ) )
@@ -371,21 +363,6 @@ void function LTSRebalance_GiveBatteryOnEject( entity player, entity titan )
 	}
 }
 #else
-void function LTSRebalance_TriggerDefaultGuard( array<string> args )
-{
-	int cvMode = GetConVarInt( "ltsrebalance_default_guard" )
-	if ( cvMode == 0 || ( cvMode == 2 && GAMETYPE != LAST_TITAN_STANDING ) )
-		return
-
-	entity player = GetLocalClientPlayer()
-	if ( player.GetPetTitanMode() == eNPCTitanMode.STAY )
-		return
-
-	player.ClientCommand( "TitanNextMode" )
-
-	SetAutoTitanModeHudIndicator( player, eNPCTitanMode.STAY )
-}
-
 void function ClLTSRebalance_ClientScripts( entity player )
 {
 	thread ClLTSRebalance_LightCannonUIThink()
