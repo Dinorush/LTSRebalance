@@ -3,16 +3,7 @@
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.\nCredits: JustANormalUser - HUD Revamp UI scripts",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.9.7.4",
-
-	"ConVars": [
-		{
-			"Name": "ltsrebalance_default_guard",
-			"DefaultValue": "2",
-			"Description": "0 - Normal auto-titan mode behavior. 1 - Default to guard mode. 2 - Default to guard mode in LTS only.",
-			"Flags": 16777216
-		}
-	],
+	"Version": "0.9.7.5",
 
 	"Scripts": [
 		{
