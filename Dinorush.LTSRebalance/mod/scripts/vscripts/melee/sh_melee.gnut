@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix termination bugs: Tone Prime reload + Ion Prime core
+   2. Allow player to escape Phase Reflex in PerfectKits
+   3. Compatability with Brute4
+*/
 untyped
 
 global function MeleeShared_Init
@@ -114,6 +119,7 @@ function MeleeShared_Init()
 	RegisterSignal( "OnSyncedMelee" )
 	RegisterSignal( "OnSyncedMeleeVictim" )
 	RegisterSignal( "OnSyncedMeleeAttacker" )
+	// Makes this mod compatible with Brute4, who needs this signal.
 	RegisterSignal( "OnMelee" )
 }
 
@@ -424,14 +430,15 @@ void function CodeCallback_OnMeleePressed_InternalThread( entity player )
 	if ( player.IsTitan() )
 	{
 		#if SERVER
+		// Perfect Kits Phase Reflex check to exit phase early. Has checks to ensure only the attacker can do it, not the victim.
 		entity soul = player.GetTitanSoul()
-		if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) && 
+		if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) &&
 			player.IsPhaseShifted() && ( !( "PerfectReflexForced" in player.s ) || !player.s.PerfectReflexForced ) )
 		{
 			CancelPhaseShift( player )
 		}
 		#endif
-			
+
 		TitanUnsyncedMelee( player )
 	}
 	else if ( player.IsHuman() )
@@ -533,14 +540,14 @@ bool function PlayerTriesSyncedMelee( entity player, entity target )
 	}
 
 #if SERVER
-    entity weapon = player.GetMainWeapons()[0]
-    table startTable = {
-        startWeapon = weapon
-        startTime = Time()
-        startAmmo = ( IsValid( weapon ) ? weapon.GetWeaponPrimaryClipCount() : 0 )
-        startEnergy = player.GetSharedEnergyCount()
-    }
-    
+	entity weapon = player.GetMainWeapons()[0]
+	table startTable = {
+		startWeapon = weapon
+		startTime = Time()
+		startAmmo = ( IsValid( weapon ) ? weapon.GetWeaponPrimaryClipCount() : 0 )
+		startEnergy = player.GetSharedEnergyCount()
+	}
+
 	OnThreadEnd(
 		function() : ( player, target, startTable )
 		{
@@ -573,12 +580,12 @@ bool function PlayerTriesSyncedMelee( entity player, entity target )
 				RemoveCinematicFlag( target, CE_FLAG_TITAN_3P_CAM )
 				RemoveCinematicFlag( target, CE_FLAG_EXECUTION )
 			}
-            else if ( LTSRebalance_Enabled() ) // Fix case where enemy leaves game during Ion prime termination
-            {
-                entity weapon = player.GetMainWeapons()[0]
-                if( IsValid( weapon ) )
-                    player.SetActiveWeaponByName( weapon.GetWeaponClassName() )
-            }
+			else if ( LTSRebalance_Enabled() ) // Fix case where enemy leaves game during Ion prime termination
+			{
+				entity weapon = player.GetMainWeapons()[0]
+				if( IsValid( weapon ) )
+					player.SetActiveWeaponByName( weapon.GetWeaponClassName() )
+			}
 		}
 	)
 

@@ -1,3 +1,10 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Enhanced Payload rebalancing/bug fix (+ PerfectKits Enhanced Payload)
+   2. Implement Amped Vortex's ability to amp projectiles
+   3. Implement validate function for held Vortexes that checks direction of the shot
+      • This is so that you can't block someone from behind them
+   4. Implement Perfect Kits Amped Vortex absorbing every attack type
+*/
 untyped
 
 //TODO: Should split this up into server, client and shared versions and just globalize_all_functions
@@ -1570,6 +1577,16 @@ function ClusterRocket_Detonate( entity rocket, vector normal, entity stickEnt =
 	}
 	else if ( mods.contains( "LTSRebalance_pas_northstar_cluster" ) )
 	{
+		/* Clusters spawn '((int) (count/groupSize) + 1) * groupSize' total subexplosions (thanks to a '<=')
+		   The ""base delay"" between each group's subexplosion on average is ((float) duration / (int) (count / groupSize))
+		   The actual delay is (""base delay"" - delay).
+
+		   Base: 25 subexplosions, 0.75s average delay, 3.75s duration
+		   Enhanced: 35 subexplosions, 5.25s duration
+
+		   Vanilla payload actually has larger average delay due to a bad duration for the int cast,
+		   plus it spawns less explosions than it should because the cluster gets killed early.
+		*/  
 		count = 30
 		duration = 7.5
 		range = CLUSTER_ROCKET_BURST_RANGE * 1.25
@@ -1639,6 +1656,8 @@ function StartClusterExplosions( entity projectile, entity owner, PopcornInfo po
 	entity placementHelper = CreateScriptMover()
 	placementHelper.SetOrigin( origin )
 	placementHelper.SetAngles( VectorToAngles( popcornInfo.normal ) )
+
+	// The target entity could die, so we will use the placement helper to track where to spawn subexplosions 
 	if ( stickEnt != null )
 	{
 		placementHelper.SetParent( stickEnt )
@@ -1723,6 +1742,8 @@ function ClusterRocketBursts( vector origin, int damage, int damageHeavyArmor, f
 		WaitFrame()
 	}
 
+	// Fix to Enhanced Payload getting cut off early. Technically overkill, since cluster doesn't
+	// actually last the whole duration, but going overkill here won't affect much.
 	wait ( LTSRebalance_Enabled() ? popcornInfo.duration : CLUSTER_ROCKET_DURATION )
 }
 
@@ -2907,6 +2928,8 @@ array<entity> function GetPlayerWeapons( entity player, array<string> excludeNam
 	return weapons
 }
 
+// The step/count variables for waves are custom KeyValue fields, and as such cannot be modified by attachments.
+// Thus, we manually set the rebalanced values here.
 const table< string, table<string, float> > WAVE_ATTACK_FIXES = {
 	mp_titancore_flame_wave = {
 		step = 130.0
@@ -3101,7 +3124,7 @@ void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInf
 	if ( IsValid( attacker ) && attacker.GetTeam() == ent.GetTeam() )
 		return
 
-	if ( LTSRebalance_Enabled() && IsValid( weapon ) )
+	if ( LTSRebalance_Enabled() && IsValid( weapon ) && "entitiesHit" in weapon.s )
 	{
 		// Increment up to 2 per target since Siphon has two callbacks
 		if ( !( ent in weapon.s.entitiesHit ) )

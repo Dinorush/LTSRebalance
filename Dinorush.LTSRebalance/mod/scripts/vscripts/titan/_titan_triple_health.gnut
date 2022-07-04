@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Prevent Phase Reflex from occuring on doom
+*/
 untyped
 
 global function HealthRegenInit
@@ -487,22 +490,6 @@ void function OnTitanDoomed( entity titan, var damageInfo )
 
 	if ( NoWeaponDoomState() )
 		TakeAllWeapons( titan )
-}
-
-void function PerfectKits_PhaseReflexDamage( entity player )
-{
-	player.EndSignal( "OnDestroy" )
-	player.EndSignal( "OnDeath" )
-	player.EndSignal( "StopPhaseShift" )
-	wait 15.0
-
-	float damage = 100
-	while(1)
-	{
-		player.TakeDamage( damage, null, null, { scriptType = DF_DOOMED_HEALTH_LOSS, damageSourceId = damagedef_suicide } )
-		damage += 50
-		wait 1.0
-	}
 }
 
 void function OnTitanDeath( entity titan, var damageInfo )

@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Superior chassis rebalancing
+   2. Doom skip fix
+   3. Monarch 2x innate core gain
+*/
 global function TitanHealth_Init
 
 global function Titan_PlayerTookDamage
@@ -625,6 +630,11 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 	soulOwner.Signal( "Doomed" )
 	titanSoul.Signal( "Doomed" )
 
+	// I believe doom skip is caused by the titan getting damaged somehow before it sets the health after the next wait.
+	// Thus, we add a callback here to cancel out damage until after the wait. We also don't regrab the soulOwner afterwards,
+	// because there could have been a disembark/embark.
+	// This also means this fix doesn't work on the titan if disembark occurs in this server frame, but
+	// the normal doom invuln still works so doom skip in such a case would be exceedingly rare.
 	if ( LTSRebalance_Enabled() )
 		AddEntityCallback_OnDamaged( soulOwner, DoomInvuln_OnDamage )
 
@@ -678,7 +688,6 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 	}
 	soulOwner.SetHealth( doomedHealth )
 	soulOwner.SetMaxHealth( maxDoomedHealth )
-	soulOwner.Signal( "DoomInvulnEnd" )
 	//soulOwner.SetHealthPerSegment( 0 )
 
 	string settings = GetSoulPlayerSettings( titanSoul )
@@ -722,29 +731,7 @@ void function DoomedHealthThink( entity titanSoul, var damageInfo )
 	}
 }
 
-// LTSRebalance - This ensures damage taken is set to 0 until doomed health gets set. Fix to what I believe causes doom skip:
-// 					damage seeping through a gap between the if statement that sets damage to 0 and health getting reset
-void function SetDoomInvulnThink( entity titan )
-{
-	titan.EndSignal( "DisembarkingTitan" )
-	titan.EndSignal( "OnDestroy" )
-	titan.EndSignal( "OnDeath" )
-	titan.EndSignal( "TitanEjectionStarted" )
-	titan.EndSignal( "OnSyncedMelee" )
-
-	AddEntityCallback_OnDamaged( titan, DoomInvuln_OnDamage )
-
-	OnThreadEnd(
-		function() : ( titan )
-		{
-			if ( IsValid( titan ) )
-				RemoveEntityCallback_OnDamaged( titan, DoomInvuln_OnDamage )
-		}
-	)
-
-	titan.WaitSignal( "DoomInvulnEnd" )
-}
-
+// Fix for doom skip. Cancels all damage via callback to prevent any from sneaking through, removed when health is set to full doom bar.
 void function DoomInvuln_OnDamage( entity titan, var damageInfo )
 {
 	if( DamageInfo_GetForceKill( damageInfo ) )
@@ -1034,10 +1021,11 @@ void function AddCreditToTitanCoreBuilder( entity titan, float credit )
 	if ( !IsAlive( titan ) )
 		return
 
+	// Innate Monarch 2x core gain for rebalance.
     entity core = titan.GetOffhandWeapon( OFFHAND_EQUIPMENT )
     if ( LTSRebalance_Enabled() && IsValid( core ) && core.GetWeaponClassName() == "mp_titancore_upgrade" )
         credit *= 2
-        
+
 	if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_COREMETER ) )
 		credit *= 1.10
 

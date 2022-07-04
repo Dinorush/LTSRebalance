@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Apply Big Punch kit
+   2. Fix to double hit melees when killing non-Player entities with the same melee
+   3. Change knockback to be based on difference between positions rather than attacker viewangle
+*/
 untyped
 
 global function MeleeTitanShared_Init
@@ -26,6 +31,7 @@ function TitanUnsyncedMelee( entity player )
 
 	local attackState = PLAYER_MELEE_STATE_TITAN_MELEE_JAB
 
+	// Using a .s variable to determine whether the melee has landed, to fix double hit bug.
     meleeWeapon.s.didHit <- false
 	player.PlayerMelee_StartAttack( attackState )
 
@@ -89,7 +95,8 @@ void function TitanMeleeAttack( entity titan )
 
 	if ( LTSRebalance_Enabled() && IsValid( meleeWeapon ) )
 	{
-		if ( !("didHit" in meleeWeapon.s) )
+		// Should exist, but have gotten crashes that I think occur from not checking this.
+		if ( !( "didHit" in meleeWeapon.s ) )
 			meleeWeapon.s.didHit <- false
 		else if ( meleeWeapon.s.didHit ) // Fix for case where the attack hit entity has been destroyed
 			return
@@ -160,6 +167,8 @@ void function TitanMeleeAttack( entity titan )
 				meleeButtonHeldCheck = true
 			#endif
 
+			// For some reason, keeping vanilla code for damage and terminations let the melees that doom also terminate.
+			// Instead, I just wrap the damaging method with two checks to cover all my bases (i.e. needs to be terminate-able before and after damage is dealt).
 			bool tryExecution = meleeButtonHeldCheck && CodeCallback_IsValidMeleeExecutionTarget( titan, targetEnt )
 
 			TitanAttackTitan( titan, meleeWeapon, targetEnt, damageOrigin )
@@ -319,13 +328,14 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 			pushBackScale = TITAN_PUNCH_KNOCKBACK_SCALE
 		}
 
+		// LTS Rebalance knockback is based on difference between positions rather than attacker angle
 		vector pushBackDir = Normalize( enemyTitan.GetOrigin() - titan.GetOrigin() )
 		vector pushBackVelocity = pushBackDir * pushBackScale
 
 		if ( !LTSRebalance_Enabled() )
 		{
 			vector angles = titan.EyeAngles()
-		 	pushBackVelocity = AnglesToForward( angles ) * pushBackScale
+		 	pushBackVelocity = AnglesToForward( angles ) * pushBackScale // No need to replace pushBackDir; it's not used again
 		}
 
 		if ( hasDashPunch )
