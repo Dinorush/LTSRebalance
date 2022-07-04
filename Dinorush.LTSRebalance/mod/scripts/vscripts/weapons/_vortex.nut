@@ -1,3 +1,10 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix one part of what despawns wave attacks inside Vortex
+   2. Implement Amped Vortex's ability to amp projectiles
+   3. Implement validate function for held Vortexes that checks direction of the shot
+      • This is so that you can't block someone from behind them
+   4. Implement Perfect Kits Amped Vortex absorbing every attack type
+*/
 untyped
 
 global function Vortex_Init
@@ -530,7 +537,7 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 			projectile.proj.hasBouncedOffVortex = true
 			return false
 		}
-		// Fix for wave attacks getting despawned by vortex/thermal when allowed to pass through them
+		// Fix for wave attacks getting despawned by vortex when allowed to pass through them
 		else if ( LTSRebalance_Enabled() && projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_ignores_vortex" ) == "mirror" )
 		{
 			projectile.proj.hasBouncedOffVortex = true
@@ -1300,9 +1307,19 @@ function Vortex_SetImpactEffectTable_OnProjectile( projectile, impactData )
 	projectile.SetImpactEffectTable( fxTableHandle )
 }
 
+/*	Since there's no way to set projectile damage or scale it without making an attachment
+	for everything, we instead use damage callbacks.
+	We're just utilizing the DF_VORTEX_REFIRE damage type since it's convenient, but technically
+	any projectile of the same type that gets reflected and lands while an Amped Vortex's projectiles
+	are in flight will take the amp for themselves. This is a very rare edge case, though, so it
+	shouldn't be an issue.
+*/
 void function OnFireAmpProjectile( entity projectile )
 {
     int id = projectile.ProjectileGetDamageSourceID()
+
+	// Add the bonus damage callback for these projectiles and count each one fired
+	// We want to remove the callback once all have died (so normal Vortexes are unaffected)
     if ( !( id in ampDamageSourceIdCounts ) )
     {
         ampDamageSourceIdCounts[id] <- 0
@@ -1314,7 +1331,8 @@ void function OnFireAmpProjectile( entity projectile )
 
 void function OnDamageAmpProjectile( entity victim, var damageInfo )
 {
-    if ( !(DamageInfo_GetCustomDamageType( damageInfo ) & DF_VORTEX_REFIRE) )
+	// Causes only reflected projectiles to receive the amp
+    if ( !( DamageInfo_GetCustomDamageType( damageInfo ) & DF_VORTEX_REFIRE ) )
         return
 
     DamageInfo_ScaleDamage( damageInfo, PAS_ION_VORTEX_AMP )
@@ -1547,6 +1565,8 @@ bool function ValidateVortexImpact( entity vortexSphere, entity projectile = nul
 }
 
 // Only for mobile shields (would not work for Particle)
+// Returns false on attacks that are in the same direction as the Vortex.
+// This is mainly to prevent Vortex/Thermal from blocking someone's attacks when used behind them.
 bool function ValidateVortexDirection( entity vortexWeapon, entity attacker, entity inflictor )
 {
 	if ( !LTSRebalance_Enabled() )
@@ -1719,6 +1739,9 @@ bool function CodeCallback_OnVortexHitBullet( entity weapon, entity vortexSphere
 
 		if ( takesDamage )
 		{
+			// LTS Rebalance doesn't need to remove this since this callback only occurs for hitscans
+			ShieldDamageModifier damageModifier = GetShieldDamageModifier( damageInfo )
+			damage *= damageModifier.damageScale
 			VortexSphereDrainHealthForDamage( vortexSphere, damage )
 		}
 
@@ -1900,9 +1923,10 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 				ElectricGrenadeSmokescreen( projectile, FX_ELECTRIC_SMOKESCREEN_PILOT_AIR )
 				break
 
+			// Adds bonus damage by just doing damage again
             case eDamageSourceId.mp_titanweapon_xo16_vanguard:
                 if ( TEMP_GetDamageFlagsFromProjectile( projectile ) & DF_ELECTRICAL )
-                    VortexSphereDrainHealthForDamage( vortexSphere, damage * ( LTSRebalance_Enabled() ? 0.25 : 0.5 ) )
+                    VortexSphereDrainHealthForDamage( vortexSphere, damage * 0.25 )
                 break
 
 			case eDamageSourceId.mp_weapon_grenade_emp:

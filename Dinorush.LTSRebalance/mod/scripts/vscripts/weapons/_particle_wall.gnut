@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Particle Wall rebalancing
+   2. Return Particle Wall entity for kit functionality
+   3. Implement Perfect Kits Reinforced Wall kit
+*/
 untyped
 
 global function ParticleWall_Init
@@ -53,6 +58,7 @@ function ParticleWall_Init()
 	PrecacheParticleSystem( AMPED_WALL_FX )
 }
 
+// Rebalance changes this function to return the Particle Wall so we can track when it gets broken for Reinforced Particle Wall
 entity function CreateParticleWallFromOwner( entity weaponOwner, float duration, WeaponPrimaryAttackParams attackParams )
 {
 	vector dir = GetParticleWallAttackAnglesFromOwner( weaponOwner, attackParams )
@@ -69,6 +75,7 @@ vector function GetParticleWallAttackAnglesFromOwner( entity weaponOwner, Weapon
 	return AnglesToForward( angles )
 }
 
+// Returns the particle wall in rebalance for the aforementioned reason
 entity function CreateParticleWallForOwnerFromDirection( entity weaponOwner, float duration, vector dir )
 {
 	Assert( IsServer() )
@@ -110,7 +117,7 @@ entity function CreateParticleWallForOwnerFromDirection( entity weaponOwner, flo
 	{
 		health = LTSRebalance_Enabled() ? LTSREBALANCE_SHIELD_WALL_HEALTH : SHIELD_WALL_HEALTH
 	}
-	
+
 	entity vortexSphere = CreateShieldWithSettings( origin + < 0, 0, -64 >, angles, SHIELD_WALL_RADIUS, SHIELD_WALL_RADIUS * 2, SHIELD_WALL_FOV, duration, health, SHIELD_WALL_FX )
 	thread DrainHealthOverTime( vortexSphere,  vortexSphere.e.shieldWallFX, duration )
 

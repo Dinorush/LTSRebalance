@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Counter Ready rebalancing
+*/
 untyped
 global function Sv_EarnMeterMP_Init
 global function EarnMeterMP_SetTitanLoadout
@@ -88,7 +91,7 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
 
-	EarnObject pilotReward = PlayerEarnMeter_GetReward( player ) 
+	EarnObject pilotReward = PlayerEarnMeter_GetReward( player )
 	float pilotRewardFrac = PlayerEarnMeter_GetRewardFrac( player )
 	int lastEarnMeterMode = PlayerEarnMeter_GetMode( player )
 	float lastPassiveGainTime = Time()
@@ -128,7 +131,7 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 			PlayerEarnMeter_SetMode( player, desiredEarnMeterMode )
 			if ( lastEarnMeterMode == eEarnMeterMode.DEFAULT ) // Set these here in case the player changed boost during the match (e.g. in dropship)
 			{
-				pilotReward = PlayerEarnMeter_GetReward( player ) 
+				pilotReward = PlayerEarnMeter_GetReward( player )
 				pilotRewardFrac = PlayerEarnMeter_GetRewardFrac( player )
 			}
 
@@ -183,7 +186,7 @@ void function EarnMeterMP_BoostEarned( entity player )
 	while ( burncard.ref == "burnmeter_random_foil" )
 		burncard = BurnReward_GetRandom()
 
-	for ( int i = 0; i < BurnMeter_GetLimitedRewardCount( player ); i++ )
+	for ( int i = 0; i < BurnMeter_GetLimitedRewardCount( player, burncard.ref ); i++ )
 		BurnMeter_GiveRewardDirect( player, burncard.ref )
 
 	PlayerEarnMeter_DisableReward( player )
@@ -208,7 +211,7 @@ void function EarnMeterMP_TitanEarned( entity player )
 	}
 }
 
-void function EarnMeterMP_SetBoostByRef( entity player, string boostRef ) 
+void function EarnMeterMP_SetBoostByRef( entity player, string boostRef )
 {
 	EarnObject earnobject = EarnObject_GetByRef( boostRef )
 	BurnReward burncard = BurnReward_GetByRef( boostRef )

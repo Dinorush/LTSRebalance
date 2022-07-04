@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Counter Ready rebalancing
+*/
 global function Sv_EarnMeter_Init
 global function PlayerEarnMeter_SoftReset
 global function PlayerEarnMeter_SetOwnedFrac
@@ -451,6 +454,7 @@ void function DummyGoalEarnedCallback( entity player )
 	Assert( false, "Must set a goal earned callback with SetCallback_EarnMeterGoalEarned() if meter is in use" )
 }
 
+// In LTSRebalance, Overcore earns smoke later.
 float function PlayerEarnMeter_GetSmokeFrac( entity titan )
 {
 	if ( !LTSRebalance_Enabled() )
