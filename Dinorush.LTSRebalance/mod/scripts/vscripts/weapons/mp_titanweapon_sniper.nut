@@ -69,7 +69,7 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 	if ( IsValid( owner ) && f_extraDamage > 0 )
 	{
 		entity dumbfire = owner.GetOffhandWeapon( OFFHAND_RIGHT )
-		if ( dumbfire.HasMod( "PerfectKits_pas_northstar_cluster" ) )
+		if ( IsValid( dumbfire ) && dumbfire.HasMod( "PerfectKits_pas_northstar_cluster" ) )
 		{
 			f_extraDamage /= 2.0
 			damage += float( victim.IsTitan() ? inflictor.s.extraDamagePerBullet_Titan : inflictor.s.extraDamagePerBullet ) / 2.0
