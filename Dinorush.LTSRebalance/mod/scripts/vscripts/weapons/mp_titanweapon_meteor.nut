@@ -379,8 +379,9 @@ void function MeteorAirburst( entity bolt )
 function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 {
 	vector velocity = projectile.GetVelocity()
+	float mod = 2200.0 / projectile.GetProjectileWeaponSettingFloat( eWeaponVar.projectile_launch_speed ) // Reduce thermite speed to compensate for rebal velocity
 	// printt( "speed " + Length( velocity ) )
-	float speed = min( Length( velocity ), 2500 )
+	float speed = min( Length( velocity ) * mod, 2500 )
 
 	float speedScale = 0.25
 
