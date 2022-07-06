@@ -99,7 +99,7 @@ void function OnActivate( entity weapon, int blockType )
 		StartShield( weapon )
 	}
     entity offhandWeapon = weaponOwner.GetOffhandWeapon( OFFHAND_MELEE )
-    if ( IsValid( offhandWeapon ) && offhandWeapon.HasMod( "super_charged" ) )
+    if ( IsValid( offhandWeapon ) && ( offhandWeapon.HasMod( "super_charged" ) || offhandWeapon.HasMod( "LTSRebalance_super_charged" ) ) )
 		thread BlockSwordCoreFXThink( weapon, weaponOwner )
 }
 
@@ -255,8 +255,29 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
 		if ( !LTSRebalance_Enabled() )
 			return TITAN_BLOCK_DAMAGE_REDUCTION
 
+		float damage = DamageInfo_GetDamage( damageInfo )
+		bool critHit = false
+		if ( CritWeaponInDamageInfo( damageInfo ) )
+			critHit = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), blockingEnt, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
+
+		entity attacker = DamageInfo_GetAttacker( damageInfo )
+		if ( HeavyArmorCriticalHitRequired( damageInfo ) && CritWeaponInDamageInfo( damageInfo ) && !critHit && IsValid( attacker ) && !attacker.IsTitan())
+		{
+			float shieldHealth = float( blockingEnt.GetTitanSoul().GetShieldHealth() )
+			if ( shieldHealth - damage <= 0 )
+			{
+				if ( shieldHealth > 0 )
+					damage = shieldHealth
+				else
+					damage = 0
+			}
+		}
+
+		if ( damage == 0 )
+			return 1.0
+
 		float oldPower = float( weapon.GetWeaponPrimaryClipCountMax() - weapon.GetWeaponPrimaryClipCount() ) / ( LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0 )
-        int damageTaken = int( DamageInfo_GetDamage( damageInfo ) + 0.5 ) / 10  // Work with damage / 10 since ammo must be < 1000 for display
+        int damageTaken = int( damage + 0.5 ) / 10  // Work with damage / 10 since ammo must be < 1000 for display
         int newAmmo = int( max ( 1, weapon.GetWeaponPrimaryClipCount() - damageTaken ) )
         weapon.SetWeaponPrimaryClipCount( newAmmo )
         float newPower = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / ( LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0 )
