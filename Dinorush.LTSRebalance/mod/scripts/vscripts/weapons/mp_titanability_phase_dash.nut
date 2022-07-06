@@ -6,6 +6,12 @@ global function SetPlayerVelocityFromInput
 #endif
 
 const PHASE_DASH_SPEED = 1000
+const float PERFECTKITS_TEMPORAL_RADIUS = 750.0
+const float PERFECTKITS_TEMPORAL_DAMAGE = 50.0
+const float PERFECTKITS_TEMPORAL_DAMAGE_HEAVYARMOR = 500.0
+const float PERFECTKITS_TEMPORAL_PUSH = 500.0
+const float PERFECTKITS_TEMPORAL_MIN_SPEED = -500.0
+const float PERFECTKITS_TEMPORAL_MAX_DIST = 50.0
 
 var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
@@ -97,7 +103,48 @@ void function PerfectKits_DelayedPhaseDrop( entity player, float moveSpeed )
 	player.EndSignal( "OnDeath" )
 	player.WaitSignal( "StopPhaseShift" )
 
-	player.SetVelocity( < 0, 0, -moveSpeed > )
+	vector vel = player.GetVelocity()
+	vel.z = -moveSpeed
+	player.SetVelocity( vel )
+
+	entity entBelow = TraceLine( player.GetOrigin(), player.GetOrigin() + < 0,0,-1 >*50, [ MGetPlayer() ], TRACE_MASK_TITANSOLID, TRACE_COLLISION_GROUP_NONE ).hitEnt
+	while( !player.IsOnGround() && vel.z < PERFECTKITS_TEMPORAL_MIN_SPEED && ( !IsValid( entBelow ) || !entBelow.IsTitan() ) )
+	{
+		vel = player.GetVelocity()
+		WaitFrame()
+		entBelow = TraceLine( player.GetOrigin(), player.GetOrigin() + < 0,0,-1 >*50, [ MGetPlayer() ], TRACE_MASK_TITANSOLID, TRACE_COLLISION_GROUP_NONE ).hitEnt
+	}
+
+	if ( vel.z > PERFECTKITS_TEMPORAL_MIN_SPEED )
+		return
+	
+	PlayFX( FLIGHT_CORE_IMPACT_FX, player.GetOrigin() )
+	array<entity> targets = GetNPCArrayEx( "any", TEAM_ANY, player.GetTeam(), player.GetOrigin(), PERFECTKITS_TEMPORAL_RADIUS )
+	targets.extend( GetPlayerArrayOfTeam_Alive( GetEnemyTeam( player.GetTeam() ) ) )
+	table damageTable = {
+		origin = player.GetOrigin(),
+		scriptType = DF_RAGDOLL | DF_EXPLOSION,
+		damageSourceId = eDamageSourceId.mp_ability_ground_slam
+	}
+
+	foreach ( ent in targets )
+	{
+		if ( !ent.IsOnGround() )
+		{
+			float downFrac = TraceLine( ent.GetOrigin(), ent.GetOrigin() + <0, 0, -1>*PERFECTKITS_TEMPORAL_MAX_DIST, null, TRACE_MASK_SOLID_BRUSHONLY, TRACE_COLLISION_GROUP_DEBRIS ).fraction
+			if ( downFrac == 1.0 )
+				continue
+		}
+
+		float damage = ent.GetArmorType() == ARMOR_TYPE_HEAVY ? PERFECTKITS_TEMPORAL_DAMAGE_HEAVYARMOR : PERFECTKITS_TEMPORAL_DAMAGE
+		ent.TakeDamage( damage, player, player, damageTable )
+		if ( ent.IsTitan() || ent.IsPlayer() )
+		{
+			vector velocity = ent.GetVelocity()
+			velocity.z += PERFECTKITS_TEMPORAL_PUSH
+			ent.SetVelocity( velocity )
+		}
+	}
 }
 #endif
 
