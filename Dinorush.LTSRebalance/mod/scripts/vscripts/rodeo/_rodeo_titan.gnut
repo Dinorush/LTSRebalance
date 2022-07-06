@@ -1,3 +1,7 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Make changes to battery heals so that Energy Siphon's temporary shielding works
+   2. Make changes to battery heals for PerfectKits Energy Thief
+*/
 untyped //Panel.s stuff needs to be typed
 
 global function RodeoTitan_Init
@@ -835,7 +839,7 @@ void function TryBatteryStyleRodeo( entity rodeoPilot, entity rodeoTitan, entity
 	#endif
 
 	bool classicRodeo = MP && GetCurrentPlaylistVarInt( "classic_rodeo", 0 ) == 1
-	
+
 	if ( ShouldThrowGrenadeInHatch( rodeoPilot ) )
 	{
 		if ( !classicRodeo )
@@ -845,12 +849,12 @@ void function TryBatteryStyleRodeo( entity rodeoPilot, entity rodeoTitan, entity
 	{
 		waitthread PlayerRemovesBatteryPack( rodeoPilot, rodeoTitan, titanSoul, rodeoPackage ) //This ends rodeo at the end of the sequence
 	}
-	
+
 	#if MP
 	if ( classicRodeo )
-	{	
+	{
 		RodeoBatteryRemoval_ShowBattery( rodeoPilot ) // hide battery, will be shown at the end of a battery removal rodeo
-	
+
 		//This is default R1 style rodeo, with the panel ripped and ready to be shot at
 		FirstPersonSequenceStruct sequence
 		sequence.attachment = "hijack"
@@ -861,19 +865,19 @@ void function TryBatteryStyleRodeo( entity rodeoPilot, entity rodeoTitan, entity
 
 		RodeoPilotPullsOutWeapon( rodeoPilot, rodeoTitan, rodeoTitanType )
 		entity weakpointHitbox = CreateClassicRodeoWeakpoint( rodeoPilot, rodeoTitan )
-		
+
 		OnThreadEnd( function() : ( weakpointHitbox )
 		{
 			if ( IsValid( weakpointHitbox ) )
 				weakpointHitbox.Destroy()
 		})
-		
-		while ( true ) 
+
+		while ( true )
 		{
 			// the point of no return stuff breaks jumping if you pulled a battery, so do this manually, sucks but whatever
 			if ( rodeoPilot.IsInputCommandHeld( IN_JUMP ) )
 				ThrowRiderOff( rodeoPilot, rodeoTitan, CalculateDirectionToThrowOffBatteryThief( rodeoPilot, rodeoTitan ) ) //This signals RodeoOver
-				
+
 			WaitFrame()
 		}
 	}
@@ -1368,9 +1372,6 @@ void function Rodeo_ApplyBatteryDelayed( entity player, table<string,bool> e )
 
 void function Rodeo_GiveExecutingTitanABattery( entity attacker )
 {
-	if ( LTSRebalance_Enabled() )
-		return
-		
 	Rodeo_ApplyBatteryToTitan( null, attacker )
 	MessagePlayerGivingBatteryToTitan( attacker, attacker, eEventNotifications.Rodeo_TitanPickedUpBattery, -1, false )
 }
@@ -1694,17 +1695,17 @@ void function Rodeo_DropAllBatteries( entity player )
 	if ( !PlayerHasBattery( player ) )
 		return
 
-	while ( GetPlayerBatteryCount( player ) > 1 )
+	float batteryCount = float( GetPlayerBatteryCount( player ) - 1 ) // Floats instead of ints since we need decimal values for the math
+	for ( float i = 1.0; GetPlayerBatteryCount( player ) > 1; i += 1.0 )
 	{
 		entity newBattery = Rodeo_CreateBatteryPack()
 		newBattery.s.touchEnabledTime = Time() + 0.3
-		//look into using the players bounds for placement, instead of hardcoded numbers
-		array<vector> offsets = [<0,0,0>, <30,0,0>, <0,30,0>, <0,-30,0> ]
-		newBattery.SetOrigin( player.GetWorldSpaceCenter() + offsets[ GetPlayerBatteryCount( player ) ] ) //Temp fix, should change the origin
+		vector direction = AnglesToForward( <0, i/batteryCount * 360.0, 0> )
+		newBattery.SetOrigin( player.GetWorldSpaceCenter() + direction * 30 )
 		newBattery.SetAngles( <0, 0, 0 > )
 		vector baseVelocity = player.GetVelocity()
 		baseVelocity.z = 0
-		newBattery.SetVelocity( baseVelocity + AnglesToForward( <0, RandomInt( 360.0 ), 0 > ) * 100 + <0,0,1> )
+		newBattery.SetVelocity( baseVelocity + direction * 100 + <0, 0, 1> )
 		Rodeo_TakeBatteryAwayFromPilot( player )
 	}
 
@@ -1783,6 +1784,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 	}
 	else if ( IsMultiplayer() )
 	{
+		// We don't ignore missing doom health for Survival of the Fittest in LTSRebalance.
 		if ( !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() )
 		{
 			UndoomTitan( titan, 1 )
@@ -1798,6 +1800,8 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		int shieldHealth = soul.GetShieldHealth()
 		int shieldMaxHealth = soul.GetShieldHealthMax()
 
+		// Since these are permanent shielding, we have to let temporary shields know a change has occurred.
+		// Also need to convert some shields for PerfectKits Energy Thief.
 		int perfectKitsShieldsTaken = PerfectKits_EnergyThiefConvert( titan, shieldMaxHealth )
 		int shielding = minint( shieldMaxHealth - perfectKitsShieldsTaken, shieldMaxHealth - shieldHealth )
 		StunLaser_HandleTempShieldChange( soul, shielding ) // For Siphon temporary shield purposes
@@ -1808,6 +1812,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		int addHealth = int( healingAmount * frac )
         int trgtHealth = addHealth + titan.GetHealth()
 		int totalHealth = minint( titan.GetMaxHealth(), trgtHealth )
+		// Additional logic for Rebalance Survival of the Fittest
         if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() && trgtHealth > totalHealth )
 		{
 			UndoomTitan( titan, 1 )
@@ -1817,7 +1822,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 			UndoomTitan( titan, 1 )
 		else
 			titan.SetHealth( totalHealth )
-		
+
 		soul.SetShieldHealth( shielding + shieldHealth )
 	}
 
