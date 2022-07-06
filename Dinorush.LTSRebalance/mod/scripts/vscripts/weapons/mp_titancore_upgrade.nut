@@ -81,8 +81,11 @@ int function PerfectKits_EnergyThiefConvert( entity titan, int shieldAmount )
 	table soulDotS = expect table( soul.s )
 	soulDotS.energy_thief_dash_scale += boost
 	float scale = expect float ( soulDotS.energy_thief_dash_scale )
-	titan.SetPowerRegenRateScale( scale )
-	titan.SetDodgePowerDelayScale( min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
+	if ( titan.IsPlayer() )
+	{
+		titan.SetPowerRegenRateScale( scale )
+		titan.SetDodgePowerDelayScale( min( 1.0, PERFECTKITS_ENERGY_THIEF_DELAY_BASE / scale ) )
+	}
 	return shieldAmount
 }
 
@@ -136,7 +139,7 @@ void function PerfectKits_SurvivalTradeoff( entity victim, entity attacker )
 {
 	if ( !IsValid( victim ) || !IsValid( attacker ) || victim == attacker )
 		return
-	
+
 	if ( !victim.IsTitan() || !attacker.IsTitan() )
 		return
 
@@ -152,7 +155,7 @@ void function PerfectKits_SurvivalTradeoff( entity victim, entity attacker )
 		StunLaser_HandleTempShieldChange( attackerSoul, shieldRestore )
 		attackerSoul.SetShieldHealth( minint( attackerSoul.GetShieldHealthMax(), shieldRestore + attackerSoul.GetShieldHealth() ) )
 	}
-	
+
 	if ( SoulHasPassive( attackerSoul, ePassives.PAS_VANGUARD_DOOM ) )
 		AddCreditToTitanCoreBuilder( attacker, 0.5 )
 }
@@ -494,7 +497,7 @@ void function PasVanguardDoom_HealOnCore ( entity owner, entity soul  )
 		int amount = expect int( soulDotS.pas_vanguard_doom_heal )
 
         if( soul.IsDoomed() )
-        {			
+        {
             int trgtHealth = amount + owner.GetHealth()
             int maxHealth = owner.GetMaxHealth()
             if ( trgtHealth > maxHealth )
@@ -537,7 +540,7 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 	StunLaser_HandleTempShieldChange( soul, shieldAmount )
 	int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
 	soul.SetShieldHealth( newShield )
-	
+
 	OnThreadEnd(
 	function() : ( weapon, owner, soul )
 		{
