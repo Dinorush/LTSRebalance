@@ -504,6 +504,14 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 	entity vortexWeapon = vortexSphere.GetOwnerWeapon()
 	entity owner = vortexWeapon.GetWeaponOwner()
 
+	// HACK - make XO-16 be caught as hitscan. Need to save projectile since weapon is null and VortexDrainedByImpact needs one of the two.
+	entity xo16_proj = projectile
+	if ( LTSRebalance_Enabled() && weaponName == "mp_titanweapon_xo16_vanguard" )
+	{
+		projectile = null
+		impactType = "hitscan"
+	}
+
 	// keep cycling the oldest hitscan bullets out
 	if( !reflect )
 	{
@@ -597,7 +605,7 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 
 	local impactData = Vortex_CreateImpactEventData( vortexWeapon, attacker, origin, damageSourceID, weaponName, impactType )
 
-	VortexDrainedByImpact( vortexWeapon, weapon, projectile, damageType )
+	VortexDrainedByImpact( vortexWeapon, weapon, projectile == null ? xo16_proj : projectile, damageType )
 	Vortex_NotifyAttackerDidDamage( expect entity( impactData.attacker ), owner, impactData.origin )
 
 	if ( impactData.refireBehavior == VORTEX_REFIRE_ABSORB )
