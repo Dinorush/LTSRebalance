@@ -1589,7 +1589,7 @@ function ClusterRocket_Detonate( entity rocket, vector normal, entity stickEnt =
 		*/  
 		count = 30
 		duration = 7.5
-		range = CLUSTER_ROCKET_BURST_RANGE * 1.25
+		range = CLUSTER_ROCKET_BURST_RANGE * 1.2
 	}
 	else
 	{
