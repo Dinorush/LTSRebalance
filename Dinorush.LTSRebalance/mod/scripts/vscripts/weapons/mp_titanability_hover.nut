@@ -7,6 +7,8 @@ global function NPC_OnWeaponPrimaryAttack_TitanHover
 global function FlyerHovers
 #endif
 
+const float LTSREBALANCE_PAS_NORTHSTAR_HOVER_MOD = 0.67
+
 void function MpTitanAbilityHover_Init()
 {
 	PrecacheParticleSystem( $"P_xo_jet_fly_large" )
@@ -36,12 +38,19 @@ var function OnWeaponPrimaryAttack_TitanHover( entity weapon, WeaponPrimaryAttac
 		soundInfo.landing_3p = "core_ability_land_3p"
 		float horizontalVelocity
 		entity soul = flyer.GetTitanSoul()
-		if ( LTSRebalance_Enabled() || ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) ) )
+		float flightTime = 3.0
+		if ( LTSRebalance_Enabled() )
+		{
+			horizontalVelocity = 350.0
+			if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
+				flightTime *= LTSREBALANCE_PAS_NORTHSTAR_HOVER_MOD
+		}
+		else if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
 			horizontalVelocity = 350.0
 		else
 			horizontalVelocity = 250.0
 
-		thread FlyerHovers( flyer, soundInfo, 3.0, horizontalVelocity )
+		thread FlyerHovers( flyer, soundInfo, flightTime, horizontalVelocity )
 	#endif
 
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
@@ -72,8 +81,7 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 	thread AirborneThink( player, soundInfo )
 	if ( player.IsPlayer() )
 	{
-        if ( !LTSRebalance_Enabled() || !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
-		    player.Server_TurnDodgeDisabledOn()
+		player.Server_TurnDodgeDisabledOn()
 	    player.kv.airSpeed = horizVel
 	    player.kv.airAcceleration = LTSRebalance_Enabled() ? 600 : 540
 	    player.kv.gravity = 0.0
@@ -104,11 +112,6 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 				player.SetGroundFrictionScale( 1 )
 				if ( player.IsPlayer() )
 				{
-					if ( LTSRebalance_Enabled() )
-					{
-						float fadeTime = 0.75
-						StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.5, fadeTime, fadeTime )
-					}
 					player.Server_TurnDodgeDisabledOff()
 					player.kv.airSpeed = player.GetPlayerSettingsField( "airSpeed" )
 					player.kv.airAcceleration = player.GetPlayerSettingsField( "airAcceleration" )
@@ -148,12 +151,8 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 	EmitSoundOnEntityExceptToPlayer( player, player, soundInfo.hover_3p )
 
 	float movestunEffect = 1.0 - StatusEffect_Get( player, eStatusEffect.dodge_speed_slow )
-
-	if ( !LTSRebalance_Enabled() )
-	{
-		float fadeTime = 0.75
-		StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, 0.65, flightTime + fadeTime, fadeTime )
-	}
+	float fadeTime = 0.75
+	StatusEffect_AddTimed( soul, eStatusEffect.dodge_speed_slow, LTSRebalance_Enabled() ? 0.5 : 0.65, flightTime + fadeTime, fadeTime )
 
 	vector startOrigin = player.GetOrigin()
 	for ( ;; )

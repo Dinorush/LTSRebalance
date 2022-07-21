@@ -1,0 +1,11 @@
+WeaponData
+{
+	Mods
+	{
+		LTSRebalance_pas_northstar_hover
+		{
+			"fire_duration"   						"*.67"
+			"regen_ammo_refill_rate"				"*1.5"
+		}
+	}
+}
