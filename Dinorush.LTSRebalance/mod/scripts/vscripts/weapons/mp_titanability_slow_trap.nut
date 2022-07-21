@@ -606,8 +606,7 @@ void function FireTrap_DamagedPlayerOrNPC( entity ent, var damageInfo )
 			UpdateScorchHotStreakCoreMeter( attacker, DamageInfo_GetDamage( damageInfo ) )
 	}
 
-	// Firewall does 70 damage, which *0.05 becomes 3.5. Ammo uses ints, so use random to average it to 3.5 instead of 3.
-	PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) + RandomInt( 2 ) * 10 )
+	PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) )
 }
 #endif
 

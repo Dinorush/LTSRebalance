@@ -27,9 +27,10 @@ global const PLAYER_METEOR_DAMAGE_TICK_PILOT = 20.0
 global const NPC_METEOR_DAMAGE_TICK = 100.0
 global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 
-global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.05
-global const float PAS_SCORCH_FLAMECORE_MOD = 1.25
+global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.08
+global const float PAS_SCORCH_FLAMECORE_MOD = 1.3
 const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
+const float PAS_SCORCH_SELFDMG_GRACE_PERIOD = 1.5
 const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.22
 global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.16
 
@@ -233,7 +234,8 @@ void function PasScorchFirewall_ReduceCooldowns( entity owner, float damage )
 	if ( !IsValid( ordnance ) || !ordnance.HasMod( "LTSRebalance_pas_scorch_firewall" ) )
 		return
 
-	int bonusAmmo = int( damage * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE )
+	float damageToAmmo = damage * PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE
+	int bonusAmmo = int( damageToAmmo ) + ( damageToAmmo % int( damageToAmmo ) > RandomFloat( 1.0 ) ? 1 : 0 )
 	int newAmmo = minint( ordnance.GetWeaponPrimaryClipCountMax(), ordnance.GetWeaponPrimaryClipCount() + bonusAmmo )
 	ordnance.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
 
@@ -285,7 +287,7 @@ void function TemperedPlating_DamageReduction( entity ent, var damageInfo )
 	entity soul = ent.GetTitanSoul()
 	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
 	{
-		if ( "scorchLastBurnTime" in soul.s && soul.s.scorchLastBurnTime + 0.5 >= Time() )
+		if ( "scorchLastBurnTime" in soul.s && soul.s.scorchLastBurnTime + PAS_SCORCH_SELFDMG_GRACE_PERIOD >= Time() )
 			DamageInfo_ScaleDamage( damageInfo, 1.0 - PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION )
 
 		if ( PerfectKits_Enabled() )
@@ -406,8 +408,8 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 
 	if ( LTSRebalance_Enabled() )
 	{
-		thermiteLifetimeMin = 1.9 * GetThermiteDurationBonus( owner )
-		thermiteLifetimeMax = 2.3 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMin = 1 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMax = 1.25 * GetThermiteDurationBonus( owner )
 	}
 
 	if ( IsSingleplayer() )
