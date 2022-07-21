@@ -166,7 +166,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( owner.IsPlayer() )
 	{
 		owner.Server_SetDodgePower( 100.0 )
-		owner.SetPowerRegenRateScale(  LTSRebalance_Enabled() ? 4.5 : 6.5 )
+		owner.SetPowerRegenRateScale( LTSRebalance_Enabled() ? 4.5 : 6.5 )
 
 		GivePassive( owner, ePassives.PAS_FUSION_CORE )
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
@@ -224,7 +224,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 			titan.SetActiveWeaponByName( "mp_titanweapon_shift_core_sword" )
 
 			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
-			if ( LTSRebalance_Enabled() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
 				block.AddMod( "LTSRebalance_core_regen" )
 		}
 		else
@@ -363,7 +363,12 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 		if ( IsValid( meleeWeapon ) )
 		{
 			if( LTSRebalance_Enabled() && titan.IsPlayer() )
-				meleeWeapon.RemoveMod( "LTSRebalance_super_charged" )
+			{
+				array<string> mods = meleeWeapon.GetMods()
+				mods.fastremovebyvalue( "LTSRebalance_super_charged" )
+				mods.fastremovebyvalue( "LTSRebalance_super_charged_beam" )
+				meleeWeapon.SetMods( mods )
+			}
 			else
 				meleeWeapon.RemoveMod( "super_charged" )
 

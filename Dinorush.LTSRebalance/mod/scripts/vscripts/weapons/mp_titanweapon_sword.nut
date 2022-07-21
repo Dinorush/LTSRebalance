@@ -11,7 +11,8 @@ global const asset SWORD_GLOW_PRIME = $"P_xo_sword_core_PRM"
 
 const float WAVE_SEPARATION = 100
 const float VORTEX_DAMAGE_MOD = .2
-const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.1
+const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.15
+const float PAS_RONIN_SWORDCORE_BEAM_COOLDOWN = 0.1
 
 void function MpTitanWeaponSword_Init()
 {
@@ -41,13 +42,13 @@ void function OnWeaponActivate_titanweapon_sword( entity weapon )
 		#if SERVER
 		entity owner = weapon.GetWeaponOwner()
 		if ( LTSRebalance_Enabled() )
-        	thread WaitForMeleeAttack( weapon, owner )
+        	thread LTSRebalance_SwordCoreBeamThink( weapon, owner )
         #endif
 	}
 }
 
 #if SERVER
-void function WaitForMeleeAttack( entity weapon, entity titan )
+void function LTSRebalance_SwordCoreBeamThink( entity weapon, entity titan )
 {
     weapon.EndSignal( "WeaponDeactivateEvent" )
 	weapon.EndSignal( "OnDestroy" )
@@ -56,6 +57,11 @@ void function WaitForMeleeAttack( entity weapon, entity titan )
 	titan.EndSignal( "OnDeath" )
 	titan.EndSignal( "DisembarkingTitan" )
     titan.EndSignal( "TitanEjectionStarted" )
+
+	if ( !GetDoomedState( titan ) )
+		titan.WaitSignal( "Doomed" )
+	
+	weapon.AddMod( "LTSRebalance_super_charged_beam" )
 
     float lastMeleeTime = 0
     while(1)
@@ -236,6 +242,8 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	entity soul = attacker.GetTitanSoul()
 
+	bool beam = DamageInfo_GetDamageType( damageInfo ) != DMG_MELEE_ATTACK
+
     if ( LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
     {
         entity offhand
@@ -245,19 +253,18 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
             if ( !offhand )
                 continue
 
+			float restore = beam ? PAS_RONIN_SWORDCORE_COOLDOWN : PAS_RONIN_SWORDCORE_COOLDOWN
             int maxAmmo = offhand.GetWeaponPrimaryClipCountMax()
-            int newAmmo = minint( maxAmmo, offhand.GetWeaponPrimaryClipCount() + int( maxAmmo * PAS_RONIN_SWORDCORE_COOLDOWN ) )
+            int newAmmo = minint( maxAmmo, offhand.GetWeaponPrimaryClipCount() + int( maxAmmo * restore ) )
             offhand.SetWeaponPrimaryClipCountNoRegenReset( newAmmo )
         }
     }
 
-    if( DamageInfo_GetDamageSourceIdentifier( damageInfo ) != eDamageSourceId.mp_titancore_shift_core )
+    if ( DamageInfo_GetDamageSourceIdentifier( damageInfo ) != eDamageSourceId.mp_titancore_shift_core )
         return
 
-    // Don't want sword core beams to give shields in Aegis
-	entity inflictor = DamageInfo_GetInflictor( damageInfo )
-    if( !IsValid( inflictor ) || inflictor.IsProjectile() )
-        return
+	if ( beam ) // Don't want beam triggering Aegis shields
+		return
 
 	entity coreWeapon = attacker.GetOffhandWeapon( OFFHAND_EQUIPMENT )
 	if ( !IsValid( coreWeapon ) )
