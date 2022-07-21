@@ -18,8 +18,8 @@ global function OnWeaponNpcPreAttack_titanweapon_predator_cannon
 const SPIN_EFFECT_1P = $"P_predator_barrel_blur_FP"
 const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 
-const float PAS_LEGION_SMARTCORE_MAX_MOD = 0.5 // added to 1
-const float PAS_LEGION_SMARTCORE_MAX_TIME = 3.0
+const float PAS_LEGION_SMARTCORE_DAMAGE_MOD = 0.251 // 0.25 causes rounding errors for PS
+const float PAS_LEGION_SMARTCORE_EFFECT_DURATION = 2.0
 const float PAS_LEGION_WEAPON_RESTORE_FRAC = 0.7
 
 void function MpTitanWeaponpredatorcannon_Init()
@@ -107,7 +107,7 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 		#if SERVER
 			weapon.s.lockStartTime <- Time()
 			weapon.s.locking <- true
-			weapon.s.smartArrayTargets <- {}
+			weapon.s.sensorArrayTargets <- {}
 			weapon.s.ammoRestoreBuffer <- 0.0
 		#endif
 	}
@@ -115,60 +115,7 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 	#if SERVER
 	weapon.s.locking = true
 	weapon.s.lockStartTime = Time()
-	if ( LTSRebalance_Enabled() )
-	{
-		entity core = weapon.GetOwner().GetOffhandWeapon( OFFHAND_EQUIPMENT )
-		if( IsValid( core ) && core.HasMod( "pas_legion_smartcore" ) )
-			thread TrackSmartArrayMultiplier( weapon )
-	}
 	#endif
-}
-
-void function TrackSmartArrayMultiplier( entity weapon )
-{
-    entity player = weapon.GetOwner()
-    player.EndSignal( "DisembarkingTitan" )
-	player.EndSignal( "TitanEjectionStarted" )
-    player.EndSignal( "OnDeath" )
-    weapon.EndSignal( "WeaponDeactivateEvent" )
-
-	OnThreadEnd(
-		function() : ( weapon )
-		{
-			if ( IsValid( weapon ) )
-				weapon.s.smartArrayTargets.clear()
-		}
-	)
-
-    while( 1 )
-    {
-        if( !weapon.SmartAmmo_IsEnabled() )
-        {
-			if( weapon.s.smartArrayTargets.len() > 0 )
-				weapon.s.smartArrayTargets.clear()
-            WaitFrame()
-            continue
-        }
-
-        array<entity> trackedList = SmartAmmo_GetWeaponTargets( weapon )
-        array<entity> untrackedList = []
-
-        foreach( key, value in weapon.s.smartArrayTargets )
-		{
-			entity eKey = expect entity( key )
-            if ( !trackedList.contains( eKey ) )
-                untrackedList.append( eKey )
-		}
-
-        foreach( ent in untrackedList )
-            delete weapon.s.smartArrayTargets[ent]
-
-        foreach( ent in trackedList )
-            if ( !( ent in weapon.s.smartArrayTargets ) )
-                weapon.s.smartArrayTargets[ent] <- Time()
-
-        WaitFrame()
-    }
 }
 
 void function OnWeaponDeactivate_titanweapon_predator_cannon( entity weapon )
@@ -272,14 +219,14 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 				#endif
 			}
 		}
-		
+
 		#if CLIENT
 		if( !LTSRebalance_Enabled() )
 			PowerShotCleanup( owner, weapon, ["LongRangePowerShot","fd_LongRangePowerShot","pas_LongRangePowerShot"], [ "LongRangeAmmo" ] )
 		#else
 		PowerShotCleanup( owner, weapon, ["LongRangePowerShot","fd_LongRangePowerShot","pas_LongRangePowerShot"], [ "LongRangeAmmo" ] )
 		#endif
-		
+
 		return 1
 	}
 	else
@@ -345,7 +292,7 @@ var function OnWeaponNpcPrimaryAttack_titanweapon_predator_cannon( entity weapon
 int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams attackParams, bool playerFired )
 {
 	int damageType = DF_BULLET | DF_STOPS_TITAN_REGEN | DF_GIB
-    
+
 	if ( weapon.HasMod( "Smart_Core" ) )
 	{
         entity owner = weapon.GetOwner()
@@ -365,7 +312,7 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
 	{
 		if ( weapon.HasMod( "PerfectKits_pas_legion_weapon" ) )
 			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() )
-			
+
 		weapon.FireWeaponBullet( attackParams.pos, attackParams.dir, 1, damageType )
 		if ( weapon.HasMod( "LongRangeAmmo" ) )
 			return 2
@@ -405,7 +352,7 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 
 	if ( target.IsTitan() && ( flags & DF_SKIPS_DOOMED_STATE ) && GetDoomedState( target ) )
 		DamageInfo_SetDamage( damageInfo, target.GetHealth() + 1 )
-	
+
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	if ( !IsValid( attacker ) || attacker.GetMainWeapons().len() == 0 )
 		return
@@ -413,25 +360,30 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 	entity weapon = attacker.GetMainWeapons()[0]
 	if ( LTSRebalance_Enabled() )
 	{
-		// Smart array bonus damage for normal shots
-		if ( !( flags & DF_KNOCK_BACK || DamageInfo_GetInflictor( damageInfo ).IsProjectile() ) && weapon.s.smartArrayTargets.len() > 0 )
-		{
-			if ( target in weapon.s.smartArrayTargets )
-			{
-				float percent = min( 1, ( Time() - weapon.s.smartArrayTargets[ target ] ) / PAS_LEGION_SMARTCORE_MAX_TIME )
-				DamageInfo_ScaleDamage( damageInfo, 1 + percent * PAS_LEGION_SMARTCORE_MAX_MOD )
-			}
-		}
-
 		if ( !target.IsTitan() )
 			return
-		
-		if ( weapon.HasMod( "pas_legion_weapon" ) && !weapon.HasMod( "Smart_Core" ) )
+
+		if ( weapon.HasMod( "Smart_Core" ) )
+		{
+			entity soul = attacker.GetTitanSoul()
+			if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_SMARTCORE ) )
+			{
+				if ( !( target in weapon.s.sensorArrayTargets ) )
+					weapon.s.sensorArrayTargets[target] <- 0
+
+				// Handle bonus damage status effect & sonar
+				if ( weapon.s.sensorArrayTargets[target] == 0 )
+					thread SensorArray_StartStatusEffects( attacker, target, weapon.s.sensorArrayTargets )
+
+				weapon.s.sensorArrayTargets[target] = Time()
+			}
+		}
+		else if ( weapon.HasMod( "pas_legion_weapon" ) )
 		{
 			bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
 			if ( isCritical )
 			{
-				weapon.s.ammoRestoreBuffer += ( weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1 ) * PAS_LEGION_WEAPON_RESTORE_FRAC
+				weapon.s.ammoRestoreBuffer += ( weapon.HasMod( "LongRangeAmmo" ) ? 2.0 : 1.0 ) * PAS_LEGION_WEAPON_RESTORE_FRAC
 				int regenAmt = int( weapon.s.ammoRestoreBuffer )
 				weapon.s.ammoRestoreBuffer -= float( regenAmt )
 				int newAmmo = minint( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + regenAmt )
@@ -439,5 +391,37 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 			}
 		}
 	}
+}
+
+// Tracks sonar & bonus damage effects for Sensor Array.
+// Handling each target with one thread, one status effect, and one sonar, in case stacking them on one target would otherwise cause performance issues
+void function SensorArray_StartStatusEffects( entity owner, entity target, var sensorArrayTable )
+{
+	owner.EndSignal( "OnDestroy" )
+	owner.EndSignal( "CoreEnd" )
+	target.EndSignal( "OnDestroy" )
+
+	int team = owner.GetTeam()
+	IncrementSonarPerTeam( team )
+	SonarStart( target, target.GetOrigin(), team, owner )
+
+	int damageEffectID = StatusEffect_AddEndless( target, eStatusEffect.damage_received_multiplier, PAS_LEGION_SMARTCORE_DAMAGE_MOD )
+
+	OnThreadEnd(
+		function() : ( target, team, damageEffectID )
+		{
+			StatusEffect_Stop( target, damageEffectID )
+			SonarEnd( target, team )
+			DecrementSonarPerTeam( team )
+		}
+	)
+	
+	float remainingTime = PAS_LEGION_SMARTCORE_EFFECT_DURATION
+	while ( remainingTime > 0 )
+	{
+		wait remainingTime
+		remainingTime = expect float( sensorArrayTable[target] ) + PAS_LEGION_SMARTCORE_EFFECT_DURATION - Time()
+	}
+	sensorArrayTable[target] = 0
 }
 #endif
