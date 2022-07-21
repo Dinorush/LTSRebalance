@@ -8,9 +8,11 @@ global function OnWeaponNpcPrimaryAttack_titanweapon_leadwall
 #endif // #if SERVER
 
 const LEADWALL_MAX_BOLTS = 8 // this is the code limit for bolts per frame... do not increase.
-const float LTSREBALANCE_RICOCHET_LIFETIME = 0.2
-const float LTSREBALANCE_RICOCHET_SEEK_RANGE = LTSREBALANCE_RICOCHET_LIFETIME * 5280 * 0.65
+const float LTSREBALANCE_SPREAD_FRAC = 0.043
+const float LTSREBALANCE_RICOCHET_LIFETIME = 0.3
+const float LTSREBALANCE_RICOCHET_SEEK_RANGE = LTSREBALANCE_RICOCHET_LIFETIME * 5280 * 0.43
 const float LTSREBALANCE_RICOCHET_SPREAD_MOD = 4 // Increase spread of ricochet'd shots to better match normal spread fired at the target
+const float LTSREBALANCE_RICOCHET_MAX_COMPENSATE = 2
 
 struct
 {
@@ -67,7 +69,7 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 			adsMultiplier = 1.0
 
 		bool perfectRicochet = PerfectKits_Enabled() && weapon.HasMod( "PerfectKitsReplace_pas_ronin_weapon" )
-		float spreadFrac = LTSRebalance_Enabled() ? 0.043 : 0.05
+		float spreadFrac = LTSRebalance_Enabled() ? LTSREBALANCE_SPREAD_FRAC : 0.05
 		for ( int index = 0; index < numProjectiles; index++ )
 		{
 			vector upVec = baseUpVec * file.boltOffsets[index][0] * spreadFrac * RandomFloatRange( 1.2, 1.7 ) * adsMultiplier
@@ -99,11 +101,11 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 				else
 				    bolt.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) ) 
 
-				// Need to store the offset of leadwall shots so they properly target that offset when bouncing toward a target
+				// Need to store some info of leadwall shots so they properly target their offset when bouncing toward a target
 				if ( LTSRebalance_Enabled() && weapon.HasMod( "LTSRebalance_pas_ronin_weapon" ) )
 				{
-					bolt.s.upVec <- upVec * LTSREBALANCE_RICOCHET_SPREAD_MOD
-					bolt.s.rightVec <- rightVec * LTSREBALANCE_RICOCHET_SPREAD_MOD
+					bolt.s.index <- index
+					bolt.s.adsMultiplier <- adsMultiplier
 				}
 
 				EmitSoundOnEntity( bolt, "wpn_leadwall_projectile_crackle" )
@@ -215,17 +217,33 @@ void function LTSRebalance_RicochetSeek( entity projectile )
 
 	if ( minEnt != null )
 		thread LTSRebalance_SetRicochetVelocity( projectile, minEnt )
+	else
+		projectile.proj.projectileBounceCount = projectile.GetProjectileWeaponSettingInt( eWeaponVar.projectile_ricochet_max_count )
 }
 
 void function LTSRebalance_SetRicochetVelocity( entity projectile, entity ent )
 {
+	float oldDistSqr = DistanceSqr( projectile.GetOrigin(), ent.GetWorldSpaceCenter() )
 	WaitEndFrame()
 	if ( !IsValid( projectile ) || !IsValid( ent ) )
 		return
 	projectile.proj.projectileBounceCount = projectile.GetProjectileWeaponSettingInt( eWeaponVar.projectile_ricochet_max_count )
 	projectile.SetProjectileLifetime( LTSREBALANCE_RICOCHET_LIFETIME )
 	vector dir = Normalize( ent.GetWorldSpaceCenter() - projectile.GetOrigin() )
-	dir += expect vector( projectile.s.upVec + projectile.s.rightVec )
+
+	vector angle = VectorToAngles( dir )
+	vector baseUpVec = AnglesToUp( angle )
+	vector baseRightVec = AnglesToRight( angle )
+	int index = expect int( projectile.s.index )
+	float adsMult = expect float( projectile.s.adsMultiplier )
+
+	// Additional thingy to make the spread bigger or smaller to compensate for delay between hitting the environment and seeking the target
+	float distSqrMod = min( LTSREBALANCE_RICOCHET_MAX_COMPENSATE, oldDistSqr / DistanceSqr( projectile.GetOrigin(), ent.GetWorldSpaceCenter() ) )
+
+	vector upVec = baseUpVec * file.boltOffsets[index][0] * LTSREBALANCE_SPREAD_FRAC * RandomFloatRange( 1.2, 1.7 ) * adsMult
+	vector rightVec = baseRightVec * file.boltOffsets[index][1] * LTSREBALANCE_SPREAD_FRAC * RandomFloatRange( 1.2, 1.7 ) * adsMult
+
+	dir += ( upVec + rightVec ) * LTSREBALANCE_RICOCHET_SPREAD_MOD * distSqrMod
 	projectile.SetVelocity( dir * 5280 )
 }
 #endif
