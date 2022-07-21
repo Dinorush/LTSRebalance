@@ -11,8 +11,8 @@ WeaponData
 		}
 		LTSRebalance_pas_ronin_weapon
 		{
-			"projectile_ricochet_max_count"					"2"
-			"projectile_damage_reduction_per_bounce"		"-25"
+			"projectile_ricochet_max_count"					"50" // Arbitrarily large
+			"projectile_damage_reduction_per_bounce"		"0"
 			"projectile_damages_owner"						"0"
 			"projectile_speed_reduction_factor"				"0.0"
 		}
