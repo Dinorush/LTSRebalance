@@ -1804,7 +1804,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		// Also need to convert some shields for PerfectKits Energy Thief.
 		int perfectKitsShieldsTaken = PerfectKits_EnergyThiefConvert( titan, shieldMaxHealth )
 		int shielding = minint( shieldMaxHealth - perfectKitsShieldsTaken, shieldMaxHealth - shieldHealth )
-		StunLaser_HandleTempShieldChange( soul, shielding ) // For Siphon temporary shield purposes
+		LTSRebalance_HandleTempShieldChange( soul, shielding ) // For Siphon temporary shield purposes
 
 		bool batteryIsAmped = IsAmpedBattery( battery )
 		float frac = batteryIsAmped ? ampedHealthSegmentFrac : healthSegmentFrac

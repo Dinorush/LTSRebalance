@@ -64,7 +64,7 @@ void function EnergyThief_GrantShield( entity victim, entity attacker )
 		return
 
 	int amount = PAS_VANGUARD_COREMETER_SHIELD - PerfectKits_EnergyThiefConvert( attacker, PAS_VANGUARD_COREMETER_SHIELD )
-	StunLaser_HandleTempShieldChange( soul, amount )
+	LTSRebalance_HandleTempShieldChange( soul, amount )
     int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + amount )
     soul.SetShieldHealth( newShield )
 }
@@ -152,7 +152,7 @@ void function PerfectKits_SurvivalTradeoff( entity victim, entity attacker )
 	{
 		int shieldRestore = attackerSoul.GetShieldHealthMax()
 		shieldRestore -= PerfectKits_EnergyThiefConvert( attacker, shieldRestore )
-		StunLaser_HandleTempShieldChange( attackerSoul, shieldRestore )
+		LTSRebalance_HandleTempShieldChange( attackerSoul, shieldRestore )
 		attackerSoul.SetShieldHealth( minint( attackerSoul.GetShieldHealthMax(), shieldRestore + attackerSoul.GetShieldHealth() ) )
 	}
 
@@ -537,7 +537,7 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 
 	shieldAmount -= PerfectKits_EnergyThiefConvert( owner, shieldAmount )
 
-	StunLaser_HandleTempShieldChange( soul, shieldAmount )
+	LTSRebalance_HandleTempShieldChange( soul, shieldAmount )
 	int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
 	soul.SetShieldHealth( newShield )
 
