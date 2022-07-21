@@ -17,6 +17,7 @@ global function OnWeaponNpcPrimaryAttack_titanweapon_40mm
 #endif
 
 global const PROJECTILE_SPEED_40MM		= 8000.0
+const PERFECTKITS_ENHANCED_SPEED_40MM	= 2400.0
 global const TITAN_40MM_SHELL_EJECT		= $"models/Weapons/shellejects/shelleject_40mm.mdl"
 
 global const TANK_BUSTER_40MM_SFX_LOOP	= "Weapon_Vortex_Gun.ExplosiveWarningBeep"
@@ -92,7 +93,7 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 		if ( attackParams.burstIndex == 0 )
 		{
 			int level = weapon.GetWeaponChargeLevel()
-
+			thread LTSRebalance_Drain40mmCharge( weapon )
 			weapon.SetWeaponBurstFireCount( maxint( 1, level ) )
 		}
 	}
@@ -108,6 +109,12 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 	if ( shouldCreateProjectile )
 	{
 		float speed = PROJECTILE_SPEED_40MM
+		float gravity = 0.05
+		if ( PerfectKits_Enabled() && weapon.HasMod( "pas_tone_weapon" ) )
+		{
+			speed = PERFECTKITS_ENHANCED_SPEED_40MM
+			gravity = 0.005
+		}
 
 		bool hasMortarShotMod = weapon.HasMod( "mortar_shots" )
 		if( hasMortarShotMod )
@@ -127,7 +134,7 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 			}
 			else
 			{
-				bolt.kv.gravity = 0.05
+				bolt.kv.gravity = gravity
 			}
 		}
 
@@ -146,11 +153,22 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 	return 1
 }
 
+void function LTSRebalance_Drain40mmCharge( entity weapon )
+{
+	weapon.SetWeaponChargeFractionForced( 0.0 )
+	WaitEndFrame() // Charge doesn't get set to 0 if only firing 1 shot and ADSing for some reason
+	if ( IsValid( weapon ) )
+		weapon.SetWeaponChargeFractionForced( 0.0 )
+}
+
 void function OnWeaponReload_titanweapon_40mm( entity weapon, int milestone )
 {
 	#if SERVER
     if( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
         weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
+
+	if ( weapon.IsChargeWeapon() )
+		weapon.SetWeaponChargeFractionForced( 0 )
 	#endif
 }
 
@@ -226,9 +244,6 @@ void function OnProjectileCollision_titanweapon_sticky_40mm( entity projectile, 
 
 	#if SERVER
 
-	if ( PerfectKits_Enabled() && mods.contains( "pas_tone_weapon" ) )
-		Tracker40mmSmokescreen( projectile, hitEnt.IsWorld() ? FX_ELECTRIC_SMOKESCREEN_PILOT : FX_ELECTRIC_SMOKESCREEN_PILOT_AIR )
-
 	if ( LTSRebalance_Enabled() ) // Remove crit lock effect of enhanced tracker rounds
 		return
 
@@ -261,6 +276,13 @@ void function ApplyTrackerMark( entity owner, entity hitEnt, bool is40mm = false
 
 	int oldCount = trackerRockets.SmartAmmo_GetNumTrackersOnEntity( hitEnt )
 	trackerRockets.SmartAmmo_TrackEntity( hitEnt, GetTrackerLifetime() )
+	// Perfect Kits Enhanced Tracker Rounds applies full locks on hit. Could do it by calling the function multiple times instead, but
+	// doing so would play the audio for each lock stage; this causes only the final lock sound to play.
+	if ( is40mm && PerfectKits_Enabled() && owner.GetMainWeapons().len() > 0 && owner.GetMainWeapons()[0].HasMod( "pas_tone_weapon" ) )
+	{
+		trackerRockets.SmartAmmo_TrackEntity( hitEnt, GetTrackerLifetime() )
+		trackerRockets.SmartAmmo_TrackEntity( hitEnt, GetTrackerLifetime() )
+	}
 	int count = trackerRockets.SmartAmmo_GetNumTrackersOnEntity( hitEnt )
 
 	if ( oldCount == count )
@@ -456,38 +478,6 @@ void function PerfectKits_EnhancedTrackerSonarThink( entity enemy, vector positi
     float duration = 1.0
 	wait duration
 }
-
-void function Tracker40mmSmokescreen( entity projectile, asset fx )
-{
-	entity owner = projectile.GetOwner()
-
-	if ( !IsValid( owner ) )
-		return
-
-	SmokescreenStruct smokescreen
-	smokescreen.smokescreenFX = fx
-	smokescreen.ownerTeam = owner.GetTeam()
-	smokescreen.damageSource = eDamageSourceId.mp_weapon_grenade_electric_smoke
-	smokescreen.deploySound1p = "explo_electric_smoke_impact"
-	smokescreen.deploySound3p = "explo_electric_smoke_impact"
-	smokescreen.attacker = owner
-	smokescreen.inflictor = owner
-	smokescreen.weaponOrProjectile = projectile
-	smokescreen.damageInnerRadius = 50
-	smokescreen.damageOuterRadius = 210
-	smokescreen.dangerousAreaRadius = smokescreen.damageOuterRadius
-	smokescreen.damageDelay = 1.0
-	smokescreen.dpsPilot = 40
-	smokescreen.dpsTitan = 300
-	smokescreen.lifetime = 3.0
-
-	smokescreen.origin = projectile.GetOrigin()
-	smokescreen.angles = projectile.GetAngles()
-	smokescreen.fxUseWeaponOrProjectileAngles = false
-	smokescreen.fxOffsets = [ <0.0, 0.0, 2.0> ]
-
-	Smokescreen( smokescreen )
-}
 #endif
 
 bool function OnWeaponChargeLevelIncreased_titanweapon_sticky_40mm( entity weapon )
@@ -516,16 +506,8 @@ void function OnWeaponStartZoomIn_titanweapon_sticky_40mm( entity weapon )
 {
 	if ( weapon.IsReadyToFire() )
 	{
-		if ( weapon.HasMod( "pas_tone_burst") )
+		if ( weapon.HasMod( "pas_tone_burst") || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
-		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
-		{
-			if ( weapon.GetWeaponChargeFraction() < 0.33 )
-			{
-				weapon.SetWeaponChargeFractionForced( 0.33 ) // Doing this instead of using 2 charge levels to get the reticle to cooperate
-				weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
-			}
-		}
 	}
 }
 
@@ -534,15 +516,7 @@ void function OnWeaponReadyToFire_titanweapon_sticky_40mm( entity weapon )
 {
 	if ( weapon.IsWeaponInAds() && weapon.GetWeaponPrimaryClipCount() > 0 )
     {
-		if ( weapon.HasMod( "pas_tone_burst") )
+		if ( weapon.HasMod( "pas_tone_burst") || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
-		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" )  )
-		{
-			if ( weapon.GetWeaponChargeFraction() < 0.33 )
-			{
-				weapon.SetWeaponChargeFractionForced( 0.33 ) // Doing this instead of using 2 charge levels to get the reticle to cooperate
-				weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
-			}
-		}
     }
 }
