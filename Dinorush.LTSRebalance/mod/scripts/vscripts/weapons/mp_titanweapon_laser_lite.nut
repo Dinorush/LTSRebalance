@@ -3,6 +3,7 @@ global function MpTitanWeaponLaserLite_Init
 
 global function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite
 global function OnWeaponPrimaryAttack_titanweapon_laser_lite
+// global function OnWeaponActivate_titanweapon_laser_lite
 
 #if SERVER
 global function OnWeaponNPCPrimaryAttack_titanweapon_laser_lite
@@ -22,6 +23,13 @@ void function MpTitanWeaponLaserLite_Init()
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_laser_lite, LaserLite_DamagedTarget )
 	#endif
 }
+
+// void function OnWeaponActivate_titanweapon_laser_lite( entity weapon )
+// {
+// 	#if CLIENT
+// 		//TODO - Charge Level UI
+// 	#endif
+// }
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( entity weapon )
 {
@@ -44,7 +52,8 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_lite( entity weapon, Weapon
     if ( LTSRebalance_Enabled() && !weaponOwner.ContextAction_IsBusy() && !OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( weapon ) )
         return 0
 
-    weapon.s.entitiesHit <- []
+    weapon.s.entitiesHit <- {}
+	weapon.s.perfectKitsRefrac <- false
 
 	#if CLIENT
 		if ( !weapon.ShouldPredictProjectiles() )
@@ -57,6 +66,7 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_lite( entity weapon, Weapon
 	array<entity> weapons = weaponOwner.GetMainWeapons()
 	if ( PerfectKits_Enabled() && weapons.len() > 0 && weapons[0].HasMod( "PerfectKits_pas_ion_weapon_ads" ) )
 	{
+		weapon.s.perfectKitsRefrac <- true
 		int cost = weapon.GetWeaponCurrentEnergyCost()
 		weapon.SetWeaponEnergyCost( cost / 3 )
 		vector attackAngles = VectorToAngles( attackParams.dir )
@@ -92,14 +102,57 @@ void function LaserLite_DamagedTarget( entity target, var damageInfo )
 
 	if ( LTSRebalance_Enabled() )
 	{
-		if ( !IsValid( weapon ) || !( "entitiesHit" in weapon.s ) )
+		if ( !IsValid( weapon ) )
 			return
 
-		if ( !weapon.s.entitiesHit.contains( target ) )
-			weapon.s.entitiesHit.append( target )
-		else
-			DamageInfo_SetDamage( damageInfo, 0 )
+		if ( "entitiesHit" in weapon.s )
+		{
+			if ( !( target in weapon.s.entitiesHit ) )
+				weapon.s.entitiesHit[ target ] <- 1
+			else if ( PerfectKits_Enabled() && weapon.s.perfectKitsRefrac && weapon.s.entitiesHit[ target ] < 3 )
+				weapon.s.entitiesHit[ target ] += 1
+			else
+			{
+				DamageInfo_SetDamage( damageInfo, 0 )
+				return
+			}
+		}
+
+		// int level = minint( 5, weapon.GetWeaponChargeLevel() )
+		// float f_extraDamage = CalculateLaserShotExtraDamage( weapon, target )
+		// float damage = DamageInfo_GetDamage( damageInfo )
+
+		// bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), damage, DamageInfo_GetDamageType( damageInfo ) )
+
+		// if ( isCritical )
+		// {
+		// 	float critMod = weapon.GetWeaponSettingFloat( eWeaponVar.critical_hit_damage_scale )
+		// 	f_extraDamage *= critMod
+		// }
+
+		// //Check to see if damage has been see to zero so we don't override it.
+		// if ( damage > 0 && f_extraDamage > 0 )
+		// {
+		// 	damage += f_extraDamage
+		// 	DamageInfo_SetDamage( damageInfo, damage )
+		// }
 	}
 }
 
+// float function CalculateLaserShotExtraDamage( entity weapon, entity hitent )
+// {
+// 	int damagePerBullet
+// 	if ( hitent.IsTitan() )
+// 		damagePerBullet = weapon.GetWeaponSettingInt( eWeaponVar.damage_additional_bullets )
+// 	else
+// 		damagePerBullet = weapon.GetWeaponSettingInt( eWeaponVar.damage_additional_bullets_titanarmor )
+
+// 	int cap = expect int( weapon.GetWeaponInfoFileKeyField( "charge_levels_cap" ) )
+// 	float extraDamage = float( minint( weapon.GetWeaponChargeLevel(), cap ) * damagePerBullet )
+
+// 	if ( extraDamage <= 0 )
+// 		return 0
+
+// 	return extraDamage
+// }
 #endif
