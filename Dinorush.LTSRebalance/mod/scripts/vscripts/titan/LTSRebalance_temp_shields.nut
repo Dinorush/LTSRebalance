@@ -96,7 +96,8 @@ void function LTSRebalance_DecayTempShields( entity soul, float passedTime )
 			tempShields[i].delay = 0
 		}
 
-		int decay = int( tempShields[i].total * remainingTime / tempShields[i].decayTime + 0.5 )
+		float decayPercent = min( 1.0, tempShields[i].decayTime > 0 ? remainingTime / expect float( tempShields[i].decayTime ) : 1.0 )
+		int decay = int( tempShields[i].total * decayPercent + 0.5 )
 		if ( tempShields[i].overflow > 0 )
 		{
 			tempShields[i].overflow -= decay
