@@ -52,6 +52,19 @@ var function OnWeaponPrimaryAttack_gun_shield( entity weapon, WeaponPrimaryAttac
 	float duration = weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration )
 	if ( weaponOwner.IsPlayer() )
 		PlayerUsedOffhand( weaponOwner, weapon )
+
+	#if SERVER
+	if ( LTSRebalance_Enabled() )
+	{
+		entity soul = weaponOwner.GetTitanSoul()
+		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) )
+		{
+			LTSRebalance_TrackTempShields( weaponOwner )
+			LTSRebalance_AddTempShields( soul, soul.GetShieldHealthMax(), 0, 0, weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration ) )
+		}
+	}
+	#endif
+
 	thread GunShieldThink( primaryWeapon, weapon, weaponOwner, duration )
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
@@ -66,27 +79,16 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	//owner.EndSignal( "SettingsChanged")
 
 	weapon.e.gunShieldActive = true
-    if( !LTSRebalance_Enabled() || !weapon.HasMod( "pas_legion_spinup" ) )
-	    weapon.SetForcedADS()
-    #if SERVER
-    entity soul = owner.GetTitanSoul()
-    if ( LTSRebalance_Enabled() && ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" ) ) )
-        weapon.AddMod( "pas_legion_gunshield" )
-    #endif
-	if( ( !LTSRebalance_Enabled() || !weapon.HasMod( "pas_legion_gunshield") ) && owner.IsPlayer() )
+	weapon.SetForcedADS()
+	if ( owner.IsPlayer() )
 		owner.SetMeleeDisabled()
 
 	OnThreadEnd(
 	function() : ( weapon, owner )
 		{
-			if ( IsValid( weapon ) )
+			if ( !LTSRebalance_Enabled() )
 			{
-                #if SERVER
-                if( weapon.HasMod( "pas_legion_gunshield" ) )
-                    weapon.RemoveMod( "pas_legion_gunshield" )
-                #endif
-
-				if ( !LTSRebalance_Enabled() )
+				if ( IsValid( weapon ) )
 				{
 					weapon.e.gunShieldActive = false
 					if ( !weapon.HasMod( "LongRangePowerShot" ) && !weapon.HasMod( "CloseRangePowerShot" ) && !weapon.HasMod( "SiegeMode" ) )
@@ -96,12 +98,12 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 					}
 					weapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
 				}
-			}
-			if ( !LTSRebalance_Enabled() && IsValid( owner ) )
-			{
-				if ( owner.IsPlayer() )
-					owner.ClearMeleeDisabled()
-				owner.Signal( "GunShieldEnd" )
+				if ( IsValid( owner ) )
+				{
+					if ( owner.IsPlayer() )
+						owner.ClearMeleeDisabled()
+					owner.Signal( "GunShieldEnd" )
+				}
 			}
 		}
 	)
@@ -113,6 +115,7 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 	}
 
 	#if SERVER
+	entity soul = owner.GetTitanSoul()
 		if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) )
 			thread Sv_CreateGunShields( owner, weapon, shieldWeapon, duration )
 		else
@@ -165,14 +168,14 @@ void function Sv_CreateGunShields( entity titan, entity weapon, entity shieldWea
 	DispatchSpawn( centerHelper )
 
 	array<entity> vortexSpheres = [ CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon ) ]
-	vortexSpheres.extend( 
+	vortexSpheres.extend(
 		[ 	CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < 170, 0, 0 >, centerHelper ),
 			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -170, 0, 0 >, centerHelper ),
 			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < 85, 170, 0 >, centerHelper ),
 			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -85, 170, 0 >, centerHelper ),
 			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < 85, -170, 0 >, centerHelper ),
-			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -85, -170, 0 >, centerHelper ) 
-		] 
+			CreateGunShieldVortexSphere( titan, vortexWeapon, shieldWeapon, < -85, -170, 0 >, centerHelper )
+		]
 	)
 	int weaponEHandle = vortexWeapon.GetEncodedEHandle()
 	int shieldEHandle = vortexSpheres[0].GetEncodedEHandle()
@@ -270,8 +273,8 @@ void function Sv_CreateGunShields( entity titan, entity weapon, entity shieldWea
 		}
 		if ( !good )
 			return
-			
-		WaitFrame()	
+
+		WaitFrame()
 	}
 }
 
@@ -395,7 +398,7 @@ entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon,
 	vortexSphere.kv.physics_max_size = 6
 	float health
 	entity soul = player.GetTitanSoul()
-	bool hasShieldUpgrade = IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) || shieldWeapon.HasMod( "fd_gun_shield" )
+	bool hasShieldUpgrade = ( !LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" )
 	if ( hasShieldUpgrade )
 		health = PAS_LEGION_SHEILD_HEALTH
 	else
