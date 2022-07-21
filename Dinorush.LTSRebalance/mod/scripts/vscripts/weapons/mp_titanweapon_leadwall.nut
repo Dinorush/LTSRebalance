@@ -8,6 +8,9 @@ global function OnWeaponNpcPrimaryAttack_titanweapon_leadwall
 #endif // #if SERVER
 
 const LEADWALL_MAX_BOLTS = 8 // this is the code limit for bolts per frame... do not increase.
+const float LTSREBALANCE_RICOCHET_LIFETIME = 0.2
+const float LTSREBALANCE_RICOCHET_SEEK_RANGE = LTSREBALANCE_RICOCHET_LIFETIME * 5280 * 0.65
+const float LTSREBALANCE_RICOCHET_SPREAD_MOD = 4 // Increase spread of ricochet'd shots to better match normal spread fired at the target
 
 struct
 {
@@ -20,7 +23,6 @@ struct
 		[0.2, -0.2],
 		[-0.2, 0.2],
 		[-0.2, -0.2],
-
 	]
 
 	int maxAmmo
@@ -97,6 +99,13 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 				else
 				    bolt.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) ) 
 
+				// Need to store the offset of leadwall shots so they properly target that offset when bouncing toward a target
+				if ( LTSRebalance_Enabled() && weapon.HasMod( "LTSRebalance_pas_ronin_weapon" ) )
+				{
+					bolt.s.upVec <- upVec * LTSREBALANCE_RICOCHET_SPREAD_MOD
+					bolt.s.rightVec <- rightVec * LTSREBALANCE_RICOCHET_SPREAD_MOD
+				}
+
 				EmitSoundOnEntity( bolt, "wpn_leadwall_projectile_crackle" )
 			}
 		}
@@ -146,10 +155,16 @@ void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vec
 
 		if ( projectile.proj.projectileBounceCount >= bounceCount )
 			return
-
+		
 		if ( hitEnt == svGlobal.worldspawn )
 			EmitSoundAtPosition( TEAM_UNASSIGNED, pos, "Bullets.DefaultNearmiss" )
-		
+
+		projectile.proj.projectileBounceCount++
+
+		// We only want to run the following stuff on first bounce
+		if ( projectile.proj.projectileBounceCount > 1 )
+			return
+
 		if ( PerfectKits_Enabled() )
 		{
 			if ( !( "hasBoomeranged" in projectile.s ) )
@@ -161,7 +176,56 @@ void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vec
 			}
 		}
 		else if ( LTSRebalance_Enabled() )
-        	projectile.SetProjectileLifetime( RandomFloatRange( 0.30, 0.35 ) )
-		projectile.proj.projectileBounceCount++
+			LTSRebalance_RicochetSeek( projectile )
 	#endif
 }
+
+#if SERVER
+void function LTSRebalance_RicochetSeek( entity projectile )
+{
+	projectile.SetProjectileLifetime( LTSREBALANCE_RICOCHET_LIFETIME )
+	vector projectilePos = projectile.GetOrigin()
+	array<entity> enemyTitans = GetNPCArrayEx( "npc_titan", TEAM_ANY, projectile.GetTeam(), projectilePos, LTSREBALANCE_RICOCHET_SEEK_RANGE )
+	array<entity> enemyPlayers = GetPlayerArrayOfEnemies_Alive( projectile.GetTeam() )
+	
+	float minDistSqr = LTSREBALANCE_RICOCHET_SEEK_RANGE * LTSREBALANCE_RICOCHET_SEEK_RANGE
+	entity minEnt = null
+
+	foreach ( player in enemyPlayers )
+		if ( player.IsTitan() )
+			enemyTitans.append( player )
+
+	foreach ( titan in enemyTitans )
+	{
+		vector titanPos = titan.GetOrigin()
+		if ( projectilePos.z > titanPos.z )
+			titanPos.z = min( titan.EyePosition().z, projectilePos.z )
+
+		float distSqr = DistanceSqr( titan.GetWorldSpaceCenter(), projectilePos ) 
+		if ( distSqr >= minDistSqr )
+			continue
+
+		TraceResults hitResult = TraceLine( projectilePos, titan.GetWorldSpaceCenter(), [ projectile ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
+		if ( hitResult.hitEnt == null )
+		{
+			minDistSqr = distSqr
+			minEnt = titan
+		}
+	}
+
+	if ( minEnt != null )
+		thread LTSRebalance_SetRicochetVelocity( projectile, minEnt )
+}
+
+void function LTSRebalance_SetRicochetVelocity( entity projectile, entity ent )
+{
+	WaitEndFrame()
+	if ( !IsValid( projectile ) || !IsValid( ent ) )
+		return
+	projectile.proj.projectileBounceCount = projectile.GetProjectileWeaponSettingInt( eWeaponVar.projectile_ricochet_max_count )
+	projectile.SetProjectileLifetime( LTSREBALANCE_RICOCHET_LIFETIME )
+	vector dir = Normalize( ent.GetWorldSpaceCenter() - projectile.GetOrigin() )
+	dir += expect vector( projectile.s.upVec + projectile.s.rightVec )
+	projectile.SetVelocity( dir * 5280 )
+}
+#endif
