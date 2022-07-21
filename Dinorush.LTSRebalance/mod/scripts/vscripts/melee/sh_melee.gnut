@@ -1,5 +1,5 @@
 /* LTS Rebalance replaces this file for the following reasons:
-   1. Fix termination bugs: Tone Prime reload + Ion Prime core
+   1. Fix termination bugs: Tone Prime reload + Ion Prime core + Ion energy
    2. Allow player to escape Phase Reflex in PerfectKits
    3. Compatability with Brute4
 */
