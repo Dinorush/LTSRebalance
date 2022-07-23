@@ -14,7 +14,8 @@ const TITAN_SWORD_KNOCKBACK_SCALE_MP = 400.0
 const TITAN_SWORD_KNOCKBACK_SCALE_MP_SWORD_CORE = 100.0
 const TITAN_SWORD_KNOCKBACK_SCALE_SP = 300.0
 
-const TITAN_BIG_PUNCH_KNOCKBACK_MOD = 1.3
+const float TITAN_BIG_PUNCH_KNOCKBACK_MOD = 2.0
+const float TITAN_BIG_SWORD_KNOCKBACK_MOD = 1.3
 
 function MeleeTitanShared_Init()
 {
@@ -152,7 +153,10 @@ void function TitanMeleeAttack( entity titan )
 			}
 		}
 
-		titan.PlayerMelee_SetAttackHitEntity( targetEnt )
+		// HACK - As long as attack hit entity is a titan, player can only move backwards.
+		// We cannot clear the hit entity, so we prevent it from setting.
+		if ( !meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
+			titan.PlayerMelee_SetAttackHitEntity( targetEnt )
 
 		if ( IsHumanSized( targetEnt ) )
 		{
@@ -354,7 +358,7 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 		targetVelocity += pushBackVelocity
 
 		if ( IsValid( meleeWeapon ) && meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
-			targetVelocity *= TITAN_BIG_PUNCH_KNOCKBACK_MOD
+			targetVelocity *= meleeWeapon.GetWeaponClassName() == "melee_titan_sword" ? TITAN_BIG_SWORD_KNOCKBACK_MOD : TITAN_BIG_PUNCH_KNOCKBACK_MOD
 
 		// Put a floor on the targetVelocity: has to be at least 0.85 of the pushback velocity to be able to push back players far enough
 		// so that their slow melee attack doesn't still connect after being hit by a fast melee.
