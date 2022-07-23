@@ -57,7 +57,7 @@ var function OnWeaponPrimaryAttack_gun_shield( entity weapon, WeaponPrimaryAttac
 	if ( LTSRebalance_Enabled() )
 	{
 		entity soul = weaponOwner.GetTitanSoul()
-		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) )
+		if ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || weapon.HasMod( "fd_gun_shield" ) )
 		{
 			LTSRebalance_TrackTempShields( weaponOwner )
 			LTSRebalance_AddTempShields( soul, soul.GetShieldHealthMax(), 0, 0, weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration ) )
@@ -398,8 +398,8 @@ entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon,
 	vortexSphere.kv.physics_max_size = 6
 	float health
 	entity soul = player.GetTitanSoul()
-	bool hasShieldUpgrade = ( !LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" )
-	if ( hasShieldUpgrade )
+	bool hasShieldUpgrade = ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || shieldWeapon.HasMod( "fd_gun_shield" )
+	if ( hasShieldUpgrade && !LTSRebalance_Enabled() )
 		health = PAS_LEGION_SHEILD_HEALTH
 	else
 		health = TITAN_GUN_SHIELD_HEALTH

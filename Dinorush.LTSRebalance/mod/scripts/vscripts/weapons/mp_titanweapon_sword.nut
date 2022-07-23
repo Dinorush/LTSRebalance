@@ -62,6 +62,8 @@ void function LTSRebalance_SwordCoreBeamThink( entity weapon, entity titan )
 		titan.WaitSignal( "Doomed" )
 	
 	weapon.AddMod( "LTSRebalance_super_charged_beam" )
+	if ( weapon.HasMod( "fd_sword_upgrade" ) )
+		weapon.AddMod( "LTSRebalance_fd_sword_upgrade_beam" )
 
     float lastMeleeTime = 0
     while(1)

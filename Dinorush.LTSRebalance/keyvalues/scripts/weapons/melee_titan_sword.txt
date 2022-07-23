@@ -27,15 +27,22 @@ WeaponData
 			"melee_angle"										"45"
 			"clear_fx_on_new_view_model"						"0"
         }
+
 		LTSRebalance_super_charged_beam
 		{
 			"melee_damage_heavyarmor"							"--900" // match explosion_damage_heavy_armor
 		}
+
 		LTSRebalance_big_punch
 		{
-			"melee_attack_animtime"								"1.026"
 			"melee_damage"										"++300"
 			"melee_damage_heavyarmor"							"++300"
+		}
+
+		LTSRebalance_fd_sword_upgrade_beam
+		{
+			"melee_damage"										"*1.164" // Compensate for loss of melee damage from beam
+			"melee_damage_heavyarmor"							"*1.164"
 		}
 	}
 }
