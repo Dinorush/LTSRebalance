@@ -4,9 +4,10 @@ WeaponData
 	{
 		LTSRebalance_big_punch
 		{
-			"melee_attack_animtime"								"0.94"
-			"melee_damage"										"++300"
-			"melee_damage_heavyarmor"							"++300"
+			"melee_anim_1p_number"								"2"			// ACT_VM_MELEE_ATTACK1, 2, or 3
+			"melee_attack_animtime"								"1.67"
+			"melee_damage"										"*2.4"
+			"melee_damage_heavyarmor"							"*2.4"
 		}
 	}
 }
