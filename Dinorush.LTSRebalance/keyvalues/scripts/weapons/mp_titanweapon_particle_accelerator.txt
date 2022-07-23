@@ -7,8 +7,6 @@ WeaponData
 			"damage_near_distance"							"1200"
 			"damage_far_distance" 							"2000"
 
-			"shared_energy_cost"						"*.9"
-
 			"lower_time"  									"0.01"
 		}
 		LTSRebalance_pas_ion_weapon_ads
