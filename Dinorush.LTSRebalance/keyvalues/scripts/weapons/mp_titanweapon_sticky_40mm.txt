@@ -14,7 +14,7 @@ WeaponData
 			"damage_far_value_titanarmor" 					"430"
 			"explosion_damage_heavy_armor"					"250"
 
-			"ammo_clip_size"   								"9"
+			"ammo_clip_size"   								"*.75"
 
 			"lower_time"  									".01" //.1
 

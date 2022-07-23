@@ -367,6 +367,7 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 				array<string> mods = meleeWeapon.GetMods()
 				mods.fastremovebyvalue( "LTSRebalance_super_charged" )
 				mods.fastremovebyvalue( "LTSRebalance_super_charged_beam" )
+				mods.fastremovebyvalue( "LTSRebalance_fd_sword_upgrade_beam" )
 				meleeWeapon.SetMods( mods )
 			}
 			else
