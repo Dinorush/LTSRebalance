@@ -225,7 +225,10 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 
 			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
 			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+			{
 				block.AddMod( "LTSRebalance_core_regen" )
+				block.SetWeaponPrimaryClipCount( block.GetWeaponPrimaryClipCountMax() )
+			}
 		}
 		else
 		{
