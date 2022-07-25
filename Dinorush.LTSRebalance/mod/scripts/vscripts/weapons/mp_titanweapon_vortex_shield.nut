@@ -23,13 +23,16 @@ global function OnClientAnimEvent_titanweapon_vortex_shield
 
 
 const ACTIVATION_COST_FRAC = 0.05 //0.2 //R1 was 0.1
-const int ION_ACTIVATION_ENERGY_COST = 25
+const int ION_ACTIVATION_ENERGY_COST = 0
 const int ION_MINIMUM_ENERGY = 150
-global const float PAS_ION_VORTEX_AMP = 1.5
-const float LTSREBALANCE_VORTEX_COST = 102.0 // Per second
-const float PAS_ION_VORTEX_AMP_ON_ENERGY = -0.5
-const float PAS_ION_VORTEX_AMP_OFF_ENERGY = 0.25
-const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.75
+global const float PAS_ION_VORTEX_AMP = 1.35
+const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.9
+
+#if CLIENT
+struct {
+	// table<string, LTSRebalance_BarTopoData> LTSRebalance_vortex_ui
+} file
+#endif
 
 function MpTitanweaponVortexShield_Init()
 {
@@ -37,6 +40,17 @@ function MpTitanweaponVortexShield_Init()
 
 	RegisterSignal( "DisableAmpedVortex" )
 	RegisterSignal( "FireAmpedVortexBullet" )
+
+	#if CLIENT
+	// LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.1, 0.1, 0.0 >, 0.11, 0.015, eDirection.right )
+	// RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+	// RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+	// LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.1, 0.1, 0.0 >, 0.1, 0.0075, eDirection.right )
+	// LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 2, 0.075 )
+	// LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
+	// file.LTSRebalance_vortex_ui["bg"] <- bg
+	// file.LTSRebalance_vortex_ui["charges"] <- charges
+	#endif
 }
 
 function VortexShieldPrecache()
@@ -98,8 +112,15 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 	#if SERVER
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
+	#elseif CLIENT
+		// RuiSetFloat( file.LTSRebalance_vortex_ui["bg"], "basicImageAlpha", 0.5 )
+		
 	#endif
 }
+
+#if CLIENT
+// void function ClLTSRebalance_VortexUIThink( entity weapon, var ui )
+#endif
 
 #if SERVER
 void function PerfectKits_VortexAmpEnergyThink( entity weapon, entity owner )
@@ -124,43 +145,20 @@ void function PerfectKits_VortexAmpEnergyThink( entity weapon, entity owner )
 		lastTime = Time()
 	}
 }
-
-void function LTSRebalance_VortexEnergyThink( entity weapon, entity owner )
-{
-	weapon.EndSignal( "OnDestroy" )
-	owner.EndSignal( "OnDestroy" )
-	owner.EndSignal( "OnDeath" )
-
-	entity vortexSphere = weapon.GetWeaponUtilityEntity()
-	vortexSphere.EndSignal( "OnDestroy" )
-
-	bool isAmped = weapon.HasMod( "LTSRebalance_pas_ion_vortex" )
-	float vanillaCost = float( weapon.GetWeaponSettingInt( eWeaponVar.shared_energy_charge_cost ) ) * 60 //Cost is per frame, we want it per second
-	float accumulatedEnergy = 0
-	float lastTime = Time()
-	while(1)
-	{
-		WaitFrame()
-		float passedTime = Time() - lastTime
-		bool hasCaught = vortexSphere.GetBulletAbsorbedCount() > 0 || vortexSphere.GetProjectileAbsorbedCount() > 0
-		accumulatedEnergy += passedTime * ( vanillaCost - LTSREBALANCE_VORTEX_COST )
-		if ( isAmped )
-			accumulatedEnergy += passedTime * LTSREBALANCE_VORTEX_COST * ( hasCaught ? PAS_ION_VORTEX_AMP_ON_ENERGY : PAS_ION_VORTEX_AMP_OFF_ENERGY )
-
-		if ( accumulatedEnergy > 0 )
-			owner.AddSharedEnergy( int( accumulatedEnergy ) )
-		else
-			owner.TakeSharedEnergy( int( -accumulatedEnergy ) )
-
-		accumulatedEnergy -= float( int( accumulatedEnergy ) )
-		lastTime = Time()
-	}
-}
 #endif
 
 void function OnWeaponDeactivate_titanweapon_vortex_shield( entity weapon )
 {
 	EndVortex( weapon )
+	#if SERVER
+	if ( weapon.HasMod( "stop_regen" ) )
+	{
+		weapon.RemoveMod( "stop_regen" )
+		weapon.RegenerateAmmoReset()
+	}
+	#elseif CLIENT
+		weapon.Signal( "WeaponDeactivateEvent" )
+	#endif
 
 	if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 		weapon.Signal( "DisableAmpedVortex" )
@@ -206,8 +204,12 @@ function StartVortex( entity weapon )
 		weapon.EmitWeaponSound_1p3p( "vortex_shield_loop_1P", "vortex_shield_loop_3P" )
 
 		#if SERVER
-		if ( LTSRebalance_Enabled() && !PerfectKits_Enabled() )
-			thread LTSRebalance_VortexEnergyThink( weapon, weaponOwner )
+		if ( LTSRebalance_Enabled() )
+		{
+			weapon.AddMod( "stop_regen" )
+			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCount() - weapon.GetAmmoPerShot() )
+		}
+		
 		if ( PerfectKits_Enabled() && ( weapon.HasMod( "LTSRebalance_pas_ion_vortex" ) || weapon.HasMod( "pas_ion_vortex" ) ) )
 			thread PerfectKits_VortexAmpEnergyThink( weapon, weaponOwner )
 		#endif
@@ -388,6 +390,14 @@ var function OnWeaponPrimaryAttack_titanweapon_vortex_shield( entity weapon, Wea
 
 	DestroyVortexSphereFromVortexWeapon( weapon )  // sphere ent holds networked ammo count, destroy it after predicted firing is done
 
+	#if SERVER
+	if ( weapon.HasMod( "stop_regen" ) )
+	{
+		weapon.RemoveMod( "stop_regen" )
+		weapon.RegenerateAmmoReset()
+	}
+	#endif
+
 	if ( hasBurnMod )
 	{
 		FadeOutSoundOnEntity( weapon, "vortex_shield_start_amped_1P", 0.15 )
@@ -511,6 +521,9 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_vortex_shield( entity wea
 			FlashEnergyNeeded_Bar( minEnergyCost )
 		#endif
 	}
+
+	if ( LTSRebalance_Enabled() )
+		allowSwitch = allowSwitch && WeaponHasAmmoToUse( weapon )
 	// Return whether or not we can bring up the vortex
 	// Only allow it if we have enough charge to do anything
 	return allowSwitch
