@@ -55,7 +55,11 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 		#endif
 	}
 
-    #if SERVER
+	#if CLIENT
+    if ( !weapon.ShouldPredictProjectiles() )
+		return weapon.GetAmmoPerShot()
+	#endif
+
     if ( primaryWeapon.HasMod( "Smart_Core_Spread" ) )
         primaryWeapon.RemoveMod( "Smart_Core_Spread" )
 
@@ -89,6 +93,7 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 		primaryWeapon.SetMods( mods )
 	}
     
+	#if SERVER
 	if ( LTSRebalance_Enabled() )
     	thread StopRegenDuringPowerShot( weapon, weaponOwner )
 	#endif
