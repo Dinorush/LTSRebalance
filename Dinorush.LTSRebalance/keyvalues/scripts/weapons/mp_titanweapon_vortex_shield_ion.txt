@@ -6,16 +6,37 @@ WeaponData
 		{
 			"fire_rate"   									"2.25"
 
-			"deploy_time" 									".2"
+			"deploy_time" 									".17"
+
+			"ammo_stockpile_max"							"100"
+			"ammo_clip_size"   								"100"
+			"ammo_default_total"							"100"
+			"ammo_min_to_fire"								"50"
+			"ammo_per_shot"									"50"
+			"regen_ammo_refill_rate"						"100"
+			"regen_ammo_refill_start_delay"					"0.2"
+			"reload_enabled"  								"0"
 		}
 		LTSRebalance_pas_ion_vortex
 		{
-			"damage_near_value"   							"*1.5"
-			"damage_far_value"								"*1.5"
-			"damage_near_value_titanarmor"					"*1.5"
-			"damage_far_value_titanarmor" 					"*1.5"
-			"explosion_damage"								"*1.5"
-			"explosion_damage_heavy_armor"					"*1.5"
+			"ammo_stockpile_max"							"++50" // Should match ammo per shot
+			"ammo_clip_size"   								"++50"
+			"ammo_default_total"							"++50"
+			"damage_near_value"   							"*1.35"
+			"damage_far_value"								"*1.35"
+			"damage_near_value_titanarmor"					"*1.35"
+			"damage_far_value_titanarmor" 					"*1.35"
+			"explosion_damage"								"*1.35"
+			"explosion_damage_heavy_armor"					"*1.35"
+		}
+		PerfectKits_pas_ion_vortex
+		{
+			"regen_ammo_refill_start_delay"					"*0"
+			"regen_ammo_refill_rate"						"*10"
+		}
+		stop_regen
+		{
+			"regen_ammo_refill_rate"						"*0.0"
 		}
 	}
 }
