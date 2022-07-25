@@ -1,0 +1,10 @@
+WeaponData
+{
+	Mods
+	{
+		PerfectKitsReplace_pas_ronin_phase
+		{
+
+		}
+	}
+}

@@ -75,10 +75,10 @@ void function PhaseDash( entity weapon, entity player )
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect * 1.5
 	else
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect
-	bool perfectPhase = PerfectKits_Enabled() && weapon.HasMod( "pas_ronin_phase" )
+	bool perfectPhase = weapon.HasMod( "PerfectKitsReplace_pas_ronin_phase" )
 	SetPlayerVelocityFromInput( player, moveSpeed, <0,0,200>, perfectPhase )
-	if ( perfectPhase )
-		thread PerfectKits_DelayedPhaseDrop( player, moveSpeed )
+	// if ( perfectPhase )
+	// 	thread PerfectKits_DelayedPhaseDrop( player, moveSpeed )
 }
 
 void function SetPlayerVelocityFromInput( entity player, float scale, vector baseVel = < 0,0,0 >, bool perfectPhase = false )
