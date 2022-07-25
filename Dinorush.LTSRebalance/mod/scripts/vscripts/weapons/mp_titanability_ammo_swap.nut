@@ -195,13 +195,16 @@ void function ToggleAmmoMods( entity weapon, entity primaryWeapon, entity weapon
 		entity viewModel = weaponOwner.GetViewModelEntity()
 		float animDuration = viewModel.GetSequenceDuration( "ammo_swap_seq" )
 
+		if ( LTSRebalance_Enabled() )
+			animDuration *= 0.75
+			
 		entity powerShot = weaponOwner.GetOffhandWeapon( OFFHAND_RIGHT )
 		if ( PerfectKits_Enabled() && powerShot.HasMod( "PerfectKits_pas_legion_chargeshot" ) )
 			animDuration *= 0.5
 
 		wait animDuration
 	}
-	if ( LTSRebalance_Enabled() )
+	if ( LTSRebalance_Enabled() || PerfectKits_Enabled() )
 	{
 		#if SERVER
 		weaponOwner.Anim_StopGesture( DEFAULT_SCRIPTED_ANIMATION_BLEND_TIME )
