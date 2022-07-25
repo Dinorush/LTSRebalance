@@ -106,7 +106,6 @@ WeaponData
 	//For long range power shot
 	"projectilemodel" 								"models/weapons/bullets/projectile_40mm.mdl"
 	"bolt_hitsize"									"12.0"
-    "projectile_trail_effect_0" 					"P_proj_predator_alt_pwr"
 
 	"fx_shell_eject_view"							"wpn_shelleject_20mm_FP"
 	"fx_shell_eject_world"							"wpn_shelleject_20mm"
@@ -159,7 +158,7 @@ WeaponData
 	// Behavior
 	"ads_move_speed_scale"							"0.55"
 
-	"zoom_time_in"									"1.5"
+	"zoom_time_in"									"1.25"
 	"zoom_time_out"   								"0.75"
 	"zoom_fov"										"75"
 	"reload_time" 									"4.6"
@@ -610,6 +609,7 @@ WeaponData
 			"impact_effect_table" 							"predator_bullet_ps_alt"
 			"fx_muzzle_flash_view"							"P_muzzleflash_predator_PS_FP_ALT"
 			"fx_muzzle_flash_world"							"P_muzzleflash_predator_PS_ALT"
+			"projectile_trail_effect_0" 					"P_proj_predator_alt_pwr"
 
 			"damage_far_value"								"200"
 
