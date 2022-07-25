@@ -222,6 +222,7 @@ const float SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.15
 const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.125
 const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.27
 const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT = 1000.0
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_PER_INCREMENT = 1500.0
 const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT_MIN = pow( LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT, 1.0 / LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) - 1.0
 const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT_MIN = pow( LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT, 1.0 / LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) - 1.0
 
@@ -243,6 +244,7 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
         float initial = LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION
         float exponent = LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT
 		float exponentMin = LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT_MIN
+		float damageIncrement = LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT
 		if ( blockingEnt.IsPlayer() && PlayerHasPassive( blockingEnt, ePassives.PAS_SHIFT_CORE ) )
         {
 			if ( !LTSRebalance_Enabled() )
@@ -250,6 +252,7 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
             initial = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION
             exponent = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT
 			exponentMin = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT_MIN
+			damageIncrement = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_PER_INCREMENT
         }
 
 		if ( !LTSRebalance_Enabled() )
@@ -276,11 +279,11 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
 		if ( damage == 0 )
 			return 1.0
 
-		float oldPower = float( weapon.GetWeaponPrimaryClipCountMax() - weapon.GetWeaponPrimaryClipCount() ) / ( LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0 )
+		float oldPower = float( weapon.GetWeaponPrimaryClipCountMax() - weapon.GetWeaponPrimaryClipCount() ) / ( damageIncrement / 10.0 )
         int damageTaken = int( damage + 0.5 ) / 10  // Work with damage / 10 since ammo must be < 1000 for display
         int newAmmo = int( max ( 1, weapon.GetWeaponPrimaryClipCount() - damageTaken ) )
         weapon.SetWeaponPrimaryClipCount( newAmmo )
-        float newPower = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / ( LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT / 10.0 )
+        float newPower = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / ( damageIncrement / 10.0 )
 
 		float increase
 		if ( newPower != oldPower ) // Geometric sum formula
