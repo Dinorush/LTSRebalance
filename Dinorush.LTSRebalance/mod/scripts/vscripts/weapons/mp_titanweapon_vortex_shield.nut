@@ -29,8 +29,35 @@ global const float PAS_ION_VORTEX_AMP = 1.35
 const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.9
 
 #if CLIENT
+global enum eDirection 
+{
+    down, 
+    up,
+    left,
+    right
+}
+
+global struct LTSRebalance_TopoData {
+    vector position = Vector( 0.0, 0.0, 0.0 )
+    vector size = Vector( 0.0, 0.0, 0.0 )
+    vector angles = Vector( 0.0, 0.0, 0.0 )
+    var topo
+}
+
+global struct LTSRebalance_BarTopoData {
+    vector position = Vector( 0.0, 0.0, 0.0 )
+    vector size = Vector( 0.0, 0.0, 0.0 )
+    vector angles = Vector( 0.0, 0.0, 0.0 )
+    int segments = 1
+    array<var> imageRuis
+    array<LTSRebalance_TopoData> topoData
+    int direction
+	float fill
+    void functionref( entity ) updateFunc = null
+}
+
 struct {
-	// table<string, LTSRebalance_BarTopoData> LTSRebalance_vortex_ui
+	table< string, LTSRebalance_BarTopoData > LTSRebalance_vortex_ui
 } file
 #endif
 
@@ -42,14 +69,14 @@ function MpTitanweaponVortexShield_Init()
 	RegisterSignal( "FireAmpedVortexBullet" )
 
 	#if CLIENT
-	// LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.1, 0.1, 0.0 >, 0.11, 0.015, eDirection.right )
-	// RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
-	// RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
-	// LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.1, 0.1, 0.0 >, 0.1, 0.0075, eDirection.right )
-	// LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 2, 0.075 )
-	// LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
-	// file.LTSRebalance_vortex_ui["bg"] <- bg
-	// file.LTSRebalance_vortex_ui["charges"] <- charges
+	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.1, 0.0 >, 0.11, 0.015, eDirection.right )
+	RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+	RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+	LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.1, 0.0 >, 0.1, 0.0075, eDirection.right )
+	LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 1, 0.075 )
+	LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
+	file.LTSRebalance_vortex_ui["bg"] <- bg
+	file.LTSRebalance_vortex_ui["charges"] <- charges
 	#endif
 }
 
@@ -113,8 +140,9 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		// RuiSetFloat( file.LTSRebalance_vortex_ui["bg"], "basicImageAlpha", 0.5 )
-		
+		RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.5 )
+		if ( weapon.HasMod( "LTSRebalance_pas_ion_vortex") && file.LTSRebalance_vortex_ui["charges"].segments < 2 )
+			LTSRebalance_BasicImageBar_UpdateSegmentCount( file.LTSRebalance_vortex_ui["charges"], 2, 0.075 )
 	#endif
 }
 

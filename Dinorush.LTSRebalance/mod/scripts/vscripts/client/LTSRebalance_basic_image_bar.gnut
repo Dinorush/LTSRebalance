@@ -3,6 +3,9 @@ untyped
 // Code taken from HUD Revamp 1.0 and modified for our purposes
 // Credit to JustANormalUser
 
+/*
+Declared in whichever file needs it compiled first
+
 global enum eDirection 
 {
     down, 
@@ -29,6 +32,7 @@ global struct LTSRebalance_BarTopoData {
 	float fill
     void functionref( entity ) updateFunc = null
 }
+*/
 
 global function LTSRebalance_BasicImageBar_CreateRuiTopo
 global function LTSRebalance_BasicImageBar_UpdateSegmentCount
