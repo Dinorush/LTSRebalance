@@ -504,7 +504,10 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 
 		// slight protection to prevent multiple rapid damage events from eating through doomed state health
 		if ( Time() - titanSoul.soul.doomedStartTime < TITAN_DOOMED_INVUL_TIME && !DamageInfo_GetForceKill( damageInfo ) )
+		{
+			printt("Doom invuln hit. Doomed start time:", titanSoul.soul.doomedStartTime, " | Current time:", Time())
 			DamageInfo_SetDamage( damageInfo, 0 )
+		}
 	}
 	else
 	{
