@@ -107,12 +107,12 @@ void function PerfectKits_DelayedPhaseDrop( entity player, float moveSpeed )
 	vel.z = -moveSpeed
 	player.SetVelocity( vel )
 
-	entity entBelow = TraceLine( player.GetOrigin(), player.GetOrigin() + < 0,0,-1 >*50, [ MGetPlayer() ], TRACE_MASK_TITANSOLID, TRACE_COLLISION_GROUP_NONE ).hitEnt
+	entity entBelow = TraceLine( player.GetOrigin(), player.GetOrigin() + < 0,0,-1 >*50, [ player ], TRACE_MASK_TITANSOLID, TRACE_COLLISION_GROUP_NONE ).hitEnt
 	while( !player.IsOnGround() && vel.z < PERFECTKITS_TEMPORAL_MIN_SPEED && ( !IsValid( entBelow ) || !entBelow.IsTitan() ) )
 	{
 		vel = player.GetVelocity()
 		WaitFrame()
-		entBelow = TraceLine( player.GetOrigin(), player.GetOrigin() + < 0,0,-1 >*50, [ MGetPlayer() ], TRACE_MASK_TITANSOLID, TRACE_COLLISION_GROUP_NONE ).hitEnt
+		entBelow = TraceLine( player.GetOrigin(), player.GetOrigin() + < 0,0,-1 >*50, [ player ], TRACE_MASK_TITANSOLID, TRACE_COLLISION_GROUP_NONE ).hitEnt
 	}
 
 	if ( vel.z > PERFECTKITS_TEMPORAL_MIN_SPEED )
