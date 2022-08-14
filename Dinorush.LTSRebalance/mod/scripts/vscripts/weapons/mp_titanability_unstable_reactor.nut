@@ -3,8 +3,8 @@ global function OnWeaponPrimaryAttack_titanability_unstablereactor
 	global function OnWeaponNpcPrimaryAttack_titanability_unstablereactor
 #endif
 
-const float HEALTH_COST_FRAC = 0.08
-const int MIN_HEALTH_COST = 600
+const float HEALTH_COST_FRAC = 0.1
+const int MIN_HEALTH_COST = 750
 
 var function OnWeaponPrimaryAttack_titanability_unstablereactor( entity weapon, WeaponPrimaryAttackParams attackPParams )
 {
