@@ -3569,7 +3569,7 @@ function EMPGrenade_EffectsPlayer( entity player, damageInfo, float slowTurn, fl
 	if ( dmgSource == eDamageSourceId.mp_weapon_arc_blast )
 	{
 		fadeoutDuration = 0.5
-		duration = 1
+		duration = 0.5
 	}
 	
 	strength *= strengthMod
