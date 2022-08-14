@@ -671,7 +671,7 @@ function VortexDrainedByImpact( entity vortexWeapon, entity weapon, entity proje
 	if ( amount <= 0.0 )
 		return
 
-	if ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
+	if ( WeaponIsIonVortex( vortexWeapon ) )
 	{
 		entity owner = vortexWeapon.GetWeaponOwner()
 		int totalEnergy = owner.GetSharedEnergyTotal()
@@ -1457,7 +1457,7 @@ function VortexSphereColorUpdate( entity weapon, sphereClientFXHandle = null )
 	#if CLIENT
 		Assert( sphereClientFXHandle != null )
 	#endif
-	bool isIonVortex = weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion"
+	bool isIonVortex = WeaponIsIonVortex( weapon )
 	entity weaponOwner = weapon.GetWeaponOwner()
 	float energyTotal = float ( weaponOwner.GetSharedEnergyTotal() )
 	while( IsValid( weapon ) && IsValid( weaponOwner ) )

@@ -69,11 +69,13 @@ function MpTitanweaponVortexShield_Init()
 	RegisterSignal( "FireAmpedVortexBullet" )
 
 	#if CLIENT
-	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.1, 0.0 >, 0.11, 0.015, eDirection.right )
+	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, eDirection.right )
 	RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
 	RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
-	LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.1, 0.0 >, 0.1, 0.0075, eDirection.right )
-	LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 1, 0.075 )
+	LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, eDirection.right )
+	LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 2, 0.12 )
+	foreach ( var rui in charges.imageRuis )
+		RuiSetFloat( rui, "basicImageAlpha", 0.6 )
 	LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
 	file.LTSRebalance_vortex_ui["bg"] <- bg
 	file.LTSRebalance_vortex_ui["charges"] <- charges
@@ -140,14 +142,39 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.5 )
-		if ( weapon.HasMod( "LTSRebalance_pas_ion_vortex") && file.LTSRebalance_vortex_ui["charges"].segments < 2 )
-			LTSRebalance_BasicImageBar_UpdateSegmentCount( file.LTSRebalance_vortex_ui["charges"], 2, 0.075 )
+		RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
+		int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
+		if ( file.LTSRebalance_vortex_ui["charges"].segments != trgtSegments )
+		{
+			LTSRebalance_BasicImageBar_UpdateSegmentCount( file.LTSRebalance_vortex_ui["charges"], trgtSegments, 0.12 )
+			foreach ( var rui in file.LTSRebalance_vortex_ui["charges"].imageRuis )
+				RuiSetFloat( rui, "basicImageAlpha", 0.7 )
+		}
+		thread ClLTSRebalance_VortexUIThink( weapon )
 	#endif
 }
 
 #if CLIENT
-// void function ClLTSRebalance_VortexUIThink( entity weapon, var ui )
+void function ClLTSRebalance_VortexUIThink( entity weapon )
+{
+	weapon.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "WeaponDeactivateEvent" )
+
+	OnThreadEnd(
+		function() : ()
+		{
+			LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], 0.0 )
+			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.0 )
+		}
+	)
+
+	while ( true )
+	{
+		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
+		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], ammoFrac )
+		WaitFrame()
+	}
+}
 #endif
 
 #if SERVER
@@ -490,7 +517,7 @@ bool function OnWeaponChargeBegin_titanweapon_vortex_shield( entity weapon )
 	// just for players
 	if ( weaponOwner.IsPlayer() )
 	{
-		if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
+		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) )
 		{
 			weaponOwner.TakeSharedEnergy( ION_ACTIVATION_ENERGY_COST )
 		}
@@ -520,7 +547,7 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_vortex_shield( entity wea
 	int minEnergyCost = LTSRebalance_Enabled() ? ION_MINIMUM_ENERGY : 100
 	if ( IsValid( activeWeapon ) && activeWeapon.IsChargeWeapon() && activeWeapon.IsWeaponCharging() )
 		allowSwitch = false
-	else if ( weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
+	else if ( WeaponIsIonVortex( weapon ) )
 		allowSwitch = weaponOwner.CanUseSharedEnergy( minEnergyCost )
 	else
 	{

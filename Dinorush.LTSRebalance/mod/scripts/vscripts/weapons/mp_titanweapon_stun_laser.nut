@@ -378,7 +378,7 @@ int function ShotgunBlastDamageEntity( entity weapon, vector barrelPos, vector b
 
 	// vortex needs to scale damage based on number of rounds absorbed
 	string className = weapon.GetWeaponClassName()
-	if ( (className == "mp_titanweapon_vortex_shield") || (className == "mp_titanweapon_vortex_shield_ion") || (className == "mp_titanweapon_heat_shield") )
+	if ( (className == "mp_titanweapon_vortex_shield") || WeaponIsIonVortex( weapon ) || (className == "mp_titanweapon_heat_shield") )
 	{
 		damageAmount *= numPellets
 		//printt( "scaling vortex hitscan output damage by", numPellets, "pellets for", weaponNearDamageTitan, "damage vs titans" )
