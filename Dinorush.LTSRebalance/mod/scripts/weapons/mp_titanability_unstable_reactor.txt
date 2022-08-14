@@ -1,0 +1,30 @@
+#base "mp_titanability_electric_smoke.txt"
+WeaponData
+{
+	"hud_icon"										"rui/menu/boosts/boost_icon_arc_trap"
+
+	"OnWeaponPrimaryAttack"							"OnWeaponPrimaryAttack_titanability_unstablereactor"
+	"OnWeaponNpcPrimaryAttack"						"OnWeaponNpcPrimaryAttack_titanability_unstablereactor"
+
+	"fire_sound_1_player_1p"						"Explo_ProximityEMP_Impact_3P"
+	"fire_sound_1_player_3p"						"Explo_ProximityEMP_Impact_3P"
+
+	"explosion_inner_radius"						"150"
+	"explosionradius"								"500"
+	"explosion_damage"								"60"
+	"explosion_damage_heavy_armor"					"300"
+
+	"ammo_no_remove_from_clip"						"1"
+	"ammo_no_remove_from_stockpile"					"1"
+	"fire_rate"										"0.2"
+	
+	Mods
+	{
+		maelstrom
+		{
+			"hud_icon"										"rui/titan_loadout/passive/monarch_core_maelstrom"
+			"explosion_damage"								"*2"
+			"explosion_damage_heavy_armor"					"*2"
+		}
+	}
+}

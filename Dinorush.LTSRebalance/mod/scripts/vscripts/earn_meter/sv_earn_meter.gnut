@@ -454,11 +454,14 @@ void function DummyGoalEarnedCallback( entity player )
 	Assert( false, "Must set a goal earned callback with SetCallback_EarnMeterGoalEarned() if meter is in use" )
 }
 
-// In LTSRebalance, Overcore earns smoke later.
+// In LTSRebalance, Overcore earns smoke later and Unstable Reactor does not earn smoke.
 float function PlayerEarnMeter_GetSmokeFrac( entity titan )
 {
 	if ( !LTSRebalance_Enabled() )
 		return CORE_SMOKE_FRAC
+
+	if ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_UNSTABLE_REACTOR ) )
+		return 0.0
 
 	return ( SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_HYPER_CORE ) ? 0.4 : CORE_SMOKE_FRAC )
 }
@@ -484,7 +487,10 @@ void function JFS_PlayerEarnMeter_CoreRewardUpdate( entity titan, float starting
 void function GiveOffhandElectricSmoke( entity titan )
 {
 	entity soul = titan.GetTitanSoul()
-	bool hasAntiRodeoKit = !LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO )
+	bool hasAntiRodeoKit = !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO )
+	if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_UNSTABLE_REACTOR ) )
+		return
+
 	if ( titan.GetOffhandWeapon( OFFHAND_INVENTORY ) != null )
 	{
 		entity weapon = titan.GetOffhandWeapon( OFFHAND_INVENTORY )

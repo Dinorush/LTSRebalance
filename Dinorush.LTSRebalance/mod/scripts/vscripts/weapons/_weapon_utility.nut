@@ -117,6 +117,10 @@ const float EMP_SEVERITY_SLOWTURN = 0.35
 const float EMP_SEVERITY_SLOWMOVE = 0.50
 const float LASER_STUN_SEVERITY_SLOWTURN = 0.20
 const float LASER_STUN_SEVERITY_SLOWMOVE = 0.30
+const float ARC_BLAST_STUN_SEVERITY_SLOWTURN_MIN = 0.2
+const float ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MIN = 0.2
+const float ARC_BLAST_STUN_SEVERITY_SLOWTURN_MAX = 0.35
+const float ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MAX = 0.5
 
 const asset FX_EMP_BODY_HUMAN			= $"P_emp_body_human"
 const asset FX_EMP_BODY_TITAN			= $"P_emp_body_titan"
@@ -600,7 +604,7 @@ int function ShotgunBlastDamageEntity( entity weapon, vector barrelPos, vector b
 
 	// vortex needs to scale damage based on number of rounds absorbed
 	string className = weapon.GetWeaponClassName()
-	if ( (className == "mp_titanweapon_vortex_shield") || (className == "mp_titanweapon_vortex_shield_ion") || (className == "mp_titanweapon_heat_shield") )
+	if ( (className == "mp_titanweapon_vortex_shield") || WeaponIsIonVortex( weapon ) || (className == "mp_titanweapon_heat_shield") )
 	{
 		damageAmount *= numPellets
 		//printt( "scaling vortex hitscan output damage by", numPellets, "pellets for", weaponNearDamageTitan, "damage vs titans" )
@@ -3114,7 +3118,13 @@ void function EMP_DamagedPlayerOrNPC( entity ent, var damageInfo )
 
 void function ArcBlast_DamagedPlayerOrNPC( entity ent, var damageInfo )
 {
-	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, EMP_SEVERITY_SLOWTURN, EMP_SEVERITY_SLOWMOVE )
+	if ( ent == DamageInfo_GetAttacker( damageInfo ) )
+		return
+	float distSqr = DistanceSqr( ent.GetWorldSpaceCenter(), DamageInfo_GetDamagePosition( damageInfo ) )
+	float percent = max( 0, 1 - ( distSqr - 150 ) / ( 350 * 350 ) ) // 150 = inner explosion radius, 350 = outer - inner explosion radius
+	float slowMove = ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MIN + ( ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MAX - ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MIN ) * percent
+	float slowTurn = ARC_BLAST_STUN_SEVERITY_SLOWTURN_MIN + ( ARC_BLAST_STUN_SEVERITY_SLOWTURN_MAX - ARC_BLAST_STUN_SEVERITY_SLOWTURN_MIN ) * percent
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, slowTurn, slowMove, percent * 0.5 + 0.5 )
 }
 
 void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInfo )
@@ -3135,10 +3145,10 @@ void function VanguardEnergySiphon_DamagedPlayerOrNPC( entity ent, var damageInf
 			return
 	}
 
-	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE )
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_VANGUARD_ENERGY_BODY_HUMAN, FX_VANGUARD_ENERGY_BODY_TITAN, LASER_STUN_SEVERITY_SLOWTURN, LASER_STUN_SEVERITY_SLOWMOVE, 0.1 )
 }
 
-void function Elecriticy_DamagedPlayerOrNPC( entity ent, var damageInfo, asset humanFx, asset titanFx, float slowTurn, float slowMove )
+void function Elecriticy_DamagedPlayerOrNPC( entity ent, var damageInfo, asset humanFx, asset titanFx, float slowTurn, float slowMove, float strengthMod = 1 )
 {
 	if ( !IsValid( ent ) )
 		return
@@ -3238,7 +3248,7 @@ void function Elecriticy_DamagedPlayerOrNPC( entity ent, var damageInfo, asset h
 
 	if ( ent.IsPlayer() )
 	{
-		thread EMPGrenade_EffectsPlayer( ent, damageInfo, slowTurn, slowMove )
+		thread EMPGrenade_EffectsPlayer( ent, damageInfo, slowTurn, slowMove, strengthMod )
 	}
 	else if ( ent.IsTitan() )
 	{
@@ -3530,7 +3540,7 @@ function EMPGrenade_AffectsAccuracy( npcTitan )
 }
 
 
-function EMPGrenade_EffectsPlayer( entity player, damageInfo, float slowTurn, float slowMove )
+function EMPGrenade_EffectsPlayer( entity player, damageInfo, float slowTurn, float slowMove, float strengthMod )
 {
 	player.Signal( "OnEMPPilotHit" )
 	player.EndSignal( "OnEMPPilotHit" )
@@ -3550,10 +3560,11 @@ function EMPGrenade_EffectsPlayer( entity player, damageInfo, float slowTurn, fl
 	local origin = inflictor.GetOrigin()
 
 	int dmgSource = DamageInfo_GetDamageSourceIdentifier( damageInfo )
-	if ( dmgSource == eDamageSourceId.mp_weapon_proximity_mine || dmgSource == eDamageSourceId.mp_titanweapon_stun_laser )
+	if ( dmgSource == eDamageSourceId.mp_weapon_proximity_mine )
 	{
 		strength *= 0.1
 	}
+	strength *= strengthMod
 
 	if ( player.IsTitan() )
 	{
