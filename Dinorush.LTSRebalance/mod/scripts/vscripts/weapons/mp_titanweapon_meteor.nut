@@ -162,7 +162,7 @@ void function TemperedPlating_FXThink( entity owner )
 	while(1)
 	{
 		float curTime = Time()
-		float burnTime = expect float( owner.s.scorchLastBurnTime + 0.5 ) - curTime
+		float burnTime = expect float( owner.s.scorchLastBurnTime + PAS_SCORCH_SELFDMG_GRACE_PERIOD ) - curTime
 		#if SERVER
 		entity titan = owner.GetTitan()
 		if ( burnTime > 0 && ( lastTime <= 0 || lastTitan != titan ) && IsValid( titan ) )
