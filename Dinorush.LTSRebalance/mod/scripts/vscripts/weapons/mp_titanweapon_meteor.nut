@@ -30,7 +30,6 @@ global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.08
 global const float PAS_SCORCH_FLAMECORE_MOD = 1.3
 const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
-const float PAS_SCORCH_SELFDMG_GRACE_PERIOD = 1.5
 const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.22
 global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.16
 
@@ -44,6 +43,8 @@ global struct MeteorRadiusDamage
 
 
 #endif // #if SERVER
+
+const float PAS_SCORCH_SELFDMG_GRACE_PERIOD = 1.5
 
 #if CLIENT
 const INDICATOR_IMAGE = $"ui/menu/common/locked_icon"
