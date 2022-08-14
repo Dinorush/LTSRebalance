@@ -375,9 +375,11 @@ void function OnOwnerDeathOrDisembark(entity owner, entity hitEnt, entity tracke
 	if ( !IsAlive( owner ) )
 		return
 
-	owner.EndSignal("OnDeath")
-	owner.EndSignal("TrackerRocketsFired")
-	owner.EndSignal("DisembarkingTitan")
+	owner.EndSignal( "OnDeath" )
+	owner.EndSignal( "TrackerRocketsFired" )
+	owner.EndSignal( "DisembarkingTitan" )
+	if( LTSRebalance_Enabled() )
+		trackerRockets.EndSignal( "OnDestroy" )
 
 	OnThreadEnd(
 		function () : ( hitEnt, statusEffectID )
