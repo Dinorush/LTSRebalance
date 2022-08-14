@@ -37,6 +37,7 @@ global struct LTSRebalance_BarTopoData {
 global function LTSRebalance_BasicImageBar_CreateRuiTopo
 global function LTSRebalance_BasicImageBar_UpdateSegmentCount
 global function LTSRebalance_BasicImageBar_SetFillFrac
+global function LTSRebalance_BasicImageBar_Destroy
 
 LTSRebalance_BarTopoData function LTSRebalance_BasicImageBar_CreateRuiTopo( vector posOffset, vector angles, float hudWidth, float hudHeight, int direction = eDirection.up )
 {
@@ -65,6 +66,20 @@ LTSRebalance_BarTopoData function LTSRebalance_BasicImageBar_CreateRuiTopo( vect
     data.imageRuis.append( rui )
 
     return data
+}
+
+void function LTSRebalance_BasicImageBar_Destroy( LTSRebalance_BarTopoData data )
+{
+    foreach ( var image in data.imageRuis )
+    {
+        RuiDestroy( image )
+    }
+    data.imageRuis.clear()
+    foreach ( LTSRebalance_TopoData topoData in data.topoData )
+    {
+        RuiTopology_Destroy( topoData.topo )
+    }
+    data.topoData.clear()
 }
 
 void function LTSRebalance_BasicImageBar_UpdateSegmentCount( LTSRebalance_BarTopoData data, int segmentCount, float segDistance )
