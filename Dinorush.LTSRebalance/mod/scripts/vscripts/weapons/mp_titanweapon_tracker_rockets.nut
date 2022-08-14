@@ -23,8 +23,7 @@ void function MpTitanWeaponTrackerRockets_Init()
 	#if CLIENT
 	AddCallback_PlayerClassChanged( TrackerRockets_OnPlayerClassChanged )
 	#else
-	if( LTSRebalance_EnabledOnInit() )
-		AddCallback_OnTitanBecomesPilot( TrackerRockets_ClearLocksOnDisembark )
+	AddCallback_OnTitanBecomesPilot( LTSRebalance_ClearTrackerOnDisembark )
 	#endif
 }
 
@@ -146,11 +145,11 @@ var function OnWeaponNPCPrimaryAttack_titanweapon_tracker_rockets( entity weapon
 	return OnWeaponPrimaryAttack_titanweapon_tracker_rockets( weapon, attackParams )
 }
 
-void function TrackerRockets_ClearLocksOnDisembark( entity player, entity titan )
+void function LTSRebalance_ClearTrackerOnDisembark( entity player, entity oldTitan )
 {
-	entity trackerRockets = player.GetOffhandWeapon( OFFHAND_ORDNANCE )
-	if ( IsValid( trackerRockets ) && trackerRockets.GetBurstFireShotsPending() > 0 )
-		trackerRockets.SmartAmmo_Clear( true, false )
+	entity trackerRockets = oldTitan.GetOffhandWeapon( OFFHAND_RIGHT )
+	if ( IsValid( trackerRockets ) )
+		trackerRockets.SmartAmmo_Clear( true, true )
 }
 #endif
 
