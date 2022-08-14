@@ -34,8 +34,8 @@ void function ClLTSRebalance_CounterReadyThink( entity player )
 	player.EndSignal( "OnDestroy" )
 	player.EndSignal( "OnDeath" )
 
-	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.47, 0.0 >, 0.108, 0.02, eDirection.right )
-	LTSRebalance_BarTopoData charge = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.47, 0.0 >, 0.1, 0.01, eDirection.right )
+	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.47, 0.0 >, 0.108, 0.02, LTSRebalance_eDirection.right )
+	LTSRebalance_BarTopoData charge = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.47, 0.0 >, 0.1, 0.01, LTSRebalance_eDirection.right )
 
 	OnThreadEnd(
 		function() : ( bg, charge )
@@ -76,8 +76,8 @@ void function ClLTSRebalance_LightCannonThink( entity player )
 	player.EndSignal( "OnDestroy" )
 	player.EndSignal( "OnDeath" )
 
-	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.25, 0.0 >, 0.108, 0.02, eDirection.right )
-	LTSRebalance_BarTopoData coreCharges = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.25, 0.0 >, 0.1, 0.01, eDirection.right )
+	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.25, 0.0 >, 0.108, 0.02, LTSRebalance_eDirection.right )
+	LTSRebalance_BarTopoData coreCharges = LTSRebalance_BasicImageBar_CreateRuiTopo( <0, 0, 0>, < -0.417, 0.25, 0.0 >, 0.1, 0.01, LTSRebalance_eDirection.right )
 	OnThreadEnd(
 		function() : ( bg, coreCharges )
 		{

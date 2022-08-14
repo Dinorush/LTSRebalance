@@ -6,7 +6,7 @@ untyped
 /*
 Declared in whichever file needs it compiled first
 
-global enum eDirection 
+global enum LTSRebalance_eDirection 
 {
     down, 
     up,
@@ -39,7 +39,7 @@ global function LTSRebalance_BasicImageBar_UpdateSegmentCount
 global function LTSRebalance_BasicImageBar_SetFillFrac
 global function LTSRebalance_BasicImageBar_Destroy
 
-LTSRebalance_BarTopoData function LTSRebalance_BasicImageBar_CreateRuiTopo( vector posOffset, vector angles, float hudWidth, float hudHeight, int direction = eDirection.up )
+LTSRebalance_BarTopoData function LTSRebalance_BasicImageBar_CreateRuiTopo( vector posOffset, vector angles, float hudWidth, float hudHeight, int direction = LTSRebalance_eDirection.up )
 {
     float height = COCKPIT_RUI_HEIGHT * hudHeight
     float width = COCKPIT_RUI_WIDTH * hudWidth
@@ -94,7 +94,7 @@ void function LTSRebalance_BasicImageBar_UpdateSegmentCount( LTSRebalance_BarTop
     }
 
     float segmentDistance = segDistance / data.size.x
-    if ( data.direction == eDirection.down || data.direction == eDirection.up )
+    if ( data.direction == LTSRebalance_eDirection.down || data.direction == LTSRebalance_eDirection.up )
         segmentDistance = segDistance / data.size.y
 
     data.topoData.clear()
@@ -131,8 +131,8 @@ void function LTSRebalance_BasicImageBar_UpdateSegmentCount( LTSRebalance_BarTop
 
 	switch (data.direction)
     {
-        case eDirection.left:
-        case eDirection.right:
+        case LTSRebalance_eDirection.left:
+        case LTSRebalance_eDirection.right:
             for (int i = 0; i < segmentCount; i++)
             {
                 LTSRebalance_TopoData topoData
@@ -150,8 +150,8 @@ void function LTSRebalance_BasicImageBar_UpdateSegmentCount( LTSRebalance_BarTop
                 data.topoData.append(topoData)
             }
             break
-        case eDirection.up:
-        case eDirection.down:
+        case LTSRebalance_eDirection.up:
+        case LTSRebalance_eDirection.down:
             for (int i = 0; i < segmentCount; i++)
             {
                 LTSRebalance_TopoData topoData
@@ -197,7 +197,7 @@ var function LTSRebalance_BasicImageBar_SetFillFrac( LTSRebalance_BarTopoData ba
     barData.fill = progress
 	 switch (barData.direction)
     {
-        case eDirection.right:
+        case LTSRebalance_eDirection.right:
             for (int i = barData.segments - 1; i >= 0; i--)
             {
                 LTSRebalance_TopoData data = barData.topoData[i]
@@ -225,7 +225,7 @@ var function LTSRebalance_BasicImageBar_SetFillFrac( LTSRebalance_BarTopoData ba
                 }
             }
             break
-        case eDirection.left:
+        case LTSRebalance_eDirection.left:
             for (int i = 0; i < barData.segments; i++)
             {
                 LTSRebalance_TopoData data = barData.topoData[i]
@@ -253,7 +253,7 @@ var function LTSRebalance_BasicImageBar_SetFillFrac( LTSRebalance_BarTopoData ba
                 }
             }
             break
-        case eDirection.up:
+        case LTSRebalance_eDirection.up:
             for (int i = barData.segments - 1; i >= 0; i--)
             {
                 LTSRebalance_TopoData data = barData.topoData[i]
@@ -282,7 +282,7 @@ var function LTSRebalance_BasicImageBar_SetFillFrac( LTSRebalance_BarTopoData ba
             }
             break
 
-        case eDirection.down:
+        case LTSRebalance_eDirection.down:
             for (int i = 0; i < barData.segments; i++)
             {
                 LTSRebalance_TopoData data = barData.topoData[i]
