@@ -142,7 +142,7 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) && weaponOwner == GetLocalClientPlayer() )
+		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) && weaponOwner == GetLocalViewPlayer() )
 		{
 			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
 			int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
@@ -161,6 +161,8 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 {
 	player.EndSignal( "DisembarkingTitan" )
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "OnDestroy" )
 	weapon.EndSignal( "OnDestroy" )
 	weapon.EndSignal( "WeaponDeactivateEvent" )
 
