@@ -3,7 +3,7 @@
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.\nCredits: JustANormalUser - HUD Revamp UI scripts",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.9.7.5",
+	"Version": "0.10",
 
 	"Scripts": [
 		{
@@ -11,7 +11,22 @@
 			"RunOn": "CLIENT"
 		},
 		{
+			"Path": "client/cl_LTSRebalance_ui.nut",
+			"RunOn": "CLIENT && MP",
+			"ClientCallback": {
+				"After": "ClLTSRebalance_Init"
+			}
+		},
+		{
+			"Path": "weapons/mp_titanability_unstable_reactor.nut",
+			"RunOn": "(CLIENT || SERVER) && MP"
+		},
+		{
 			"Path": "weapons/mp_titanweapon_shift_core_sword.nut",
+			"RunOn": "(CLIENT || SERVER) && MP"
+		},
+		{
+			"Path": "titan/LTSRebalance_temp_shields.nut",
 			"RunOn": "(CLIENT || SERVER) && MP"
 		},
 		{
