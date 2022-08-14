@@ -488,7 +488,7 @@ void function GiveOffhandElectricSmoke( entity titan )
 {
 	entity soul = titan.GetTitanSoul()
 	bool hasAntiRodeoKit = !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO )
-	if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_UNSTABLE_REACTOR ) )
+	if ( LTSRebalance_Enabled() && soul.passives.len() > GetNumPassives() && SoulHasPassive( soul, ePassives.PAS_UNSTABLE_REACTOR ) )
 		return
 
 	if ( titan.GetOffhandWeapon( OFFHAND_INVENTORY ) != null )
