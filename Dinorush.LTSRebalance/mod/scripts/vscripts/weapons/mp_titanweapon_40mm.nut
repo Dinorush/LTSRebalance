@@ -40,6 +40,8 @@ void function MpTitanweapon40mm_Init()
 	#if SERVER
 		PrecacheModel( TITAN_40MM_SHELL_EJECT )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_sticky_40mm, Tracker40mm_DamagedTarget )
+		if ( LTSRebalance_EnabledOnInit() )
+			AddCallback_OnTitanBecomesPilot( LTSRebalance_BurstLoaderClear )
 	#endif
 
 	RegisterSignal("TrackerRocketsFired")
@@ -479,6 +481,12 @@ void function PerfectKits_EnhancedTrackerSonarThink( entity enemy, vector positi
 
     float duration = 1.0
 	wait duration
+}
+
+void function LTSRebalance_BurstLoaderClear( entity player, entity titan )
+{
+	if ( titan.GetMainWeapons().len() > 0 )
+		titan.GetMainWeapons()[0].SetWeaponChargeFractionForced( 0.0 )
 }
 #endif
 
