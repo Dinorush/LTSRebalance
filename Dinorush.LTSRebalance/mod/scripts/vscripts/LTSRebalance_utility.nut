@@ -88,6 +88,8 @@ void function LTSRebalance_Precache()
 	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
 	damageSourceTable.mp_titanweapon_predator_cannon_perfectkits <- eDamageSourceId.mp_titanweapon_predator_cannon
 	damageSourceTable.mp_titanweapon_vortex_shield_ion_ltsrebalance <- eDamageSourceId.mp_titanweapon_vortex_shield_ion
+	LTSRebalance_AddPassive( "PAS_UNSTABLE_REACTOR" )
+	LTSRebalance_AddPassive( "PAS_BATTERY_EJECT" )
 
 	#if SERVER
 	PrecacheWeapon( "mp_titanability_unstable_reactor")
@@ -101,8 +103,6 @@ void function LTSRebalance_Precache()
 // Similar to Precache, called client & server. However, only occurs if Rebalance is on, which can mess some things up
 void function LTSRebalance_WeaponInit()
 {
-	LTSRebalance_AddPassive( "PAS_UNSTABLE_REACTOR" )
-	LTSRebalance_AddPassive( "PAS_BATTERY_EJECT" )
 	MpTitanweaponShiftCoreSword_Init()
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 }
@@ -376,7 +376,10 @@ void function LTSRebalance_SyncCounterReadyCharge( entity soul )
 			entity smoke = titan.GetOffhandWeapon( OFFHAND_INVENTORY )
 			smoke.WaitSignal( "CounterReadyUse" )
 			charge = 0
-			player.SetPlayerNetFloat( "LTSRebalance_CounterReadyCharge", charge )
+			titan = soul.GetTitan()
+			player = !IsValid( titan ) || titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+			if ( IsValid( player ) )
+				player.SetPlayerNetFloat( "LTSRebalance_CounterReadyCharge", charge )
 		}
 
 		lastTime = Time()

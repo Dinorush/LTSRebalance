@@ -488,7 +488,7 @@ void function LTSRebalance_BurstLoaderClear( entity player, entity titan )
 	if ( titan.GetMainWeapons().len() > 0 )
 	{
 		entity mainWeapon = titan.GetMainWeapons()[0]
-		if ( mainWeapon.GetWeaponClassName() == "mp_titanweapon_sticky_40mm" )
+		if ( mainWeapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
 			mainWeapon.SetWeaponChargeFractionForced( 0.0 )
 	}
 }
