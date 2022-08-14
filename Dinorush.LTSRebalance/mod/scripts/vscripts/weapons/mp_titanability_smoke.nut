@@ -8,9 +8,14 @@ global function MpTitanAbilitySmoke_Init
 
 const SHIELD_BODY_FX			= $"P_xo_armor_body_CP"
 
+global const float LTSREBALANCE_COUNTER_READY_REGEN_TIME = 30.0
+
 void function MpTitanAbilitySmoke_Init()
 {
 	PrecacheParticleSystem( SHIELD_BODY_FX )
+
+	if ( LTSRebalance_EnabledOnInit() )
+		RegisterSignal( "CounterReadyUse" )
 
 	#if SERVER
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanability_smoke, ElectricSmoke_DamagedTarget )
@@ -76,8 +81,8 @@ void function TitanSmokescreen( entity ent, entity weapon )
 		smokescreen.smokescreenFX = FX_ELECTRIC_SMOKESCREEN_HEAL
 	}
 	#endif
-	if( LTSRebalance_Enabled() && ent.IsTitan() && SoulHasPassive( ent.GetTitanSoul(), ePassives.PAS_ANTI_RODEO ) )
-		smokescreen.lifetime *= 1.25
+	if( LTSRebalance_Enabled() )
+		weapon.Signal( "CounterReadyUse" )
 
 	smokescreen.isElectric = true
 	smokescreen.ownerTeam = ent.GetTeam()
