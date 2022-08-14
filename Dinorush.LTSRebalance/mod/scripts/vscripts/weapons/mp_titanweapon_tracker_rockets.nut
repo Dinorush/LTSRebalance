@@ -148,7 +148,7 @@ var function OnWeaponNPCPrimaryAttack_titanweapon_tracker_rockets( entity weapon
 void function LTSRebalance_ClearTrackerOnDisembark( entity player, entity oldTitan )
 {
 	entity trackerRockets = oldTitan.GetOffhandWeapon( OFFHAND_RIGHT )
-	if ( IsValid( trackerRockets ) )
+	if ( IsValid( trackerRockets ) && trackerRockets.GetWeaponClassName() == "mp_titanweapon_tracker_rockets" )
 		trackerRockets.SmartAmmo_Clear( true, true )
 }
 #endif

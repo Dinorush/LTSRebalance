@@ -486,7 +486,11 @@ void function PerfectKits_EnhancedTrackerSonarThink( entity enemy, vector positi
 void function LTSRebalance_BurstLoaderClear( entity player, entity titan )
 {
 	if ( titan.GetMainWeapons().len() > 0 )
-		titan.GetMainWeapons()[0].SetWeaponChargeFractionForced( 0.0 )
+	{
+		entity mainWeapon = titan.GetMainWeapons()[0]
+		if ( mainWeapon.GetWeaponClassName() == "mp_titanweapon_sticky_40mm" )
+			mainWeapon.SetWeaponChargeFractionForced( 0.0 )
+	}
 }
 #endif
 
