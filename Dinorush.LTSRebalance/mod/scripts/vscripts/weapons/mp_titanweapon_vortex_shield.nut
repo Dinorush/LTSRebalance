@@ -142,15 +142,18 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
-		int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
-		if ( file.LTSRebalance_vortex_ui["charges"].segments != trgtSegments )
+		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) )
 		{
-			LTSRebalance_BasicImageBar_UpdateSegmentCount( file.LTSRebalance_vortex_ui["charges"], trgtSegments, 0.12 )
-			foreach ( var rui in file.LTSRebalance_vortex_ui["charges"].imageRuis )
-				RuiSetFloat( rui, "basicImageAlpha", 0.7 )
+			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
+			int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
+			if ( file.LTSRebalance_vortex_ui["charges"].segments != trgtSegments )
+			{
+				LTSRebalance_BasicImageBar_UpdateSegmentCount( file.LTSRebalance_vortex_ui["charges"], trgtSegments, 0.12 )
+				foreach ( var rui in file.LTSRebalance_vortex_ui["charges"].imageRuis )
+					RuiSetFloat( rui, "basicImageAlpha", 0.7 )
+			}
+			thread ClLTSRebalance_VortexUIThink( weapon )
 		}
-		thread ClLTSRebalance_VortexUIThink( weapon )
 	#endif
 }
 
@@ -259,7 +262,7 @@ function StartVortex( entity weapon )
 		weapon.EmitWeaponSound_1p3p( "vortex_shield_loop_1P", "vortex_shield_loop_3P" )
 
 		#if SERVER
-		if ( LTSRebalance_Enabled() )
+		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) )
 		{
 			weapon.AddMod( "stop_regen" )
 			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCount() - weapon.GetAmmoPerShot() )
