@@ -4,12 +4,11 @@ global function ClLTSRebalance_Init
 void function ClLTSRebalance_Init()
 {
 	AddCallback_PlayerClassChanged( ClLTSRebalance_ToggleUI )
-	AddCallback_OnClientScriptInit( ClLTSRebalance_UIScripts )
 }
 
 void function ClLTSRebalance_ToggleUI( entity player )
 {
-	if ( IsSpectating() )
+	if ( !LTSRebalance_Enabled() || IsSpectating() || player != GetLocalClientPlayer() )
 		return
 
 	if ( player.IsTitan() )
@@ -19,13 +18,6 @@ void function ClLTSRebalance_ToggleUI( entity player )
 		if ( player.HasPassive( ePassives.PAS_ANTI_RODEO ) )
 			thread ClLTSRebalance_CounterReadyThink( player )
 	}
-	else
-		player.Signal( "SettingsChanged" )
-}
-
-void function ClLTSRebalance_UIScripts( entity player )
-{
-
 }
 
 void function ClLTSRebalance_CounterReadyThink( entity player )
