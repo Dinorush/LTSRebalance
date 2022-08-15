@@ -14,8 +14,10 @@ WeaponData
 			"ammo_min_to_fire"								"50"
 			"ammo_per_shot"									"50"
 			"regen_ammo_refill_rate"						"100"
-			"regen_ammo_refill_start_delay"					"0.2"
+			"regen_ammo_refill_start_delay"					"0.23"
 			"reload_enabled"  								"0"
+
+			"sound_weapon_ready"							""
 		}
 		LTSRebalance_pas_ion_vortex
 		{
