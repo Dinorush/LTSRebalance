@@ -136,10 +136,11 @@ void function ClearPowerShotLimits( entity weaponOwner, entity weapon )
 {
     OnThreadEnd(
     function() : ( weaponOwner, weapon )
-        {       
+        {
             if ( IsValid( weaponOwner ) )
             {
-                weaponOwner.ClearMeleeDisabled()
+				if ( IsValid( weapon ) && weapon.e.gunShieldActive )
+            		weaponOwner.ClearMeleeDisabled()
                 weaponOwner.SetTitanDisembarkEnabled( true )
             }
         }
@@ -177,7 +178,7 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
 	#endif
 	if ( IsValid( weapon ) )
 	{
-		if ( ( LTSRebalance_Enabled() && weapon.HasMod( "pas_legion_spinup" ) ) || ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) ) )
+		if ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) )
 		{
 			while( weapon.GetForcedADS() )
 				weapon.ClearForcedADS()
