@@ -13,7 +13,7 @@ const LASER_CHAGE_FX_1P = $"P_handlaser_charge"
 const LASER_CHAGE_FX_3P = $"P_handlaser_charge"
 const FX_SHIELD_GAIN_SCREEN		= $"P_xo_shield_up"
 const int SUPERIOR_CHASSIS_HEALTH_AMOUNT = 2500
-const int SUPERIOR_CHASSIS_SHIELD_AMOUNT = 1875
+const int SUPERIOR_CHASSIS_SHIELD_AMOUNT = 1500
 const int PAS_VANGUARD_COREMETER_SHIELD = 500
 const int PAS_VANGUARD_DOOM_HEAL = 1100
 const float PAS_VANGUARD_DOOM_DIMINISH = 0.3
@@ -176,9 +176,13 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 	entity owner = weapon.GetWeaponOwner()
 	entity soul = owner.GetTitanSoul()
 	#if SERVER
+		int currentUpgradeCount = soul.GetTitanSoulNetInt( "upgradeCount" )
+		print( weapon )
+		if ( LTSRebalance_Enabled() && currentUpgradeCount == 2 && SoulHasPassive( soul, ePassives.PAS_VANGUARD_CORE8 ) )
+			weapon.AddMod( "LTSRebalance_superior_chassis" )
 		float coreDuration = weapon.GetCoreDuration()
 		thread UpgradeCoreThink( weapon, coreDuration )
-		int currentUpgradeCount = soul.GetTitanSoulNetInt( "upgradeCount" )
+		
 		if ( currentUpgradeCount == 0 )
 		{
 			if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_CORE1 ) )  // Arc Rounds
@@ -404,6 +408,7 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 						owner.SetHealth( owner.GetHealth() + HEALTH_AMOUNT )
 					}
 				}
+
 				entity soul = owner.GetTitanSoul()
 				soul.SetPreventCrits( true )
 			}
@@ -538,7 +543,7 @@ void function UpgradeCoreThink( entity weapon, float coreDuration )
 	shieldAmount -= PerfectKits_EnergyThiefConvert( owner, shieldAmount )
 
 	LTSRebalance_HandleTempShieldChange( soul, shieldAmount )
-	int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount)
+	int newShield = minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + shieldAmount )
 	soul.SetShieldHealth( newShield )
 
 	OnThreadEnd(
