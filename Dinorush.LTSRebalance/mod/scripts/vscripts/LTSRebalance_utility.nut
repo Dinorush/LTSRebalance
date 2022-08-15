@@ -9,7 +9,6 @@ global function PerfectKits_EnabledOnInit
 
 global function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse
 global function WeaponHasAmmoToUse
-global function WeaponIsIonVortex
 
 struct {
 	bool ltsrebalance_enabled = false
@@ -87,7 +86,6 @@ void function LTSRebalance_Precache()
 	table damageSourceTable = expect table( getconsttable()["eDamageSourceId"] )
 	damageSourceTable.mp_titanweapon_predator_cannon_ltsrebalance <- eDamageSourceId.mp_titanweapon_predator_cannon
 	damageSourceTable.mp_titanweapon_predator_cannon_perfectkits <- eDamageSourceId.mp_titanweapon_predator_cannon
-	damageSourceTable.mp_titanweapon_vortex_shield_ion_ltsrebalance <- eDamageSourceId.mp_titanweapon_vortex_shield_ion
 	LTSRebalance_AddPassive( "PAS_UNSTABLE_REACTOR" )
 	LTSRebalance_AddPassive( "PAS_BATTERY_EJECT" )
 
@@ -96,7 +94,6 @@ void function LTSRebalance_Precache()
 	PrecacheWeapon( "mp_titanweapon_shift_core_sword" )
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_perfectkits" )
-	PrecacheWeapon( "mp_titanweapon_vortex_shield_ion_ltsrebalance" )
 	#endif
 }
 
@@ -241,25 +238,12 @@ void function LTSRebalance_HandleAttachments( entity titan )
 				titan.TakeWeaponNow( weaponName )
 				titan.GiveWeapon( weaponName + "_ltsrebalance", mods )
 		}
-		weapons = titan.GetMainWeapons()
-	}
-
-	entity defensive = titan.GetOffhandWeapon( OFFHAND_LEFT )
-	if ( IsValid( defensive ) )
-	{
-		string weaponName = defensive.GetWeaponClassName()
-		switch ( weaponName )
-		{
-			case "mp_titanweapon_vortex_shield_ion":
-				array<string> mods = defensive.GetMods()
-				titan.TakeOffhandWeapon( OFFHAND_LEFT )
-				titan.GiveOffhandWeapon( weaponName + "_ltsrebalance", OFFHAND_LEFT, mods )
-		}
 	}
 
 	if ( file.perfectkits_enabled )
 		PerfectKits_HandleAttachments( titan )
 
+	weapons = titan.GetMainWeapons()
 	weapons.extend( titan.GetOffhandWeapons() )
 
 	string prefix = "LTSRebalance_"
@@ -398,13 +382,4 @@ bool function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse( entity weapon )
 		return true
 
 	return WeaponHasAmmoToUse( weapon )
-}
-
-bool function WeaponIsIonVortex( entity weapon )
-{
-	if ( !IsValid( weapon ) )
-		return false
-
-	string name = weapon.GetWeaponClassName()
-	return name == "mp_titanweapon_vortex_shield_ion" || name == "mp_titanweapon_vortex_shield_ion_ltsrebalance"
 }

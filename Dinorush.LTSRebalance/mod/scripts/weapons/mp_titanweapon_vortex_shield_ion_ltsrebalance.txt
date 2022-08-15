@@ -1,6 +1,0 @@
-#base "mp_titanweapon_vortex_shield_ion.txt"
-WeaponData
-{
-	"cooldown_type"									"ammo_instant"
-	"sound_weapon_ready"							""
-}
