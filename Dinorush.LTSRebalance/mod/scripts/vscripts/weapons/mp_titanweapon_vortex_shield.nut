@@ -142,7 +142,7 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) && weaponOwner == GetLocalViewPlayer() )
+		if ( LTSRebalance_Enabled() && !IsSpectating() && weapon.GetAmmoPerShot() > 1 && weaponOwner == GetLocalClientPlayer() )
 		{
 			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
 			int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
@@ -265,7 +265,7 @@ function StartVortex( entity weapon )
 		weapon.EmitWeaponSound_1p3p( "vortex_shield_loop_1P", "vortex_shield_loop_3P" )
 
 		#if SERVER
-		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) )
+		if ( LTSRebalance_Enabled() && weaponOwner.IsPlayer() && weapon.GetAmmoPerShot() > 1 )
 		{
 			weapon.AddMod( "stop_regen" )
 			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCount() - weapon.GetAmmoPerShot() )
@@ -523,7 +523,7 @@ bool function OnWeaponChargeBegin_titanweapon_vortex_shield( entity weapon )
 	// just for players
 	if ( weaponOwner.IsPlayer() )
 	{
-		if ( LTSRebalance_Enabled() && WeaponIsIonVortex( weapon ) )
+		if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
 		{
 			weaponOwner.TakeSharedEnergy( ION_ACTIVATION_ENERGY_COST )
 		}
@@ -553,7 +553,7 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_vortex_shield( entity wea
 	int minEnergyCost = LTSRebalance_Enabled() ? ION_MINIMUM_ENERGY : 100
 	if ( IsValid( activeWeapon ) && activeWeapon.IsChargeWeapon() && activeWeapon.IsWeaponCharging() )
 		allowSwitch = false
-	else if ( WeaponIsIonVortex( weapon ) )
+	else if ( weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
 		allowSwitch = weaponOwner.CanUseSharedEnergy( minEnergyCost )
 	else
 	{
