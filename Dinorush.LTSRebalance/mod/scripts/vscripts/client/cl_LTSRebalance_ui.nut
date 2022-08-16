@@ -8,7 +8,7 @@ void function ClLTSRebalance_Init()
 
 void function ClLTSRebalance_ToggleUI( entity player )
 {
-	if ( !LTSRebalance_Enabled() || IsSpectating() || player != GetLocalClientPlayer() )
+	if ( !LTSRebalance_Enabled() || IsSpectating() || IsWatchingReplay() || player != GetLocalClientPlayer() )
 		return
 
 	if ( player.IsTitan() )
