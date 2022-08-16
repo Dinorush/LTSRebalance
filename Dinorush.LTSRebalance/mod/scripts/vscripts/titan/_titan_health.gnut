@@ -247,6 +247,12 @@ void function PlayerOrNPCTitanTookDamage( entity titan, var damageInfo, bool cri
 	{
 		CheckRodeoRiderHitsTitan( soul, damageInfo )
 		titanDamage.shieldDamage = ShieldHealthUpdate( titan, damageInfo, critHit )
+
+		// Needed to cancel core gain from Bulwark shields
+		// Could use a damage callback and do some damage handling manually, but we already replace this file and this is a smoother implementation
+		table soulDotS = expect table( soul.s )
+		if ( "bulwarkShields" in soulDotS && soulDotS.bulwarkShields )
+			titanDamage.shieldDamage = 0
 	}
 
 	HandleKillshot( titan, damageInfo, titanDamage )
