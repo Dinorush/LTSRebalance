@@ -17,6 +17,8 @@ struct
 	bool ammo_counter_visible = true
 
 	int lastSelectedIndex
+
+	entity lastCenterWeapon
 } file
 
 void function ClWeaponStatus_Init()
@@ -30,6 +32,7 @@ void function ClWeaponStatus_Init()
 	AddCallback_KillReplayEnded( OnKillReplayEnded )
 
 	RegisterSignal( "EndTrackOffhandWeaponSlot" )
+	RegisterSignal( "EndTrackCenterStuff" )
 }
 
 void function ClWeaponStatus_RefreshWeaponStatus( entity player )
@@ -190,7 +193,7 @@ void function OnSelectedWeaponChanged( entity selectedWeapon )
 	float lowAmmoFrac = selectedWeapon.GetWeaponSettingFloat( eWeaponVar.low_ammo_fraction )
 	RuiSetFloat( file.ammo_status_hint, "lowAmmoFrac", lowAmmoFrac )
 	RuiSetBool( file.ammo_counter, "isVisible", file.ammo_counter_visible )
-	RuiSetBool( file.ammo_counter, "isTitan", GetLocalViewPlayer().IsTitan() )
+	RuiSetBool( file.ammo_counter, "isTitan", CheckCenterSlotOccupied(GetLocalViewPlayer()) )
 
 	RuiSetBool( file.ammo_counter, "isWeaponAmped", selectedWeapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 
@@ -251,7 +254,7 @@ void function UpdateOffhandRuis( entity player )
 {
 	UpdateOffhandRuiVisibility( file.ability_left_hud, "%offhand1%" )
 
-	if ( player.IsTitan() )
+	if ( CheckCenterSlotOccupied(player) )
 		UpdateOffhandRuiVisibility( file.ability_center_hud, "%offhand2%" )
 	else
 		UpdateOffhandRuiVisibility( file.ability_center_hud, "%offhand0%" )
@@ -280,7 +283,7 @@ void function InitWeaponStatusRuis( entity player )
 
 	UpdateOffhandRuis( player )
 
-	if ( player.IsTitan() )
+	if ( CheckCenterSlotOccupied(player) )
 	{
 		thread TrackOffhandWeaponSlot( player, file.ability_left_hud, OFFHAND_LEFT )
 		thread TrackOffhandWeaponSlot( player, file.ability_center_hud, OFFHAND_TITAN_CENTER )
@@ -303,6 +306,8 @@ void function InitWeaponStatusRuis( entity player )
 		}
 		RuiSetBool( file.ability_right_hud, "isVisible", false )
 	}
+
+	thread TrackCenterSlot( player )
 }
 
 void function UpdateOffhandRuiVisibility( var rui, string hintText )
@@ -311,6 +316,48 @@ void function UpdateOffhandRuiVisibility( var rui, string hintText )
 		RuiSetString( rui, "hintText", hintText )
 	else
 		RuiSetString( rui, "hintText", "" )
+}
+
+void function UpdateForChangedCenter( entity player )
+{
+	player.Signal( "EndTrackCenterStuff" )
+
+	bool centerOccupied = CheckCenterSlotOccupied(player)
+
+	if ( centerOccupied )
+	{
+		UpdateOffhandRuiVisibility( file.ability_center_hud, "%offhand2%" )
+
+		thread TrackOffhandWeaponSlot( player, file.ability_center_hud, OFFHAND_TITAN_CENTER )
+		thread TrackOffhandWeaponSlot( player, file.ability_right_hud, OFFHAND_RIGHT )
+	}
+	else
+	{
+		UpdateOffhandRuiVisibility( file.ability_center_hud, "%offhand0%" )
+
+		thread TrackOffhandWeaponSlot( player, file.ability_center_hud, OFFHAND_RIGHT )
+	}
+
+	RuiSetBool( file.ammo_counter, "isTitan", centerOccupied )
+}
+
+void function TrackCenterSlot( entity player )
+{
+	player.EndSignal( "EndTrackOffhandWeaponSlot" )
+	player.EndSignal( "OnDeath" )
+
+	entity lastWeapon = null
+	while ( IsAlive( player ) )
+	{
+		entity activeWeapon = player.GetOffhandWeapon( OFFHAND_TITAN_CENTER )
+		if ( activeWeapon != lastWeapon )
+		{
+			UpdateForChangedCenter( player )
+		}
+
+		lastWeapon = activeWeapon
+		WaitFrame()
+	}
 }
 
 void function TrackHoldToSwapSlot( entity player, var rui )
@@ -382,6 +429,11 @@ void function TrackHoldToSwapSlot( entity player, var rui )
 
 void function TrackOffhandWeaponSlot( entity player, var rui, int slot )
 {
+	if ( slot == OFFHAND_TITAN_CENTER || slot == OFFHAND_RIGHT )
+	{
+		player.EndSignal( "EndTrackCenterStuff" )
+	}
+
 	player.EndSignal( "EndTrackOffhandWeaponSlot" )
 	player.EndSignal( "OnDeath" )
 
@@ -562,12 +614,12 @@ void function InitOffhandRui( var rui, entity player, entity weapon )
 
 	RuiTrackFloat( rui, "readyFrac", weapon, RUI_TRACK_WEAPON_READY_TO_FIRE_FRACTION )
 	RuiTrackFloat( rui, "dryfireFrac", weapon, RUI_TRACK_WEAPON_DRYFIRE_FRACTION )
- 
+
 	RuiSetFloat( rui, "chargeFracCaution", 0.0 )
 	RuiSetFloat( rui, "chargeFracAlert", 0.0 )
 	RuiSetFloat( rui, "chargeFracAlertSpeed", 16.0 )
 	RuiSetFloat( rui, "chargeFracAlertScale", 1.0 )
-	
+
 	var cooldown_type = weapon.GetWeaponInfoFileKeyField( "cooldown_type" )
 	if ( LTSRebalance_Enabled() && weapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
 		cooldown_type = "ammo_instant"
@@ -747,8 +799,6 @@ void function InitOffhandRui( var rui, entity player, entity weapon )
 	}
 }
 
-
-
 void function ClWeaponStatus_SetOffhandVisible( int offhandIndex, bool newState )
 {
 	entity player = GetLocalClientPlayer()
@@ -763,7 +813,7 @@ var function GetRuiForIndex( entity player, int offhandIndex )
 {
 	var rui
 
-	if ( player.IsTitan() )
+	if ( CheckCenterSlotOccupied(player) )
 	{
 		switch ( offhandIndex )
 		{
@@ -804,4 +854,10 @@ void function ClWeaponStatus_SetWeaponVisible( bool newState )
 {
 	RuiSetBool( file.ammo_counter, "isVisible", newState )
 	file.ammo_counter_visible = newState
+}
+
+bool function CheckCenterSlotOccupied( entity player )
+{
+	entity weapon = player.GetOffhandWeapon( OFFHAND_TITAN_CENTER )
+	return IsValid( weapon )
 }
