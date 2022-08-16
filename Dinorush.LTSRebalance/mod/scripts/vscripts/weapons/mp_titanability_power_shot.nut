@@ -139,7 +139,7 @@ void function ClearPowerShotLimits( entity weaponOwner, entity weapon )
         {
             if ( IsValid( weaponOwner ) )
             {
-				if ( IsValid( weapon ) && weapon.e.gunShieldActive )
+				if ( IsValid( weapon ) && !weapon.e.gunShieldActive )
             		weaponOwner.ClearMeleeDisabled()
                 weaponOwner.SetTitanDisembarkEnabled( true )
             }
