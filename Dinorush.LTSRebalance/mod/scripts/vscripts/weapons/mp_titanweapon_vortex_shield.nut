@@ -142,7 +142,7 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		if ( LTSRebalance_Enabled() && !IsSpectating() && weapon.GetAmmoPerShot() > 1 && weaponOwner == GetLocalClientPlayer() )
+		if ( LTSRebalance_Enabled() && !IsSpectating() && !IsWatchingReplay() && weapon.GetAmmoPerShot() > 1 && weaponOwner == GetLocalClientPlayer() )
 		{
 			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
 			int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
@@ -160,8 +160,6 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 #if CLIENT
 void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 {
-	player.EndSignal( "DisembarkingTitan" )
-	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
 	weapon.EndSignal( "OnDestroy" )
 	weapon.EndSignal( "WeaponDeactivateEvent" )
@@ -173,12 +171,11 @@ void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.0 )
 		}
 	)
-
+	int random = rand()
+	float timeC = 0.0
+	float lastT = Time()
 	while ( true )
 	{
-		if ( IsSpectating() ) // For some reason we can get to this point when spectating
-			return
-
 		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
 		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], ammoFrac )
 		WaitFrame()
@@ -221,6 +218,7 @@ void function OnWeaponDeactivate_titanweapon_vortex_shield( entity weapon )
 		weapon.RegenerateAmmoReset()
 	}
 	#elseif CLIENT
+		print( "DEACTIVATE" )
 		weapon.Signal( "WeaponDeactivateEvent" )
 	#endif
 
