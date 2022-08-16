@@ -23,7 +23,7 @@ These weapons have limitations that prevent them from working with certain mods 
 - Predator Cannon
   - Weapon is entirely replaced. No mods that reference this weapon specifically or modify its reticle will work.
 - 40mm Tracker Cannon
-  - Reticles are replaced. Reticle mods will not work.
+  - Reticles are replaced. Reticle mods that use KeyValue modding will not work.
 
 ## FAQs
 
