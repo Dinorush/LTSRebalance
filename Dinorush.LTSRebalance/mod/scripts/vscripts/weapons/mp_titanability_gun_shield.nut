@@ -61,7 +61,8 @@ var function OnWeaponPrimaryAttack_gun_shield( entity weapon, WeaponPrimaryAttac
 		{
 			LTSRebalance_TrackTempShields( weaponOwner )
 			LTSRebalance_AddTempShields( soul, soul.GetShieldHealthMax(), 0, 0, weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration ) )
-			AddEntityCallback_OnPostShieldDamage( weaponOwner, LTSRebalance_BulwarkNoShieldCore )
+			table soulDotS = expect table( soul.s )
+			soulDotS.bulwarkShields <- true
 		}
 	}
 	#endif
@@ -110,8 +111,12 @@ void function GunShieldThink( entity weapon, entity shieldWeapon, entity owner, 
 			else if ( IsValid( owner ) )
 			{
 				entity soul = owner.GetTitanSoul()
-				if ( IsValid ( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) )
-					RemoveEntityCallback_OnPostShieldDamage( owner, LTSRebalance_BulwarkNoShieldCore )
+				if ( IsValid ( soul ) )
+				{
+					table soulDotS = expect table( soul.s )
+					if ( "bulwarkShields" in soul.s )
+						soulDotS.bulwarkShields = false
+				}
 			}
 			#endif
 		}
@@ -497,12 +502,6 @@ var function GunShield_InvulBulletHitRules( entity vortexSphere, var damageInfo 
 bool function GunShield_InvulProjectileHitRules( entity vortexSphere, entity attacker, bool takesDamageByDefault )
 {
 	return false
-}
-
-void function LTSRebalance_BulwarkNoShieldCore( entity ent, var damageInfo, float shieldDamage )
-{
-	// Shield Damage is already dealt before this is called, so this just reduces core gained from the damage dealt
-	DamageInfo_SetDamage( damageInfo, DamageInfo_GetDamage( damageInfo ) - shieldDamage )
 }
 #endif
 
