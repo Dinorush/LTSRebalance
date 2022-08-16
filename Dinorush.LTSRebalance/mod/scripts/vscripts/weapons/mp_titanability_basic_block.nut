@@ -281,18 +281,30 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
 
 		float oldPower = float( weapon.GetWeaponPrimaryClipCountMax() - weapon.GetWeaponPrimaryClipCount() ) / ( damageIncrement / 10.0 )
         int damageTaken = int( damage + 0.5 ) / 10  // Work with damage / 10 since ammo must be < 1000 for display
-        int newAmmo = int( max ( 1, weapon.GetWeaponPrimaryClipCount() - damageTaken ) )
+		int remainingDamage = maxint( 0, damageTaken - weapon.GetWeaponPrimaryClipCount() )
+        int newAmmo = int( max ( 0, weapon.GetWeaponPrimaryClipCount() - damageTaken ) )
         weapon.SetWeaponPrimaryClipCount( newAmmo )
         float newPower = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / ( damageIncrement / 10.0 )
 
-		float increase
 		if ( newPower != oldPower ) // Geometric sum formula
-			increase = ( ( pow( exponent, newPower ) - pow( exponent, oldPower ) ) /
-			             ( exponentMin * ( newPower - oldPower ) * LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) )
-		else // Only occurs if damage < 10 or Sword Block has no ammo left
-			increase = pow( exponent, oldPower )
+		{
+			float increase = ( ( pow( exponent, newPower ) - pow( exponent, oldPower ) ) /
+							( exponentMin * ( newPower - oldPower ) * LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) )
 
-		return initial * increase
+			if ( remainingDamage > 0 ) // Handle overspill damage
+			{
+				damageTaken -= remainingDamage
+				float fracDR = initial * increase
+				float maxDR = initial * newPower
+				return ( damageTaken * fracDR + remainingDamage * maxDR ) / ( damageTaken + remainingDamage )
+			}
+			else
+				return initial * increase
+		}
+		else // Only occurs if damage < 10 or Sword Block has no ammo left
+			return initial * pow( exponent, oldPower )
+
+		
 	}
 
 	int damageType = DamageInfo_GetCustomDamageType( damageInfo )

@@ -10,6 +10,7 @@ WeaponData
     "regen_ammo_refill_start_delay"                 "0.65"
     "ammo_display"									"bar"
     "cooldown_type"                                 "ammo_instant"
+	"reload_enabled"								"0"
 
 	Mods
 	{
