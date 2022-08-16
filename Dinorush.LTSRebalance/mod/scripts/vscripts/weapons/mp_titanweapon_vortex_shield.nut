@@ -176,6 +176,9 @@ void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 
 	while ( true )
 	{
+		if ( player != GetLocalClientPlayer() ) // For some reason we can get to this point with a non-local player
+			return
+
 		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
 		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], ammoFrac )
 		WaitFrame()
