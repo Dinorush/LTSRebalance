@@ -44,5 +44,10 @@ WeaponData
 			"melee_damage"										"*1.164" // Compensate for loss of melee damage from beam
 			"melee_damage_heavyarmor"							"*1.164"
 		}
+
+		fast_deploy
+		{
+			"melee_raise_recovery_animtime_normal"				"*0.01"
+		}
 	}
 }

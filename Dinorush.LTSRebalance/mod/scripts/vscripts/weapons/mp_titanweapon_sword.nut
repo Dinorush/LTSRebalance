@@ -11,8 +11,8 @@ global const asset SWORD_GLOW_PRIME = $"P_xo_sword_core_PRM"
 
 const float WAVE_SEPARATION = 100
 const float VORTEX_DAMAGE_MOD = .2
-const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.15
-const float PAS_RONIN_SWORDCORE_BEAM_COOLDOWN = 0.1
+const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.0 // .15
+const float PAS_RONIN_SWORDCORE_BEAM_COOLDOWN = 0.0 //.1
 
 void function MpTitanWeaponSword_Init()
 {
@@ -250,6 +250,8 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
 
     if ( LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
     {
+		if ( !beam )
+			thread LTSRebalance_HighlanderFastDeploy( attacker )
         entity offhand
         foreach ( index in [ OFFHAND_LEFT, OFFHAND_ANTIRODEO, OFFHAND_RIGHT ] )
         {
@@ -278,6 +280,28 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
 	{
 		int shieldRestoreAmount = target.GetArmorType() == ARMOR_TYPE_HEAVY ? 500 : 250
 		soul.SetShieldHealth( min( soul.GetShieldHealth() + shieldRestoreAmount, soul.GetShieldHealthMax() ) )
+	}
+}
+
+void function LTSRebalance_HighlanderFastDeploy( entity titan )
+{
+	titan.EndSignal( "OnDestroy" )
+	foreach ( index in [ OFFHAND_LEFT, OFFHAND_RIGHT, OFFHAND_MELEE ] )
+	{
+		entity offhand = titan.GetOffhandWeapon( index )
+		if ( IsValid( offhand ) )
+			offhand.AddMod( "fast_deploy" )
+	}
+
+	wait 0.2
+
+	waitthread WaitSignalOrTimeout( titan, 0.4, "OnPrimaryAttack" )
+
+	foreach ( index in [ OFFHAND_LEFT, OFFHAND_RIGHT, OFFHAND_MELEE ] )
+	{
+		entity offhand = titan.GetOffhandWeapon( index )
+		if ( IsValid( offhand ) )
+			offhand.RemoveMod( "fast_deploy" )
 	}
 }
 #endif

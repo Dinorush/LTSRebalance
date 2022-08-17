@@ -26,5 +26,9 @@ WeaponData
         {
             "regen_ammo_refill_rate"                "0.001"
         }
+		fast_deploy
+		{
+			"deploy_time"							"*0.01"
+		}
 	}
 }
