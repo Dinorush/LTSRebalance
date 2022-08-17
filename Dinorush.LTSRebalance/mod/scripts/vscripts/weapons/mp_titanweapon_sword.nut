@@ -11,7 +11,7 @@ global const asset SWORD_GLOW_PRIME = $"P_xo_sword_core_PRM"
 
 const float WAVE_SEPARATION = 100
 const float VORTEX_DAMAGE_MOD = .2
-const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.0 // .15
+const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.1 // .15
 const float PAS_RONIN_SWORDCORE_BEAM_COOLDOWN = 0.0 //.1
 
 void function MpTitanWeaponSword_Init()
@@ -301,7 +301,7 @@ void function LTSRebalance_HighlanderFastDeploy( entity titan )
 
 	wait 0.2
 
-	WaitSignalOrTimeout( titan, 9999.0, "HighlanderEnd", "OnPrimaryAttack" )
+	waitthread WaitSignalOrTimeout( titan, 9999.0, "HighlanderEnd", "OnPrimaryAttack" )
 
 	foreach ( index in [ OFFHAND_LEFT, OFFHAND_RIGHT, OFFHAND_MELEE ] )
 	{
