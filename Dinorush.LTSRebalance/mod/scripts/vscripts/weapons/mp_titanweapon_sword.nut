@@ -24,7 +24,11 @@ void function MpTitanWeaponSword_Init()
 
 	#if SERVER
 		if ( LTSRebalance_EnabledOnInit() )
+		{
        	 	AddDamageCallbackSourceID( eDamageSourceId.melee_titan_sword, Sword_DamagedTarget )
+			RegisterSignal( "HighlanderDeploy" )
+			RegisterSignal( "HighlanderEnd" )
+		}
 
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_shift_core, Sword_DamagedTarget )
 	#endif
@@ -285,7 +289,9 @@ void function Sword_DamagedTarget( entity target, var damageInfo )
 
 void function LTSRebalance_HighlanderFastDeploy( entity titan )
 {
+	titan.Signal( "HighlanderDeploy" )
 	titan.EndSignal( "OnDestroy" )
+	titan.EndSignal( "HighlanderDeploy" )
 	foreach ( index in [ OFFHAND_LEFT, OFFHAND_RIGHT, OFFHAND_MELEE ] )
 	{
 		entity offhand = titan.GetOffhandWeapon( index )
@@ -295,7 +301,7 @@ void function LTSRebalance_HighlanderFastDeploy( entity titan )
 
 	wait 0.2
 
-	waitthread WaitSignalOrTimeout( titan, 0.4, "OnPrimaryAttack" )
+	WaitSignalOrTimeout( titan, 9999.0 "HighlanderEnd", "OnPrimaryAttack" )
 
 	foreach ( index in [ OFFHAND_LEFT, OFFHAND_RIGHT, OFFHAND_MELEE ] )
 	{

@@ -15,15 +15,15 @@ WeaponData
 
 		LTSRebalance_pas_tone_rockets
 		{
-			"damage_near_value_titanarmor"   				"*.6"
-			"damage_far_value_titanarmor"					"*.6"
-			"damage_near_value"								"*.6"
-			"damage_far_value"								"*.6"
-			"explosion_damage_heavy_armor"					"*.6"
-			"explosion_damage"								"*.6"
-			"burst_fire_count"								"*2" //7
-			"smart_ammo_max_targeted_burst"					"*2" //7
-			"fire_rate"										"16.8" //9.8
+			"damage_near_value_titanarmor"   				"*.4"
+			"damage_far_value_titanarmor"					"*.4"
+			"damage_near_value"								"*.4"
+			"damage_far_value"								"*.4"
+			"explosion_damage_heavy_armor"					"*.4"
+			"explosion_damage"								"*.4"
+			"burst_fire_count"								"*3" //7
+			"smart_ammo_max_targeted_burst"					"*3" //7
+			"fire_rate"										"25.2" //9.8
 		}
 
 		PerfectKits_pas_tone_rockets
