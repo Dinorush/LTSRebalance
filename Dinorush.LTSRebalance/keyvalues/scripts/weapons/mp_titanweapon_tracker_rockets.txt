@@ -22,7 +22,7 @@ WeaponData
 			"explosion_damage_heavy_armor"					"*.4"
 			"explosion_damage"								"*.4"
 			"burst_fire_count"								"*3" //7
-			"smart_ammo_max_targeted_burst"					"*3" //7
+			"smart_ammo_max_targeted_burst"					"*2" //7
 			"fire_rate"										"25.2" //9.8
 		}
 
