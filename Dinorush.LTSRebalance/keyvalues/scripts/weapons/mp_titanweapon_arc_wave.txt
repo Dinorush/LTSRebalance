@@ -6,5 +6,9 @@ WeaponData
 		{
 			"deploy_time" 									"0.3"
 		}
+		fast_deploy
+		{
+			"deploy_time"									"*0.01"
+		}
 	}
 }
