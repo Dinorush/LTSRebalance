@@ -84,7 +84,9 @@ bool function OnChargeBegin( entity weapon, int blockType )
 		if ( weaponOwner.IsPlayer() )
 			PlayerUsedOffhand( weaponOwner, weapon )
 		StartShield( weapon )
+		#if SERVER
 		weaponOwner.Signal( "HighlanderEnd" )
+		#endif
 	}
 
 	return true
