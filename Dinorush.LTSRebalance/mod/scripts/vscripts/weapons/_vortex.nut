@@ -506,7 +506,7 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 
 	// HACK - make XO-16 be caught as hitscan. Need to save projectile since weapon is null and VortexDrainedByImpact needs one of the two.
 	entity xo16_proj = projectile
-	if ( LTSRebalance_Enabled() && weaponName == "mp_titanweapon_xo16_vanguard" )
+	if ( LTSRebalance_Enabled() && weaponName == "mp_titanweapon_xo16_vanguard" && attacker.GetTeam() != owner.GetTeam() )
 	{
 		projectile = null
 		impactType = "hitscan"
