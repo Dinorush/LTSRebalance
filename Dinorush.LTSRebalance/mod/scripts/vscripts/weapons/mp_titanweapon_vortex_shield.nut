@@ -142,7 +142,7 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		if ( LTSRebalance_Enabled() && !IsSpectating() && !IsWatchingReplay() && weapon.GetAmmoPerShot() > 1 && weaponOwner == GetLocalClientPlayer() )
+		if ( LTSRebalance_Enabled() && weapon.GetAmmoPerShot() > 1 && !IsWatchingReplay() && IsLocalViewPlayer( weaponOwner ) )
 		{
 			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
 			int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
@@ -171,11 +171,12 @@ void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.0 )
 		}
 	)
-	int random = rand()
-	float timeC = 0.0
-	float lastT = Time()
+
 	while ( true )
 	{
+		if ( !IsLocalViewPlayer( weapon.GetWeaponOwner() ) )
+			return
+
 		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
 		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], ammoFrac )
 		WaitFrame()
