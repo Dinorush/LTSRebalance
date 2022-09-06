@@ -219,7 +219,6 @@ void function OnWeaponDeactivate_titanweapon_vortex_shield( entity weapon )
 		weapon.RegenerateAmmoReset()
 	}
 	#elseif CLIENT
-		print( "DEACTIVATE" )
 		weapon.Signal( "WeaponDeactivateEvent" )
 	#endif
 
