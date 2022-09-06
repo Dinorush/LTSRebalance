@@ -103,6 +103,10 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	entity weapon = DamageInfo_GetInflictor( damageInfo )
+
+	// Unsure why, but sometimes the inflictor is not the weapon.
+	if ( weapon.IsPlayer() || weapon.IsNPC() )
+		weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
 	
 	if ( attacker == target )
 	{
