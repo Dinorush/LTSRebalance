@@ -1,3 +1,11 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement LTS Rebalance Sensor Array
+   2. Implement Extended Ammo Capacity (LTS Rebalance + Perfect Kits)
+   3. Implement Perfect Kits Hidden Compartment
+   4. Fix Quickdraw Power Shot bug
+   5. Implement baseline changes for Smart Core
+   6. Implement bug fixes for terminating Power Shot limitations
+*/
 untyped
 
 global function MpTitanWeaponpredatorcannon_Init
@@ -120,8 +128,6 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 
 void function OnWeaponDeactivate_titanweapon_predator_cannon( entity weapon )
 {
-	if ( LTSRebalance_Enabled() )
-   		weapon.Signal( "WeaponDeactivateEvent" )
 	StopSpinSounds( weapon )
 }
 
@@ -186,6 +192,12 @@ var function OnWeaponPrimaryAttack_titanweapon_predator_cannon( entity weapon, W
 				damageType = DF_GIB | DF_EXPLOSION | DF_KNOCK_BACK | DF_SKIPS_DOOMED_STATE
 			else
 				damageType = DF_GIB | DF_EXPLOSION | DF_KNOCK_BACK
+
+			if ( LTSRebalance_Enabled() )
+				if ( "powerShotTargets" in weapon.s )
+					weapon.s.powerShotTargets.clear()
+				else
+					weapon.s.powerShotTargets <- []
 
 			ShotgunBlast( weapon, attackParams.pos, attackParams.dir, 16, damageType, 1.0, 10.0 )
 
