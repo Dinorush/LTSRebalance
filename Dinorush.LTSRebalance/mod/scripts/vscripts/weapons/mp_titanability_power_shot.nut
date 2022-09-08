@@ -232,8 +232,11 @@ void function PowerShot_DamagedEntity( entity victim, var damageInfo )
 	if ( scriptDamageType & DF_KNOCK_BACK && !IsHumanSized( victim ) )
 	{
 		entity attacker = DamageInfo_GetAttacker( damageInfo )
-		if ( !IsValid( attacker ) || attacker.IsProjectile() ) // Need to check for PerfectKits since LR Power Shot can trigger this
+		if ( !IsValid( attacker ) || attacker.IsProjectile() ) // Need to check for PerfectKits since LR Power Shot can trigger this (attacker becomes projectile if attacker dies)
 			return
+
+		if ( LTSRebalance_Enabled() )
+			LTSRebalance_FixVortexShotgunBlast( attacker, victim, damageInfo )
 
 		float distance = Distance( victim.GetOrigin(), attacker.GetOrigin() )
 		vector pushback = Normalize( victim.GetOrigin() - attacker.GetOrigin() )
@@ -250,5 +253,30 @@ void function PowerShot_DamagedEntity( entity victim, var damageInfo )
 		}
 		PushPlayerAway( victim, pushback )
 	}
+}
+
+// If Shotgun Blast hits a Vortex entity that does not absorb the bullets, pellets will stack damage on targets behind it.
+// The damageInfo comes in with total damage, not separate instances, so we must manually calculate the correct damage.
+// One separate instance can occur for the shot that goes to Vortex though, so we have to account for duplicates.
+void function LTSRebalance_FixVortexShotgunBlast( entity attacker, entity victim, var damageInfo )
+{
+	entity weapon = DamageInfo_GetWeapon( damageInfo )
+	if ( !IsValid( weapon ) )
+		return
+
+	table weaponDotS = expect table( weapon.s )
+	array targets = expect array( weaponDotS.powerShotTargets )
+	if ( targets.contains( victim ) )
+	{
+		DamageInfo_SetDamage( damageInfo, 0 )
+		return
+	}
+	else
+		targets.append( victim )
+
+	float singleDamage = CalcWeaponDamage( attacker, victim, weapon, Distance( attacker.EyePosition(), DamageInfo_GetDamagePosition( damageInfo ) ), 0 )
+	if ( IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
+		singleDamage *= weapon.GetWeaponSettingFloat( eWeaponVar.critical_hit_damage_scale )
+	DamageInfo_SetDamage( damageInfo, min( DamageInfo_GetDamage( damageInfo ), singleDamage ) )
 }
 #endif
