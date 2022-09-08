@@ -1,9 +1,13 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Perfect Kits Refraction Lens
+   2. Fix double hit bug
+   3. Fix energy consumption during terminations
+*/
 untyped
 global function MpTitanWeaponLaserLite_Init
 
 global function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite
 global function OnWeaponPrimaryAttack_titanweapon_laser_lite
-// global function OnWeaponActivate_titanweapon_laser_lite
 
 #if SERVER
 global function OnWeaponNPCPrimaryAttack_titanweapon_laser_lite
@@ -23,13 +27,6 @@ void function MpTitanWeaponLaserLite_Init()
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_laser_lite, LaserLite_DamagedTarget )
 	#endif
 }
-
-// void function OnWeaponActivate_titanweapon_laser_lite( entity weapon )
-// {
-// 	#if CLIENT
-// 		//TODO - Charge Level UI
-// 	#endif
-// }
 
 bool function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( entity weapon )
 {
@@ -117,42 +114,6 @@ void function LaserLite_DamagedTarget( entity target, var damageInfo )
 				return
 			}
 		}
-
-		// int level = minint( 5, weapon.GetWeaponChargeLevel() )
-		// float f_extraDamage = CalculateLaserShotExtraDamage( weapon, target )
-		// float damage = DamageInfo_GetDamage( damageInfo )
-
-		// bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), damage, DamageInfo_GetDamageType( damageInfo ) )
-
-		// if ( isCritical )
-		// {
-		// 	float critMod = weapon.GetWeaponSettingFloat( eWeaponVar.critical_hit_damage_scale )
-		// 	f_extraDamage *= critMod
-		// }
-
-		// //Check to see if damage has been see to zero so we don't override it.
-		// if ( damage > 0 && f_extraDamage > 0 )
-		// {
-		// 	damage += f_extraDamage
-		// 	DamageInfo_SetDamage( damageInfo, damage )
-		// }
 	}
 }
-
-// float function CalculateLaserShotExtraDamage( entity weapon, entity hitent )
-// {
-// 	int damagePerBullet
-// 	if ( hitent.IsTitan() )
-// 		damagePerBullet = weapon.GetWeaponSettingInt( eWeaponVar.damage_additional_bullets )
-// 	else
-// 		damagePerBullet = weapon.GetWeaponSettingInt( eWeaponVar.damage_additional_bullets_titanarmor )
-
-// 	int cap = expect int( weapon.GetWeaponInfoFileKeyField( "charge_levels_cap" ) )
-// 	float extraDamage = float( minint( weapon.GetWeaponChargeLevel(), cap ) * damagePerBullet )
-
-// 	if ( extraDamage <= 0 )
-// 		return 0
-
-// 	return extraDamage
-// }
 #endif
