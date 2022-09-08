@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Scorched Earth changes (LTS Rebalance + Perfect Kits)
+   2. Implement LTS Rebalance Fuel for the Fire
+   3. Fix stored ability bug
+*/
 global function MpTitanweaponFlameWall_Init
 
 global function OnWeaponPrimaryAttack_FlameWall

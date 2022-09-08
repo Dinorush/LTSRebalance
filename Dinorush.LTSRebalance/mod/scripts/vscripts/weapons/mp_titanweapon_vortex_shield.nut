@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Perfect Kits Vortex Amplifier
+   3. Fix catching friendly hitscan bullets
+   4. Fix blocking from behind enemy titans
+*/
 untyped
 
 global function MpTitanweaponVortexShield_Init

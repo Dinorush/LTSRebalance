@@ -1,3 +1,10 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Enhanced Tracker Rounds changes (LTS Rebalance + Perfect Kits)
+   3. Implement Burst Loader changes (LTS Rebalance + Perfect Kits)
+   4. Implement LTS Rebalance Pulse Echo changes
+   5. Fix persisting lock on notifications
+*/
 global function MpTitanweapon40mm_Init
 
 global function OnWeaponOwnerChanged_titanweapon_40mm

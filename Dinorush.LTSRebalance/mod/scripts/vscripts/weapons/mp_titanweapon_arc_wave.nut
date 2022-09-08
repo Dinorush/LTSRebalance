@@ -1,4 +1,8 @@
-
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Perfect Kits Thunderstorm
+   2. Fix double hit on embarking/disembarking titan bug
+   3. Fix stored ability bug
+*/
 untyped
 global function MpTitanWeaponArcWave_Init
 global function OnWeaponPrimaryAttack_titanweapon_arc_wave

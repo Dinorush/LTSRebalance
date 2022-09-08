@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix gun shield starting cooldown faster if used during melee
+   2. Remove limitations on Gun Shield break instead of duration end
+   3. Implement bulwark changes (LTS Rebalance + Perfect Kits)
+*/
 global function OnWeaponPrimaryAttack_gun_shield
 global function MpTitanAbilityGunShield_Init
 
@@ -20,6 +25,7 @@ struct
 	int sphereClientFXHandle = -1
 } file
 #endif
+
 void function MpTitanAbilityGunShield_Init()
 {
 	PrecacheParticleSystem( FX_TITAN_GUN_SHIELD_WALL )

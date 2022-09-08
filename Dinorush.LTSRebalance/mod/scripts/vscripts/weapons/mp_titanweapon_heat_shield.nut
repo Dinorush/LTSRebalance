@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Fix blocking from behind enemy titans
+   3. Fix despawning ground attacks
+*/
 untyped
 
 global function MpTitanAbilityHeatShield_Init

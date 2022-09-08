@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix instant Rearm bug
+   2. Implement Rearm and Reload changes
+*/
+
 //TODO: FIX REARM WHILE FIRING SALVO ROCKETS
 
 global function OnWeaponPrimaryAttack_titanability_rearm

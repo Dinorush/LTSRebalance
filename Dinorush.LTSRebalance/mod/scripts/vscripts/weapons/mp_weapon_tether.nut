@@ -1,3 +1,7 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Perfect Kits Twin Traps
+*/
 untyped
 
 

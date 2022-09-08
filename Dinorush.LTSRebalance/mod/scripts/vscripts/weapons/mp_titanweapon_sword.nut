@@ -1,3 +1,7 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline Sword Core changes
+   2. Implement LTS Rebalance Highlander
+*/
 untyped
 global function OnWeaponActivate_titanweapon_sword
 global function OnWeaponDeactivate_titanweapon_sword
@@ -10,9 +14,7 @@ global const asset SWORD_GLOW_PRIME_FP = $"P_xo_sword_core_PRM_FP"
 global const asset SWORD_GLOW_PRIME = $"P_xo_sword_core_PRM"
 
 const float WAVE_SEPARATION = 100
-const float VORTEX_DAMAGE_MOD = .2
 const float PAS_RONIN_SWORDCORE_COOLDOWN = 0.15 // .15
-const float PAS_RONIN_SWORDCORE_BEAM_COOLDOWN = 0.0 //.1
 
 void function MpTitanWeaponSword_Init()
 {

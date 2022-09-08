@@ -1,3 +1,7 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Fix stored ability bug
+*/
 global function OnWeaponPrimaryAttack_titanweapon_salvo_rockets
 global function OnWeaponAttemptOffhandSwitch_titanweapon_salvo_rockets
 

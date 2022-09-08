@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement LTS Rebalance Grand Cannon (Light Cannon)
+*/
 global function LaserCannon_Init
 
 global function OnAbilityStart_LaserCannon

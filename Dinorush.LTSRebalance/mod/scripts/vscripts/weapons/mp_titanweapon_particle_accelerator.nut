@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Perfect Kits Refraction Lens
+   3. Fix splitting without damage reduction
+   4. Link new OnWeaponActivate functions to a vanilla function
+*/
 untyped
 
 global function MpTitanWeaponParticleAccelerator_Init

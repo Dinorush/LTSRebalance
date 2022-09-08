@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Fix Power Shot limitations not being terminated
+   3. Implement Perfect Kits Hidden Compartment
+*/
 global function OnWeaponPrimaryAttack_power_shot
 global function MpTitanAbilityPowerShot_Init
 global function PowerShotCleanup
