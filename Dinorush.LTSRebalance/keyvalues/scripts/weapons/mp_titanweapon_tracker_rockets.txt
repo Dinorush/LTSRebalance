@@ -23,7 +23,7 @@ WeaponData
 			"explosion_damage"								"*.6"
 			"burst_fire_count"								"*2" //7
 			"smart_ammo_max_targeted_burst"					"*2" //7
-			"fire_rate"										"16.8" //9.8
+			"fire_rate"										"18" //9.8
 		}
 
 		PerfectKits_pas_tone_rockets
