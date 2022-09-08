@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix "Jammed Thrusters" bug
+   2. Implement baseline hover changes
+   3. Implement Viper Thruster's changes (LTS Rebalance + Perfect Kits)
+*/
 global function MpTitanAbilityHover_Init
 global function OnWeaponPrimaryAttack_TitanHover
 const LERP_IN_FLOAT = 0.5
@@ -184,11 +189,6 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 		player.SetVelocity( vel )
 		WaitFrame()
 	}
-
-    // One last check, since player could dash with Viper Thrusters in last 0.1s of loop
-    vector vel = player.GetVelocity()
-    vel = LimitVelocityHorizontal( vel, horizVel + 50 )
-    player.SetVelocity( vel )
 
 	vector endOrigin = player.GetOrigin()
 
