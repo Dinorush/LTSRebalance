@@ -2,6 +2,7 @@
    1. Superior chassis rebalancing
    2. Doom skip fix
    3. Monarch 2x innate core gain
+   4. Bulwark core gain removal on shields
 */
 global function TitanHealth_Init
 
