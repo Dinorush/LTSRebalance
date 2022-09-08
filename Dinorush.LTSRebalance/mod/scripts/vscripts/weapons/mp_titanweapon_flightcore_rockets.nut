@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+*/
 global function OnWeaponPrimaryAttack_titanweapon_flightcore_rockets
 
 #if SERVER

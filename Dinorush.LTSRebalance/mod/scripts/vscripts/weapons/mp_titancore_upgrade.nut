@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes + Superior Chassis changes
+   2. Add functionality to give Rebalance core attachments
+   3. Implement Energy Thief changes (LTS Rebalance + Perfect Kits)
+   4. Implement Survival of the Fittest changes (LTS Rebalance + Perfect Kits)
+*/
 global function UpgradeCore_Init
 global function OnWeaponPrimaryAttack_UpgradeCore
 #if SERVER
@@ -177,7 +183,6 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 	entity soul = owner.GetTitanSoul()
 	#if SERVER
 		int currentUpgradeCount = soul.GetTitanSoulNetInt( "upgradeCount" )
-		print( weapon )
 		if ( LTSRebalance_Enabled() && currentUpgradeCount == 2 && SoulHasPassive( soul, ePassives.PAS_VANGUARD_CORE8 ) )
 			weapon.AddMod( "LTSRebalance_superior_chassis" )
 		float coreDuration = weapon.GetCoreDuration()

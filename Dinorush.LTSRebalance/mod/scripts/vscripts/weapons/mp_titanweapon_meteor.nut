@@ -1,3 +1,10 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Tempered Plating changes (LTS Rebalance + Perfect Kits)
+   3. Implement Scorched Earth changes (LTS Rebalance + Perfect Kits)
+   4. Implement Wildfire changes (LTS Rebalance + Perfect Kits)
+   5. Fix inconsistent tick rate
+*/
 untyped
 
 global function MpTitanweaponMeteor_Init

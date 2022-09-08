@@ -1,5 +1,5 @@
 /* LTS Rebalance replaces this file for the following reasons:
-   1. Make changes to battery heals so that Energy Siphon's temporary shielding works
+   1. Make changes to battery heals so that temporary shielding works
    2. Make changes to battery heals for PerfectKits Energy Thief
 */
 untyped //Panel.s stuff needs to be typed

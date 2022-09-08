@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Change Sword Block functionality
+      • Block on ready, not on switch
+	  • Block has scaling damage reduction based on remaining charge
+   2. Implement new Highlander effect
+*/
 untyped
 global function MpTitanAbilityBasicBlock_Init
 

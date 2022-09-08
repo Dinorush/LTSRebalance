@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes (delayed slow effect)
+   2. Fix wave tightening when looking up/down
+   3. Fix hitting an enemy titan + auto titan if they disembark/embark when in range
+   4. Implement Scorched Earth changes (LTS Rebalance + Perfect Kits)
+*/
 untyped
 global function OnWeaponActivate_titancore_flame_wave
 global function MpTitanWeaponFlameWave_Init

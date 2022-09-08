@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Fix dumbfired rockets firing less than they should
+   3. Fix not being able to use missiles until 20% charge
+*/
 global function MpTitanWeaponShoulderRockets_Init
 global function OnWeaponOwnerChanged_titanweapon_shoulder_rockets
 global function OnWeaponPrimaryAttack_titanweapon_shoulder_rockets

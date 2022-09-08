@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix melee canceled Sonar lock
+   2. Fix stored ability bug
+   3. Implement Pulse Echo changes (LTS Rebalance + Perfect Kits)
+*/
 global function OnProjectileCollision_titanability_sonar_pulse
 global function OnWeaponPrimaryAttack_titanability_sonar_pulse
 global function OnWeaponAttemptOffhandSwitch_titanability_sonar_pulse

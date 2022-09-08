@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Piercing Rounds changes (LTS Rebalance + Perfect Kits)
+   2. Implement Threat Optics changes (LTS Rebalance + Perfect Kits)
+   3. Implement Perfect Kits Viper Thrusters (damage buff)
+   4. Implement Perfect Kits Enhanced Payload (Railgun nerf)
+*/
 untyped
 
 

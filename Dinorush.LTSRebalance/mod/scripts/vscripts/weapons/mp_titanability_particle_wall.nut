@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Reinforced Particle Wall changes (LTS Rebalance + Perfect Kits)
+*/
 untyped
 
 global function MpTitanabilityBubbleShield_Init

@@ -1,4 +1,7 @@
-
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Counter Ready changes
+   2. Implement Maelstrom balancing
+*/
 global function OnWeaponPrimaryAttack_titanability_smoke
 global function MpTitanAbilitySmoke_Init
 #if SERVER

@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix lock chaining via disembark
+*/
 untyped
 
 global function OnWeaponPrimaryAttack_titanweapon_tracker_rockets

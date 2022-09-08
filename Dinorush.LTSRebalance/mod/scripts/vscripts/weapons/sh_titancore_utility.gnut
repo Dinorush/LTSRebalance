@@ -1,3 +1,7 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement LTS Rebalance Grand Cannon changes (Light Cannon)
+   2. Implement LTS Rebalance Overcore changes (no instant smoke)
+*/
 untyped
 
 global function MpTitanabilityFusionCore_Init

@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Faster Ammo Swap
+*/
 global function OnWeaponPrimaryAttack_ammo_swap
 global function MpTitanAbilityAmmoSwap_Init
 global function OnWeaponOwnerChanged_titanability_ammo_swap
@@ -20,7 +23,6 @@ struct
 
 const asset POWER_SHOT_ICON_CLOSE = $"rui/titan_loadout/ordnance/concussive_shot_short"
 const asset POWER_SHOT_ICON_FAR = $"rui/titan_loadout/ordnance/concussive_shot_long"
-const float PAS_LEGION_GUNSHIELD_DURATION_MOD = 0.5
 void function MpTitanAbilityAmmoSwap_Init()
 {
 	#if CLIENT

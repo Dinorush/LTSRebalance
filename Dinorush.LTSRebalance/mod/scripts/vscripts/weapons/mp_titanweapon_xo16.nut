@@ -1,4 +1,6 @@
-
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes (Add functionality for projectile weapon)
+*/
 global function MpTitanweaponXo16_Init
 
 global function OnWeaponActivate_titanweapon_xo16

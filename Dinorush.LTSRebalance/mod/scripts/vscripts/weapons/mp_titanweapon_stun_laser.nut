@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Shield Amplifier changes (LTS Rebalance + Perfect Kits)
+   3. Implement Perfect Kits Energy Thief (Bonus converted shield)
+*/
 untyped
 global function MpTitanWeaponStunLaser_Init
 

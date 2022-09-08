@@ -1,4 +1,6 @@
-
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Link for new OnWeaponReload functions to a vanilla function
+*/
 global function MpWeaponLSTAR_Init
 
 global function OnWeaponPrimaryAttack_weapon_lstar

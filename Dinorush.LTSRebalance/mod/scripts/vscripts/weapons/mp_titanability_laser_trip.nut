@@ -1,3 +1,8 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement rebalancing
+   2. Implement damage dropoff (for rebalancing)
+   3. Implement ZPT (LTS Rebalance + Perfect Kits)
+*/
 #if SERVER
 untyped
 #endif

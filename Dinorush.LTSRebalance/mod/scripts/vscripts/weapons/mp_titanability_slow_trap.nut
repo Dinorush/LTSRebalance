@@ -1,3 +1,9 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix double tick rate & multi-spawn bugs
+   2. Implement baseline changes
+   3. Implement Fuel for the Fire changes (LTS Rebalance + Perfect Kits)
+   4. Implement Rebalance Scorched Earth changes
+*/
 #if SERVER
 untyped
 #endif

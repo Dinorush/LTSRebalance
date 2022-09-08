@@ -1,3 +1,6 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Fix Salvo Core despawning
+*/
 global function SalvoCore_Init
 global function OnWeaponActivate_salvocore_rockets
 global function OnWeaponDeactivate_SalvoCore
@@ -63,6 +66,7 @@ bool function OnAbilityCharge_SalvoCore( entity weapon )
 {
 	if ( !OnAbilityCharge_TitanCore( weapon ) )
 		return false
+
 	//weapon.PlayWeaponEffect( LASER_CHAGE_FX_1P, LASER_CHAGE_FX_3P, "muzzle_flash" )
 	//weapon.PlayWeaponEffectNoCull( SALVO_CORE_AIM, SALVO_CORE_AIM, "muzzle_flash" )
 
