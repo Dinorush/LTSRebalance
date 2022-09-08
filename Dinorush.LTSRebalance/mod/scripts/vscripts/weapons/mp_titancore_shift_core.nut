@@ -1,15 +1,13 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement baseline changes
+   2. Implement Highlander changes (LTS Rebalance + Perfect Kits)
+   3. Implement Phase Reflex changes (LTS Rebalance + Perfect Kits)
+*/
 global function OnWeaponPrimaryAttack_DoNothing
 
 global function Shift_Core_Init
 #if SERVER
 global function Shift_Core_UseMeter
-
-struct OldWeaponData {
-    string name = ""
-    int ammo = -1
-	int maxAmmo = -1
-    array< string > mods
-}
 #endif
 
 global function OnCoreCharge_Shift_Core
@@ -172,7 +170,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
 	}
 
-	OldWeaponData prevWeaponData
+	StoredWeapon storedWeapon
     entity soul = owner.GetTitanSoul()
 	if ( soul != null )
 	{
@@ -207,14 +205,13 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
 			// Take Leadwall away to skip holstering anim
-			prevWeaponData.name = mainWeapon.GetWeaponClassName()
-			prevWeaponData.ammo = mainWeapon.GetWeaponPrimaryClipCount()
-			prevWeaponData.maxAmmo = mainWeapon.GetWeaponPrimaryClipCountMax()
-			prevWeaponData.mods = mainWeapon.GetMods()
-			titan.TakeWeaponNow( prevWeaponData.name )
+			storedWeapon = StoreMainWeapon( titan )
+			int clipSize = mainWeapon.GetWeaponPrimaryClipCountMax()
+
+			titan.TakeWeaponNow( storedWeapon.name )
 			// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
 			if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-				thread WatchForPhaseReflex( titan, prevWeaponData )
+				thread WatchForPhaseReflex( titan, storedWeapon, clipSize )
 
 			array<string> mods = []
 			if( meleeWeapon.HasMod( "modelset_prime" ) )
@@ -239,7 +236,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	}
 
 	float delay = weapon.GetWeaponSettingFloat( eWeaponVar.charge_cooldown_delay )
-	thread Shift_Core_End( weapon, owner, delay, prevWeaponData )
+	thread Shift_Core_End( weapon, owner, delay, storedWeapon )
 #endif
 
 	return 1
@@ -255,7 +252,7 @@ void function PerfectKits_HighlanderKnockback( entity titan, var damageInfo )
 	titan.SetVelocity( dir * 3500 )
 }
 
-void function WatchForPhaseReflex( entity titan, OldWeaponData prevWeaponData )
+void function WatchForPhaseReflex( entity titan, StoredWeapon storedWeapon, int clipSize )
 {
     titan.EndSignal( "CoreEnd" )
     titan.EndSignal( "OnDestroy" )
@@ -271,14 +268,14 @@ void function WatchForPhaseReflex( entity titan, OldWeaponData prevWeaponData )
 			if ( "PerfectReflexForced" in titanDotS && titanDotS.PerfectReflexForced )
 				continue
 
-			prevWeaponData.ammo = prevWeaponData.maxAmmo
+			storedWeapon.clipCount = clipSize
 			return
 		}
 		WaitFrame()
 	}
 }
 
-void function Shift_Core_End( entity weapon, entity player, float delay, OldWeaponData prevWeaponData )
+void function Shift_Core_End( entity weapon, entity player, float delay, StoredWeapon storedWeapon )
 {
 	weapon.EndSignal( "OnDestroy" )
 
@@ -294,9 +291,9 @@ void function Shift_Core_End( entity weapon, entity player, float delay, OldWeap
 	player.EndSignal( "InventoryChanged" )
 
 	OnThreadEnd(
-	function() : ( weapon, player, prevWeaponData )
+	function() : ( weapon, player, storedWeapon )
 		{
-			OnAbilityEnd_Shift_Core( weapon, player, prevWeaponData )
+			OnAbilityEnd_Shift_Core( weapon, player, storedWeapon )
 
 			if ( IsValid( player ) )
 			{
@@ -319,7 +316,7 @@ void function Shift_Core_End( entity weapon, entity player, float delay, OldWeap
 	}
 }
 
-void function OnAbilityEnd_Shift_Core( entity weapon, entity player, OldWeaponData prevWeaponData )
+void function OnAbilityEnd_Shift_Core( entity weapon, entity player, StoredWeapon storedWeapon )
 {
 	OnAbilityEnd_TitanCore( weapon )
 
@@ -337,10 +334,10 @@ void function OnAbilityEnd_Shift_Core( entity weapon, entity player, OldWeaponDa
 		EmitSoundOnEntity( player, "Titan_Ronin_Sword_Core_Deactivated_3P" )
 	}
 
-	RestorePlayerWeapons( player, prevWeaponData )
+	RestorePlayerWeapons( player, storedWeapon )
 }
 
-void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData )
+void function RestorePlayerWeapons( entity player, StoredWeapon storedWeapon )
 {
 	if ( !IsValid( player ) )
 		return
@@ -393,11 +390,8 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 				block.RemoveMod( "LTSRebalance_core_regen" )
 			titan.TakeWeaponNow( "mp_titanweapon_shift_core_sword" )
 
-			if ( prevWeaponData.name != "" )
-        	{
-				titan.GiveWeapon( prevWeaponData.name, prevWeaponData.mods )
-				titan.GetMainWeapons()[0].SetWeaponPrimaryClipCount( prevWeaponData.ammo )
-			}
+			if ( storedWeapon.name != "" )
+				GiveWeaponsFromStoredArray( titan, [storedWeapon] )
 		}
 		else if ( titan.GetMainWeapons().len() > 0 )
 			titan.GetMainWeapons()[0].AllowUse( true )
@@ -412,6 +406,33 @@ void function RestorePlayerWeapons( entity player, OldWeaponData prevWeaponData 
 			titan.SetCapabilityFlag( bits_CAP_MOVE_SHOOT, true )
 		}
 	}
+}
+
+StoredWeapon function StoreMainWeapon( entity player )
+{
+	StoredWeapon sw
+	entity activeWeapon = player.GetActiveWeapon()
+	array<entity> mainWeapons = player.GetMainWeapons()
+
+	if ( mainWeapons.len() == 0 )
+		return sw
+
+	entity weapon = mainWeapons[0]
+
+	sw.name = weapon.GetWeaponClassName()
+	sw.weaponType = eStoredWeaponType.main
+	sw.activeWeapon = ( weapon == activeWeapon )
+	sw.inventoryIndex = 0
+	sw.mods = weapon.GetMods()
+	sw.modBitfield = weapon.GetModBitField()
+	sw.ammoCount = weapon.GetWeaponPrimaryAmmoCount()
+	sw.clipCount = weapon.GetWeaponPrimaryClipCount()
+	sw.nextAttackTime = weapon.GetNextAttackAllowedTime()
+	sw.skinIndex = weapon.GetSkin()
+	sw.camoIndex = weapon.GetCamo()
+	sw.isProScreenOwner = weapon.GetProScreenOwner() == player
+
+	return sw
 }
 
 void function Shift_Core_UseMeter( entity player )
