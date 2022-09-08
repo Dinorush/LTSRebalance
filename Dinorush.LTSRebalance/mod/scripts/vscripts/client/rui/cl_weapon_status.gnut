@@ -1,3 +1,7 @@
+/* LTS Rebalance replaces this file for the following reasons:
+   1. Implement Vortex Shield UI
+   2. Fix MTMS minimum charge to use UI
+*/
 global function ClWeaponStatus_Init
 global function ClWeaponStatus_SetOffhandVisible
 global function ClWeaponStatus_SetWeaponVisible
@@ -731,7 +735,10 @@ void function InitOffhandRui( var rui, entity player, entity weapon )
 			RuiSetBool( rui, "isReverseCharge", true )
 			RuiSetFloat( rui, "chargeFrac", 1.0 )
 			RuiSetFloat( rui, "readyFrac", 0.0 )
-			RuiSetFloat( rui, "minFireFrac", 0.2 )
+			if ( LTSRebalance_Enabled() )
+				RuiSetFloat( rui, "minFireFrac", 1.0 / float( weapon.GetWeaponSettingInt( eWeaponVar.smart_ammo_max_targeted_burst ) ) )
+			else
+				RuiSetFloat( rui, "minFireFrac", 0.2 )
 
 			RuiTrackFloat( rui, "chargeFrac", weapon, RUI_TRACK_WEAPON_CHARGE_FRACTION )
 			break
