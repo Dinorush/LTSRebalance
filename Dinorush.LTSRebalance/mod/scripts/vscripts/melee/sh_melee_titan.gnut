@@ -352,13 +352,16 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 		float weaponPushBackScale = meleeWeapon.GetWeaponInfoFileKeyField( "pushback_scale" ) == null ? 1.0 : expect float( meleeWeapon.GetWeaponInfoFileKeyField( "pushback_scale" ) )
 		pushBackVelocity *= weaponPushBackScale
 
+		vector backVel = -1*pushBackVelocity
+		backVel.z = 0
+		
+		if ( IsValid( meleeWeapon ) && meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
+			pushBackVelocity *= meleeWeapon.GetWeaponClassName() == "melee_titan_sword" ? TITAN_BIG_SWORD_KNOCKBACK_MOD : TITAN_BIG_PUNCH_KNOCKBACK_MOD
+			
 		//Push enemy back first before doing damage to get rid of some dependencies
 		vector targetVelocity
 		targetVelocity = enemyTitan.GetVelocity()
 		targetVelocity += pushBackVelocity
-
-		if ( IsValid( meleeWeapon ) && meleeWeapon.HasMod( "LTSRebalance_big_punch" ) )
-			targetVelocity *= meleeWeapon.GetWeaponClassName() == "melee_titan_sword" ? TITAN_BIG_SWORD_KNOCKBACK_MOD : TITAN_BIG_PUNCH_KNOCKBACK_MOD
 
 		// Put a floor on the targetVelocity: has to be at least 0.85 of the pushback velocity to be able to push back players far enough
 		// so that their slow melee attack doesn't still connect after being hit by a fast melee.
@@ -371,9 +374,6 @@ function TitanAttackTitan( entity titan, entity meleeWeapon, entity enemyTitan, 
 
 		// enemyTitan.SetVelocity( targetVelocity )
 		PushEntWithVelocity( enemyTitan, targetVelocity )
-
-		vector backVel = -1*pushBackVelocity
-		backVel.z = 0
 
 		// titan.SetVelocity( backVel )
 
