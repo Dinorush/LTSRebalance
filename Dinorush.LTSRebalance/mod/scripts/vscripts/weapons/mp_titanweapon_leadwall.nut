@@ -116,7 +116,6 @@ function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, bool pl
 				{
 					bolt.s.index <- index
 					bolt.s.adsMultiplier <- adsMultiplier
-					bolt.e.spawnTime = Time()
 				}
 				#endif
 
@@ -258,11 +257,11 @@ void function LTSRebalance_SetRicochetVelocity( entity projectile, entity ent )
 	projectile.proj.projectileBounceCount = 3
 	if ( !IsValid( ent ) )
 	{
-		projectile.SetProjectileLifetime( LEADWALL_LIFETIME_MAX - ( Time() - projectile.e.spawnTime ) )
+		projectile.SetProjectileLifetime( LEADWALL_LIFETIME_MAX - ( Time() - projectile.GetProjectileCreationTime() ) )
 		return
 	}
 
-	float timeRemaining = LEADWALL_LIFETIME_MAX - ( bounceTime - projectile.e.spawnTime )
+	float timeRemaining = LEADWALL_LIFETIME_MAX - ( bounceTime - projectile.GetProjectileCreationTime() )
 	float dist = Distance( projectile.GetOrigin(), ent.GetWorldSpaceCenter() )
 	projectile.SetProjectileLifetime( timeRemaining + ( dist - oldDist ) / LTSREBALANCE_LEADWALL_VELOCITY )
 	vector dir = Normalize( ent.GetWorldSpaceCenter() - projectile.GetOrigin() )
