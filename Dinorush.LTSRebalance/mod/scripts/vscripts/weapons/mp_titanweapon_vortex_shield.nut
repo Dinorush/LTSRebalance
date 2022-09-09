@@ -75,16 +75,19 @@ function MpTitanweaponVortexShield_Init()
 	RegisterSignal( "FireAmpedVortexBullet" )
 
 	#if CLIENT
-	LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
-	RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
-	RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
-	LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
-	LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 2, 0.12 )
-	foreach ( var rui in charges.imageRuis )
-		RuiSetFloat( rui, "basicImageAlpha", 0.6 )
-	LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
-	file.LTSRebalance_vortex_ui["bg"] <- bg
-	file.LTSRebalance_vortex_ui["charges"] <- charges
+	if ( LTSRebalance_EnabledOnInit() )
+	{
+		LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
+		RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+		LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
+		LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 2, 0.12 )
+		foreach ( var rui in charges.imageRuis )
+			RuiSetFloat( rui, "basicImageAlpha", 0.6 )
+		LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
+		file.LTSRebalance_vortex_ui["bg"] <- bg
+		file.LTSRebalance_vortex_ui["charges"] <- charges
+	}
 	#endif
 }
 
