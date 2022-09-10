@@ -4,6 +4,7 @@
    3. Implement validate function for held Vortexes that checks direction of the shot
       • This is so that you can't block someone from behind them
    4. Implement Perfect Kits Amped Vortex absorbing every attack type
+   5. Implement Vortex refire fix (for Enhanced Payload spawn count/radius)
 */
 untyped
 
@@ -1573,6 +1574,12 @@ function ClusterRocket_Detonate( entity rocket, vector normal, entity stickEnt =
 	float range
 
 	array mods = rocket.ProjectileGetMods()
+	if ( "storedReflectMods" in rocket.s ) // Vortex Refire fix
+	{
+		foreach( mod in rocket.s.storedReflectMods )
+			mods.append( expect string( mod ) )
+	}
+
 	if ( mods.contains( "pas_northstar_cluster" ) )
 	{
 		count = CLUSTER_ROCKET_BURST_COUNT_BURN
@@ -1647,6 +1654,26 @@ function StartClusterExplosions( entity projectile, entity owner, PopcornInfo po
 	{
 		explosionDamage = projectile.GetProjectileWeaponSettingInt( eWeaponVar.npc_explosion_damage )
 		explosionDamageHeavyArmor = projectile.GetProjectileWeaponSettingInt( eWeaponVar.npc_explosion_damage_heavy_armor )
+	}
+
+	if ( "storedReflectMods" in projectile.s ) // Vortex Refire fix
+	{
+		array<string> mods = projectile.ProjectileGetMods()
+		foreach( mod in projectile.s.storedReflectMods )
+			mods.append( expect string( mod ) )
+
+		innerRadius = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_inner_radius" ) )
+		outerRadius = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosionradius" ) )
+		if ( owner.IsPlayer() )
+		{
+			explosionDamage = expect int( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_damage" ) )
+			explosionDamageHeavyArmor = expect int( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_damage_heavy_armor" ) )
+		}
+		else
+		{
+			explosionDamage = expect int( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "npc_explosion_damage" ) )
+			explosionDamageHeavyArmor = expect int( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "npc_explosion_damage_heavy_armor" ) )
+		}
 	}
 
 	float explosionDelay = expect float( projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_explosion_delay" ) )
