@@ -4,6 +4,7 @@
    3. Implement Scorched Earth changes (LTS Rebalance + Perfect Kits)
    4. Implement Wildfire changes (LTS Rebalance + Perfect Kits)
    5. Fix inconsistent tick rate
+   6. Implement Vortex refire fix (to Wildfire droplets)
 */
 untyped
 
@@ -430,6 +431,11 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	}
 
 	array<string> mods = projectile.ProjectileGetMods()
+	if ( "storedReflectMods" in projectile.s ) // Vortex Refire fix
+	{
+		foreach( mod in projectile.s.storedReflectMods )
+			mods.append( expect string( mod ) )
+	}
 
 	bool PerfectKits_wildfire = ( PerfectKits_Enabled() && mods.contains( "pas_scorch_weapon" ) )
 	entity inflictor = CreateOncePerTickDamageInflictorHelper( thermiteLifetimeMax * float( PerfectKits_wildfire ? PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT + 1 : 1 ))

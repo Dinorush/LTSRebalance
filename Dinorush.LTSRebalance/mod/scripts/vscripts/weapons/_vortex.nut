@@ -4,6 +4,7 @@
    3. Implement validate function for held Vortexes that checks direction of the shot
       • This is so that you can't block someone from behind them
    4. Implement Perfect Kits Amped Vortex absorbing every attack type
+   5. Fix Vortex refiring without attachments (for weapons with damage changing attachments)
 */
 untyped
 
@@ -88,6 +89,20 @@ global const VORTEX_REFIRE_ROCKET				= "rocket"
 global const VORTEX_REFIRE_GRENADE				= "grenade"
 global const VORTEX_REFIRE_GRENADE_LONG_FUSE	= "grenade_long_fuse"
 
+#if SERVER
+const array<int> LTSREBALANCE_FIX_VORTEX_REFIRE_IDS = [
+	eDamageSourceId.mp_titanweapon_leadwall,
+	eDamageSourceId.mp_titanweapon_salvo_rockets,
+	eDamageSourceId.mp_titanweapon_shoulder_rockets,
+	eDamageSourceId.mp_titanweapon_tracker_rockets,
+	eDamageSourceId.mp_titanweapon_sniper,
+	eDamageSourceId.mp_titanweapon_sticky_40mm,
+	eDamageSourceId.mp_titanweapon_flightcore_rockets,
+	eDamageSourceId.mp_titanweapon_dumbfire_rockets,
+	eDamageSourceId.mp_titanweapon_meteor
+]
+#endif
+
 table<string, bool> VortexIgnoreClassnames = {
 	["mp_titancore_flame_wave"] = true,
 	["mp_ability_grapple"] = true,
@@ -124,6 +139,17 @@ function Vortex_Init()
 	RegisterSignal( "VortexAbsorbed" )
 	RegisterSignal( "VortexFired" )
 	RegisterSignal( "Script_OnDamaged" )
+
+	#if SERVER
+	// Vortex does not inherit attachments from projectiles. LTS Rebalance uses attachments.
+	// These damage source callbacks fix damage differences and damage dropoff differences for reflected attacks.
+	// Particle Wall damage and projectile collision are handled in their corresponding functions.
+	if ( LTSRebalance_EnabledOnInit() )
+	{
+		foreach ( id in LTSREBALANCE_FIX_VORTEX_REFIRE_IDS )
+			AddDamageCallbackSourceID( id, LTSRebalance_FixVortexRefire )
+	}
+	#endif
 }
 
 #if SERVER
@@ -627,7 +653,11 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 	if ( impactType == "hitscan" )
 		vortexSphere.AddBulletToSphere();
 	else
+	{
+		if ( LTSRebalance_Enabled() )
+			impactData.storedReflectMods <- projectile.ProjectileGetMods()
 		vortexSphere.AddProjectileToSphere();
+	}
 
 	local maxShotgunPelletsToIgnore = VORTEX_BULLET_ABSORB_COUNT_MAX * ( 1 - VORTEX_SHOTGUN_DAMAGE_RATIO )
 	if ( IsPilotShotgunWeapon( weaponName ) && ( vortexWeapon.s.shotgunPelletsToIgnore + 1 ) <  maxShotgunPelletsToIgnore )
@@ -1134,7 +1164,7 @@ bool function Vortex_FireBackExplosiveRound( vortexWeapon, attackParams, impactD
 	vector fireVec = Vortex_GenerateRandomRefireVector( vortexWeapon, VORTEX_EXP_ROUNDS_RETURN_SPREAD_XY, VORTEX_EXP_ROUNDS_RETURN_SPREAD_Z )
 
 	// fire off the bolt
-	entity bolt = vortexWeapon.FireWeaponBolt( attackPos, fireVec, projSpeed, damageType, damageType, PROJECTILE_NOT_PREDICTED, sequenceID )
+	entity bolt = vortexWeapon.FireWeaponBolt( attackPos, fireVec, projSpeed, DF_IMPACT | damageType, damageType, PROJECTILE_NOT_PREDICTED, sequenceID )
 	if ( bolt )
 	{
 		bolt.kv.gravity = 0.3
@@ -1166,7 +1196,7 @@ bool function Vortex_FireBackProjectileBullet( vortexWeapon, attackParams, impac
 	//printt( Time(), fireVec ) // print for bug with random
 
 	// fire off the bolt
-	entity bolt = vortexWeapon.FireWeaponBolt( attackPos, fireVec, projSpeed, damageType, damageType, PROJECTILE_NOT_PREDICTED, sequenceID )
+	entity bolt = vortexWeapon.FireWeaponBolt( attackPos, fireVec, projSpeed, DF_IMPACT | damageType, damageType, PROJECTILE_NOT_PREDICTED, sequenceID )
 	if ( bolt )
 	{
 		bolt.kv.gravity = 0.0
@@ -1209,7 +1239,7 @@ bool function Vortex_FireBackRocket( vortexWeapon, attackParams, impactData, seq
 	// TODO prediction for clients
 	Assert( IsServer() )
 
-	entity rocket = vortexWeapon.FireWeaponMissile( attackParams.pos, attackParams.dir, 1800.0, damageTypes.largeCaliberExp | DF_VORTEX_REFIRE, damageTypes.largeCaliberExp | DF_VORTEX_REFIRE, false, PROJECTILE_NOT_PREDICTED )
+	entity rocket = vortexWeapon.FireWeaponMissile( attackParams.pos, attackParams.dir, 1800.0, DF_IMPACT | damageTypes.largeCaliberExp | DF_VORTEX_REFIRE, damageTypes.largeCaliberExp | DF_VORTEX_REFIRE, false, PROJECTILE_NOT_PREDICTED )
 
 	if ( rocket )
 	{
@@ -1236,7 +1266,7 @@ bool function Vortex_FireBackGrenade( entity vortexWeapon, attackParams, impactD
 	float fuseTime = hasIgnitionTime ? 0.0 : baseFuseTime
 	const int HARDCODED_DAMAGE_TYPE = (damageTypes.explosive | DF_VORTEX_REFIRE)
 
-	entity grenade = vortexWeapon.FireWeaponGrenade( attackParams.pos, velocity, angularVelocity, fuseTime, HARDCODED_DAMAGE_TYPE, HARDCODED_DAMAGE_TYPE, PROJECTILE_NOT_PREDICTED, true, true )
+	entity grenade = vortexWeapon.FireWeaponGrenade( attackParams.pos, velocity, angularVelocity, fuseTime, DF_IMPACT | HARDCODED_DAMAGE_TYPE, HARDCODED_DAMAGE_TYPE, PROJECTILE_NOT_PREDICTED, true, true )
 	if ( grenade )
 	{
 		Grenade_Init( grenade, vortexWeapon )
@@ -1295,6 +1325,9 @@ function Vortex_ProjectileCommonSetup( entity projectile, impactData )
 	projectile.SetWeaponClassName( impactData.weaponName )  // causes the projectile to use its normal trail FX
 
 	projectile.ProjectileSetDamageSourceID( impactData.damageSourceID ) // obit will show the owner weapon
+
+	if ( LTSRebalance_Enabled() )
+		projectile.s.storedReflectMods <- impactData.storedReflectMods
 
     if ( impactData.ampedVortex )
         OnFireAmpProjectile( projectile )
@@ -1897,6 +1930,8 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		}
 
 		float damage = float( projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value ) )
+		if ( LTSRebalance_Enabled() )
+			damage = GetProjectileDamageToParticle( projectile )
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
@@ -2026,6 +2061,173 @@ float function HandleWeakToPilotWeapons( entity vortexSphere, string weaponName,
 	}
 
 	return damage
+}
+
+void function LTSRebalance_FixVortexRefire( entity victim, var damageInfo )
+{
+	// Only affect reflected attacks
+	if ( !( DamageInfo_GetCustomDamageType( damageInfo ) & DF_VORTEX_REFIRE ) )
+        return
+	
+	entity projectile = DamageInfo_GetInflictor( damageInfo )
+	if ( !IsValid( projectile ) || !projectile.IsProjectile() )
+		return
+	
+	array var_mods = ( "storedReflectMods" in projectile.s ) ? expect array( projectile.s.storedReflectMods ) : []
+	array<string> mods
+	foreach ( str in var_mods )
+		mods.append( expect string( str ) )
+
+	// No mods, no difference
+	if ( mods.len() == 0 )
+		return
+
+	float damage = DamageInfo_GetDamage( damageInfo )
+	// If we set damage directly, we could override other callbacks that modify the damage in some way.
+	// Hence, we instead scale the damage to the intended value.
+	DamageInfo_ScaleDamage( damageInfo, GetProjectileDamageScaleToMods( victim, damageInfo, projectile.ProjectileGetWeaponClassName(), mods ) )
+}
+
+// Returns the amount that a projectile's damage should be scaled to match its damage with mods (attachments).
+float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, string weaponName, array<string> mods )
+{
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	bool isPlayer = true
+
+	if ( IsValid( attacker ) && !attacker.IsProjectile() )
+		isPlayer = attacker.IsPlayer()
+
+	bool heavyArmor = victim.GetArmorType() == ARMOR_TYPE_HEAVY
+
+	if ( ( DamageInfo_GetCustomDamageType( damageInfo ) & DF_IMPACT ) )
+	{
+		bool critHit = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
+
+		float nearDamage = 0.0
+		float farDamage = 0.0
+		float nearDamageMod = 0.0
+		float farDamageMod = 0.0
+		float critScale = 1.0
+		if ( critHit )
+			critScale = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "critical_hit_damage_scale" ) / GetWeaponInfoFileKeyField_Global( weaponName, "critical_hit_damage_scale" ) )
+
+		array<string> keys = [ "npc_damage_near_value_titanarmor", "npc_damage_near_value", 
+							"damage_near_value_titanarmor", "damage_near_value" ]
+
+		int start = 2 * isPlayer.tointeger()
+		int inc = (!heavyArmor).tointeger() + 1
+		for ( int i = start + inc - 1; i < keys.len(); i += inc )
+		{
+			nearDamage = float( GetWeaponInfoFileKeyField_Global( weaponName, keys[i] ) )
+			nearDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
+			if ( nearDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+				break
+		}
+
+		if ( nearDamage <= 0 )
+			return 0.0
+
+		keys = [ "npc_damage_far_value_titanarmor", "npc_damage_far_value", 
+				"damage_far_value_titanarmor", "damage_far_value" ]
+
+		for ( int i = start + inc - 1; i < keys.len(); i += inc )
+		{
+			farDamage = float( GetWeaponInfoFileKeyField_Global( weaponName, keys[i] ) )
+			farDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
+			if ( farDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+				break
+		}
+
+		if ( farDamage <= 0 || farDamage >= nearDamage )
+			return nearDamageMod / nearDamage * critScale
+
+		// Could check these just in case, but no titan weapons lack these values.
+		// Similarly, won't check very far distance since no titan weapons use it.
+		float nearDistance = expect float( GetWeaponInfoFileKeyField_Global( weaponName, "damage_near_distance" ) )
+		float farDistance = expect float( GetWeaponInfoFileKeyField_Global( weaponName, "damage_far_distance" ) )
+		float nearDistanceMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_near_distance" ) )
+		float farDistanceMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_far_distance" ) )
+		float dist = DamageInfo_GetDistFromAttackOrigin( damageInfo )
+
+		float damage = GraphCapped( dist, nearDistance, farDistance, nearDamage, farDamage )
+		float damageMod = GraphCapped( dist, nearDistanceMod, farDistanceMod, nearDamageMod, farDamageMod )
+
+		return damageMod / damage * critScale
+	}
+	else
+	{
+		float explosionDamage = 0.0
+		float explosionDamageMod = 0.0
+		array<string> keys = [ "npc_explosion_damage_heavy_armor", "npc_explosion_damage", 
+	                           "explosion_damage_heavy_armor", "explosion_damage" ]
+
+		int start = 2 * int( isPlayer )
+		int inc = int( !heavyArmor ) + 1
+		for ( int i = start + inc - 1; i < keys.len(); i += inc )
+		{
+			explosionDamage = float( GetWeaponInfoFileKeyField_Global( weaponName, keys[i] ) )
+			explosionDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
+			if ( explosionDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+				break
+		}
+
+		// Calculate the damage falloff at the distance for 
+		float innerRadius = expect float( GetWeaponInfoFileKeyField_Global( weaponName, "explosion_inner_radius" ) )
+		float outerRadius = expect float( GetWeaponInfoFileKeyField_Global( weaponName, "explosionradius" ) )
+		float innerRadiusMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_inner_radius" ) )
+		float outerRadiusMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosionradius" ) )
+
+		if ( innerRadius == innerRadiusMod && outerRadius == outerRadiusMod )
+			return explosionDamageMod / explosionDamage
+
+		float explosionDist = 0
+		int traceMask    = TRACE_MASK_SHOT
+		int visConeFlags = VIS_CONE_ENTS_TEST_HITBOXES | VIS_CONE_ENTS_CHECK_SOLID_BODY_HIT | VIS_CONE_ENTS_APPOX_CLOSEST_HITBOX
+		vector explosionPos = DamageInfo_GetDamagePosition( damageInfo )
+
+		// HACK: It isn't possible to get the position of a hitbox or the explosion's distance to what it hit so this is my solution
+		array<VisibleEntityInCone> results = FindVisibleEntitiesInCone( explosionPos, <0, 0, 1>, outerRadiusMod, 89, [], traceMask, visConeFlags, null, null )
+		results.extend( FindVisibleEntitiesInCone( explosionPos, <0, 0, -1>, outerRadiusMod, 89, [], traceMask, visConeFlags, null, null ) )
+		foreach( result in results )
+		{
+			if ( result.ent == victim )
+			{
+				explosionDist = Distance( explosionPos, result.approxClosestHitboxPos )
+				break
+			}
+		}
+		// If my hacky solution failed to find the target, it can't calculate considering new radius and simply returns difference in damage values
+
+		float damage = GraphCapped( explosionDist, innerRadius, outerRadius, explosionDamage, 0.0 )
+		float damageMod = GraphCapped( explosionDist, innerRadiusMod, outerRadiusMod, explosionDamageMod, 0.0 )
+
+		return damageMod / damage
+	}
+	unreachable
+}
+
+float function GetProjectileDamageToParticle( entity projectile )
+{
+	string weaponName = projectile.ProjectileGetWeaponClassName()
+	array<string> mods = projectile.ProjectileGetMods()
+	if ( "storedReflectMods" in projectile.s )
+	{
+		foreach( mod in projectile.s.storedReflectMods )
+			mods.append( expect string( mod ) )
+	}
+	
+	float nearDamage = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_near_value" ) )
+	float farDamage = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_far_value" ) )
+
+	if ( farDamage <= 0 || farDamage >= nearDamage )
+		return nearDamage
+
+	float nearDistance = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_near_distance" ) )
+	float farDistance = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_far_distance" ) )
+	float speed = Length( projectile.GetVelocity() )
+	float dist = ( Time() - projectile.GetProjectileCreationTime() ) * speed
+
+	return GraphCapped( dist, nearDistance, farDistance, nearDamage, farDamage )
 }
 #endif
 
