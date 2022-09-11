@@ -2,6 +2,7 @@
    1. Particle Wall rebalancing
    2. Return Particle Wall entity for kit functionality
    3. Implement Perfect Kits Reinforced Wall kit
+   4. Implement data logging (for particle wall damage blocked)
 */
 untyped
 
@@ -120,6 +121,8 @@ entity function CreateParticleWallForOwnerFromDirection( entity weaponOwner, flo
 
 	entity vortexSphere = CreateShieldWithSettings( origin + < 0, 0, -64 >, angles, SHIELD_WALL_RADIUS, SHIELD_WALL_RADIUS * 2, SHIELD_WALL_FOV, duration, health, SHIELD_WALL_FX )
 	thread DrainHealthOverTime( vortexSphere,  vortexSphere.e.shieldWallFX, duration )
+
+	vortexSphere.SetOwner( weaponOwner.GetTitanSoul() ) // Added so we can track Particle Wall's owner for logging
 
 	entity groundEntity = weaponOwner.GetGroundEntity()
 	if ( groundEntity != null && groundEntity.HasPusherRootParent() )
