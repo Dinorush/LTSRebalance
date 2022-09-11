@@ -605,6 +605,10 @@ float function GetTimeSinceRoundStart()
 void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 {
 	int round = GetRoundsPlayed() + 1
+	string result = "Draw"
+	if ( GetWinningTeam() != TEAM_UNASSIGNED )
+		result = GetWinningTeam() == ls.team ? "Win" : "Loss"
+
 	// Can't print everything in one line if it's too long, so we segment the data into blocks.
 	string block1 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
 	block1 += ",\"block\":1"
@@ -615,7 +619,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"perfectKits\":" + PerfectKits_Enabled().tostring()
 	block1 += ",\"mapName\":\"" + MAPNAME_TO_STRING[ GetMapName() ] + "\""
 	block1 += ",\"team\":" + ls.team.tostring()
-	block1 += ",\"win\":" + ( ls.team == GetWinningTeam() ).tostring()
+	block1 += ",\"result\":\"" + result + "\""
 	block1 += ",\"roundEndTime\":" + GetTimeSinceRoundStart().tostring()
 
 	block1 += ",\"titan\":\"" + ls.titan + "\""
