@@ -34,6 +34,7 @@ global function VortexSphereDrainHealthForDamage
 global function Vortex_CreateImpactEventData
 global function Vortex_SpawnHeatShieldPingFX
 global function LTSRebalance_GetProjectileDamage // Needed for logging damage blocked on Vortex/Thermal
+global function LTSRebalance_GetWeaponDamage
 #endif
 
 global function Vortex_SetTagName
@@ -1774,6 +1775,14 @@ bool function CodeCallback_OnVortexHitBullet( entity weapon, entity vortexSphere
 		entity weapon = DamageInfo_GetWeapon( damageInfo )
 		float damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
+		entity attacker = DamageInfo_GetAttacker( damageInfo )
+		bool isPlayer = !IsValid( attacker ) || attacker.IsPlayer()
+		entity logWeapon = IsValid( weapon ) ? weapon : DamageInfo_GetInflictor( damageInfo )
+		if ( logWeapon.IsPlayer() || logWeapon.IsNPC() )
+			logWeapon = null
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, GetWeaponDamageToParticle( weapon, damageInfo, true, isPlayer ) )
+
+
 		Assert( damage >= 0, "Bug 159851 - Damage should be greater than or equal to 0.")
 		damage = max( 0.0, damage )
 
@@ -1936,7 +1945,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 			damage = GetProjectileDamageToParticle( projectile, false )
 
 		entity projectileOwner = projectile.GetOwner()
-		bool blockedPlayer = !IsValid( projectileOwner ) || projectileOwner.Player()
+		bool blockedPlayer = !IsValid( projectileOwner ) || projectileOwner.IsPlayer()
 		// Slightly innaccurate in vanilla; damage dealt to particle wall does not consider falloff in vanilla, but will be recorded as if it did
 		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, GetProjectileDamageToParticle( projectile, true, blockedPlayer ) )
 
@@ -2127,8 +2136,9 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 		for ( int i = start + inc - 1; i < keys.len(); i += inc )
 		{
 			nearDamage = float( GetWeaponInfoFileKeyField_Global( weaponName, keys[i] ) )
-			nearDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
-			if ( nearDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+			if ( nearDamageMod <= 0 ) // Attachments may add new values
+				nearDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
+			if ( nearDamage > 0 )
 				break
 		}
 
@@ -2141,8 +2151,9 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 		for ( int i = start + inc - 1; i < keys.len(); i += inc )
 		{
 			farDamage = float( GetWeaponInfoFileKeyField_Global( weaponName, keys[i] ) )
-			farDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
-			if ( farDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+			if ( farDamageMod <= 0 ) // Attachments may add new values
+				farDamageMod = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
+			if ( farDamage > 0 )
 				break
 		}
 
@@ -2219,6 +2230,52 @@ float function LTSRebalance_GetProjectileDamage( entity projectile, bool heavyAr
 	return GetProjectileDamageToParticle( projectile, heavyArmor, isPlayer )
 }
 
+float function LTSRebalance_GetWeaponDamage( entity weapon, var damageInfo = null, bool heavyArmor = true, bool isPlayer = true )
+{
+	return GetWeaponDamageToParticle( weapon, damageInfo, heavyArmor, isPlayer )
+}
+
+float function GetWeaponDamageToParticle( entity weapon, var damageInfo = null, bool heavyArmor = true, bool isPlayer = true )
+{
+	if ( !IsValid( weapon ) )
+		return 0.0
+
+	float nearDamage = 0.0
+	array<int> keys = [ eWeaponVar.npc_damage_near_value_titanarmor, eWeaponVar.npc_damage_near_value, 
+						   eWeaponVar.damage_near_value_titanarmor, eWeaponVar.damage_near_value ]
+
+	int start = 2 * isPlayer.tointeger()
+	int inc = ( !heavyArmor ).tointeger() + 1
+	for ( int i = start + inc - 1; i < keys.len(); i += inc )
+	{
+		nearDamage = float( weapon.GetWeaponSettingInt( keys[i] ) )
+		if ( nearDamage > 0 )
+			break
+	}
+
+	if ( nearDamage <= 0 )
+		return 0.0
+
+	float farDamage = 0.0
+	keys = [ eWeaponVar.npc_damage_far_value_titanarmor, eWeaponVar.npc_damage_far_value, 
+			 eWeaponVar.damage_far_value_titanarmor, eWeaponVar.damage_far_value ]
+
+	for ( int i = start + inc - 1; i < keys.len(); i += inc )
+	{
+		farDamage = float( weapon.GetWeaponSettingInt( keys[i] ) )
+		if ( farDamage > 0 )
+			break
+	}
+
+	if ( farDamage <= 0 || farDamage >= nearDamage || damageInfo == null )
+		return nearDamage
+
+	float dist = DamageInfo_GetDistFromAttackOrigin( damageInfo )
+	float nearDistance = weapon.GetWeaponSettingFloat( eWeaponVar.damage_near_distance )
+	float farDistance = weapon.GetWeaponSettingFloat( eWeaponVar.damage_far_distance )
+	return GraphCapped( dist, nearDistance, farDistance, nearDamage, farDamage )
+}
+
 float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor = true, bool isPlayer = true )
 {
 	string weaponName = projectile.ProjectileGetWeaponClassName()
@@ -2238,7 +2295,7 @@ float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor
 	for ( int i = start + inc - 1; i < keys.len(); i += inc )
 	{
 		nearDamage = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
-		if ( nearDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+		if ( nearDamage > 0 )
 			break
 	}
 
@@ -2252,7 +2309,7 @@ float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor
 	for ( int i = start + inc - 1; i < keys.len(); i += inc )
 	{
 		farDamage = float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, keys[i] ) )
-		if ( farDamage > 0 ) // Trusting that the attachments do not overwrite non-existing values
+		if ( farDamage > 0 )
 			break
 	}
 
