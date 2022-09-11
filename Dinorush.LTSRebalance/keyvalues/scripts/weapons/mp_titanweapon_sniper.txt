@@ -12,6 +12,11 @@ WeaponData
 			"damage_near_value_titanarmor"					"260"
 			"damage_far_value_titanarmor" 					"260"
 
+			"npc_damage_near_value"   						"260"
+			"npc_damage_far_value"							"260"
+			"npc_damage_near_value_titanarmor"				"260"
+			"npc_damage_far_value_titanarmor" 				"260"
+
 			"fire_rate"   									"1.2"
 	
 			"reload_time" 									"1.8"
