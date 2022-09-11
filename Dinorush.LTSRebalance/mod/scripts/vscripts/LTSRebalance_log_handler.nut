@@ -80,17 +80,34 @@ const table<string, string> TITANCLASS_TO_STRING = {
 	vanguard = "Monarch"
 }
 
-/*
-	Contains all the data to be recorded and printed out to logs for external analysis.
-	If a value does not specify pilot, it will not be affected if the player is a pilot. Conversely, titans will not affect pilot stats.
-*/
-global struct LTSRebalance_LogStruct {
-	bool rebalance = false
-	bool perfectKits = false
-	int round = 0
-	string mapName = ""
+const table<string, string> MAPNAME_TO_STRING = {
+	mp_angel_city = "Angel City",
+	mp_black_water_canal = "Black Water Canal",
+	mp_grave = "Boomtown",
+	mp_colony02 = "Colony",
+	mp_complex3 = "Complex",
+	mp_crashsite3 = "Crash Site",
+	mp_drydock = "Drydock",
+	mp_eden = "Eden",
+	mp_thaw = "Exoplanet",
+	mp_forwardbase_kodai = "Forwardbase Kodai",
+	mp_glitch = "Glitch",
+	mp_homestead = "Homestead",
+	mp_relic02 = "Relic",
+	mp_rise = "Rise",
+	mp_wargames = "War Games"
+}
 
+/*
+	Contains all the data specific to the player to be recorded and printed out to logs for external analysis.
+	If a value does not specify pilot, it will not be affected if the player is a pilot. Conversely, titans will not affect pilot stats.
+	Values that can be acquired globally (e.g. win, round, rebalance) are not held by the struct.
+*/
+
+global struct LTSRebalance_LogStruct {
 	string name = ""
+	int team = 0
+
 	string titan = ""
 	string kit1 = ""
 	string kit2 = ""
@@ -178,6 +195,8 @@ void function LTSRebalance_InitTracker( entity titan )
 	TitanLoadoutDef loadout = soul.soul.titanLoadout
 
 	ls.name = player.GetPlayerName()
+	ls.team = player.GetTeam()
+
 	ls.titan = TITANCLASS_TO_STRING[ loadout.titanClass ]
 
 	ls.kit1 = PASSIVE_TO_STRING[ loadout.passive1 ]
@@ -262,7 +281,7 @@ void function LTSRebalance_LogTracker( entity player )
 			if ( !IsAlive( player ) )
 			{
 				if ( player.IsTitan() )
-					ls.timeLeftDeathTitan = GetTimeSinceRoundStart()
+					ls.timeDeathTitan = GetTimeSinceRoundStart()
 				else if ( IsValid( player ) && IsAlive( player.GetPetTitan() ) )
 					thread LTSRebalance_LogTitanDeath( player.GetPetTitan(), ls )
 				ls.timeDeathPilot = GetTimeSinceRoundStart()
@@ -294,10 +313,6 @@ void function LTSRebalance_LogTracker( entity player )
 		}
 	)
 
-	ls.rebalance = LTSRebalance_Enabled()
-	ls.perfectKits = PerfectKits_Enabled()
-	ls.round = GetRoundsPlayed() + 1
-	ls.mapName = GetMapName()
 	int curScore = GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA )
 	bool hasBattery = false
 
@@ -589,15 +604,19 @@ float function GetTimeSinceRoundStart()
 
 void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 {
+	int round = GetRoundsPlayed() + 1
 	// Can't print everything in one line if it's too long, so we segment the data into blocks.
 	string block1 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
-	block1 += ",\"round\":" + ls.round.tostring()
 	block1 += ",\"block\":1"
+	block1 += ",\"round\":" + round.tostring()
 	block1 += ",\"matchID\":" + file.matchID.tostring()
 
-	block1 += ",\"rebalance\":" + ls.rebalance.tostring()
-	block1 += ",\"perfectKits\":" + ls.perfectKits.tostring()
-	block1 += ",\"mapName\":\"" + ls.mapName + "\""
+	block1 += ",\"rebalance\":" + LTSRebalance_Enabled().tostring()
+	block1 += ",\"perfectKits\":" + PerfectKits_Enabled().tostring()
+	block1 += ",\"mapName\":\"" + MAPNAME_TO_STRING[ GetMapName() ] + "\""
+	block1 += ",\"team\":" + ls.team.tostring()
+	block1 += ",\"win\":" + ( ls.team == GetWinningTeam() ).tostring()
+	block1 += ",\"roundEndTime\":" + GetTimeSinceRoundStart().tostring()
 
 	block1 += ",\"titan\":\"" + ls.titan + "\""
 	block1 += ",\"kit1\":\"" + ls.kit1 + "\""
@@ -615,8 +634,8 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += "}"
 
 	string block2 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
-	block2 += ",\"round\":" + ls.round.tostring()
 	block2 += ",\"block\":2"
+	block2 += ",\"round\":" + round.tostring()
 	block2 += ",\"matchID\":" + file.matchID.tostring()
 	
 	block2 += ",\"damageTaken\":" + ls.damageTaken.tostring()
@@ -641,15 +660,14 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block2 += "}"
 
 	string block3 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
-	block3 += ",\"round\":" + ls.round.tostring()
 	block3 += ",\"block\":3"
+	block3 += ",\"round\":" + round.tostring()
 	block3 += ",\"matchID\":" + file.matchID.tostring()
 
-	block3 += ",\"timeLeftStart\":" + ls.timeLeftStart.tostring()
 	block3 += ",\"timeAsTitan\":" + ls.timeAsTitan.tostring()
-	block3 += ",\"timeLeftDeathTitan\":" + ls.timeLeftDeathTitan.tostring()
+	block3 += ",\"timeDeathTitan\":" + ls.timeDeathTitan.tostring()
 	block3 += ",\"timeAsPilot\":" + ls.timeAsPilot.tostring()
-	block3 += ",\"timeLeftDeathPilot\":" + ls.timeLeftDeathPilot.tostring()
+	block3 += ",\"timeDeathPilot\":" + ls.timeDeathPilot.tostring()
 	block3 += ",\"ejection\":" + ls.ejection.tostring()
 
 	block3 += ",\"avgDistanceToAllies\":" + ls.distanceToAllies.tostring()
