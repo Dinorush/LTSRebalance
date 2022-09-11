@@ -530,6 +530,12 @@ void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, flo
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
 		return
+	
+	if ( !IsValid( victim ) )
+	{
+		print( "LTS Rebalance tracker log error: Tried to log damage blocked for invalid victim")
+		return
+	}
 
 	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
 	if ( ls != null )
@@ -549,21 +555,25 @@ void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, flo
 	}
 }
 
-LTSRebalance_LogStruct ornull function LTSRebalance_GetLogStruct( entity titan )
+LTSRebalance_LogStruct ornull function LTSRebalance_GetLogStruct( entity ent )
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
 		return null
 
-	if ( !IsValid( titan ) )
+	if ( !IsValid( ent ) )
 		return null
 
-	if ( titan.IsPlayer() )
-		return file.trackerTable[titan]
+	if ( ent.IsPlayer() )
+		return file.trackerTable[ent]
 	
-	if ( !titan.IsTitan() )
+	if ( !ent.IsTitan() )
+	{
+		if ( IsSoul( ent ) )
+			return LTSRebalance_GetLogStruct( ent.GetTitan() )
 		return null
+	}
 
-	entity owner = GetPetTitanOwner( titan )
+	entity owner = GetPetTitanOwner( ent )
 	if ( !IsValid( owner ) )
 		return null
 	
