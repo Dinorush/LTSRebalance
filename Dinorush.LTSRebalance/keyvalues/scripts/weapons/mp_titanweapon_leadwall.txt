@@ -4,8 +4,9 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"damage_near_distance"							"720"
-			"damage_far_distance" 							"1200"
+			"damage_near_distance"							"*1.2"
+			"damage_far_distance" 							"*1.2"
+			"npc_max_range"   								"*1.2"
 
 			"lower_time"  									"0.01"
 		}
