@@ -125,11 +125,10 @@ global struct LTSRebalance_LogStruct {
 	int healthWasted = 0 // Health + permanent shield overflow and loss from ejection/termination. Damage taken includes wasted health + shield from termination.
 	int shieldsWasted = 0
 
-	float timeLeftStart = 0.0
 	float timeAsTitan = 0.0
-	float timeLeftDeathTitan = 0.0
+	float timeDeathTitan = 0.0
 	float timeAsPilot = 0.0
-	float timeLeftDeathPilot = 0.0
+	float timeDeathPilot = 0.0
 	bool ejection = false
 
 	float distanceToAllies = 0.0 // All distance values except 'travelled' are averages.
@@ -247,7 +246,7 @@ void function LTSRebalance_LogTitanDeath( entity titan, LTSRebalance_LogStruct l
 	titan.WaitSignal( "OnDeath" )
 
 	if ( !IsRoundOver() )
-		ls.timeLeftDeathTitan = GetGameTimeLeft()
+		ls.timeDeathTitan = GetTimeSinceRoundStart()
 }
 
 void function LTSRebalance_LogTracker( entity player )
@@ -260,14 +259,13 @@ void function LTSRebalance_LogTracker( entity player )
 	OnThreadEnd(
 		function() : ( player, ls, counters )
 		{
-			print( "THREAD ENDED")
 			if ( !IsAlive( player ) )
 			{
 				if ( player.IsTitan() )
-					ls.timeLeftDeathTitan = GetGameTimeLeft()
+					ls.timeLeftDeathTitan = GetTimeSinceRoundStart()
 				else if ( IsValid( player ) && IsAlive( player.GetPetTitan() ) )
 					thread LTSRebalance_LogTitanDeath( player.GetPetTitan(), ls )
-				ls.timeLeftDeathPilot = GetGameTimeLeft()
+				ls.timeDeathPilot = GetTimeSinceRoundStart()
 			}
 
 			// Average out some values (we want the average in logs)
@@ -300,7 +298,6 @@ void function LTSRebalance_LogTracker( entity player )
 	ls.perfectKits = PerfectKits_Enabled()
 	ls.round = GetRoundsPlayed() + 1
 	ls.mapName = GetMapName()
-	ls.timeLeftStart = GetGameTimeLeft()
 	int curScore = GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA )
 	bool hasBattery = false
 
@@ -364,8 +361,8 @@ void function LTSRebalance_LogTracker( entity player )
 				ls.batteriesPicked++
 			hasBattery = PlayerHasBattery( player )
 		
-			if ( ls.timeLeftDeathTitan == 0.0 && !IsAlive( player.GetPetTitan() ) )
-				ls.timeLeftDeathTitan = GetGameTimeLeft()
+			if ( ls.timeDeathTitan == 0.0 && !IsAlive( player.GetPetTitan() ) )
+				ls.timeDeathTitan = GetTimeSinceRoundStart()
 
 			array<entity> titans = GetPlayerArray()
 			titans.extend( GetNPCArrayByClass( "npc_titan" ) )
@@ -585,7 +582,7 @@ bool function IsRoundOver()
 	return expect float( GetServerVar( "roundEndTime" ) ) <= Time()
 }
 
-float function GetGameTimeLeft()
+float function GetTimeSinceRoundStart()
 {
 	return Time() - expect float( GetServerVar( "roundStartTime" ) )
 }
