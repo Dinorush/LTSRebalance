@@ -391,7 +391,7 @@ bool function OnWeaponVortexHitBullet_titanweapon_vortex_shield( entity weapon, 
 		if ( LTSRebalance_Enabled() && attacker.GetTeam() == owner.GetTeam() )
 			return false
 
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, DamageInfo_GetDamage( damageInfo ) )
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetWeaponDamage( weapon, damageInfo, true, attacker.IsPlayer() ) )
 
 		return TryVortexAbsorb( vortexSphere, attacker, origin, damageSourceID, attackerWeapon, attackerWeaponName, "hitscan", null, damageType, weapon.HasMod( "burn_mod_titan_vortex_shield" ) )
 	#endif
@@ -411,7 +411,10 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 		if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
 			return false
 
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetProjectileDamage( projectile ) )
+		if ( !IsValid( attacker ) )
+			attacker = projectile.GetOwner()
+		bool isPlayer = !IsValid( attacker ) || attacker.IsPlayer()
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
