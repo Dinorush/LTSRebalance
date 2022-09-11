@@ -411,10 +411,9 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 		if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
 			return false
 
-		if ( !IsValid( attacker ) )
-			attacker = projectile.GetOwner()
-		bool isPlayer = !IsValid( attacker ) || attacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
+		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
+		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()

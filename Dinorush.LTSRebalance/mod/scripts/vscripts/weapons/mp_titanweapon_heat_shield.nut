@@ -231,10 +231,9 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
 
-		if ( !IsValid( attacker ) )
-			attacker = projectile.GetOwner()
-		bool isPlayer = !IsValid( attacker ) || attacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
+		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
+		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
 
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, contactPos, damageSourceID, weaponName, "projectile" )
 		VortexDrainedByImpact( weapon, projectile, projectile, null )
