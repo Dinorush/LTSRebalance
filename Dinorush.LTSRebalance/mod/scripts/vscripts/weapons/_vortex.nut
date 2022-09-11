@@ -2211,12 +2211,12 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 	unreachable
 }
 
-float function LTSRebalance_GetProjectileDamage( entity projectile, bool heavyArmor = true )
+float function LTSRebalance_GetProjectileDamage( entity projectile, bool heavyArmor = true, bool isPlayer = true )
 {
-	return GetProjectileDamageToParticle( projectile, heavyArmor )
+	return GetProjectileDamageToParticle( projectile, heavyArmor, isPlayer )
 }
 
-float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor = true )
+float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor = true, bool isPlayer = true )
 {
 	string weaponName = projectile.ProjectileGetWeaponClassName()
 	array<string> mods = projectile.ProjectileGetMods()
@@ -2225,8 +2225,6 @@ float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor
 		foreach( mod in projectile.s.storedReflectMods )
 			mods.append( expect string( mod ) )
 	}
-	entity owner = projectile.GetOwner()
-	bool isPlayer = !IsValid( owner ) || !owner.IsNPC()
 	
 	float nearDamage = 0.0
 	array<string> keys = [ "npc_damage_near_value_titanarmor", "npc_damage_near_value", 
