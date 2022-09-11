@@ -270,6 +270,9 @@ void function LTSRebalance_FixVortexShotgunBlast( entity attacker, entity victim
 		return
 
 	table weaponDotS = expect table( weapon.s )
+	if ( !( "powerShotTargets" in weaponDotS ) )
+		weaponDotS.powerShotTargets <- []
+
 	array targets = expect array( weaponDotS.powerShotTargets )
 	if ( targets.contains( victim ) )
 	{
