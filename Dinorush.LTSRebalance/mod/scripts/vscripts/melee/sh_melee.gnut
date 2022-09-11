@@ -540,7 +540,7 @@ bool function PlayerTriesSyncedMelee( entity player, entity target )
 	}
 
 #if SERVER
-	entity weapon = player.GetMainWeapons()[0]
+	entity weapon = player.GetMainWeapons().len() > 0 ? player.GetMainWeapons()[0] : null
 	table startTable = {
 		startWeapon = weapon
 		startTime = Time()
@@ -556,7 +556,7 @@ bool function PlayerTriesSyncedMelee( entity player, entity target )
 				RemoveCinematicFlag( player, CE_FLAG_TITAN_3P_CAM )
 				RemoveCinematicFlag( player, CE_FLAG_EXECUTION )
 
-				if ( LTSRebalance_Enabled() )
+				if ( LTSRebalance_Enabled() && player.IsTitan() )
 				{
 					// Band-aid fix to fix Tone Prime ammo refill bug
 					if( IsValid( startTable.startWeapon ) )
@@ -580,7 +580,7 @@ bool function PlayerTriesSyncedMelee( entity player, entity target )
 				RemoveCinematicFlag( target, CE_FLAG_TITAN_3P_CAM )
 				RemoveCinematicFlag( target, CE_FLAG_EXECUTION )
 			}
-			else if ( LTSRebalance_Enabled() ) // Fix case where enemy leaves game during Ion prime termination
+			else if ( LTSRebalance_Enabled() && player.IsTitan() ) // Fix case where enemy leaves game during Ion prime termination
 			{
 				entity weapon = player.GetMainWeapons()[0]
 				if( IsValid( weapon ) )
