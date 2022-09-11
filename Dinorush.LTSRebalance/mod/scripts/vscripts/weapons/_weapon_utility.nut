@@ -3065,6 +3065,8 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			// If passVortex has nothing, stop on Vortex (normal behavior)
 			if ( !LTSRebalance_Enabled() || passVortex == "" )
 			{
+				if ( i == maxCount - 1 )
+					LTSRebalance_LogDamageBlocked( owner, vortexHit.vortex.GetOwner(), float( damageNearValueTitanArmor ) )
 				WaitFrame()
 				continue
 			}
