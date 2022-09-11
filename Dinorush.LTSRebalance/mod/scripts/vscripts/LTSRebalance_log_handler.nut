@@ -620,7 +620,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"mapName\":\"" + MAPNAME_TO_STRING[ GetMapName() ] + "\""
 	block1 += ",\"team\":" + ls.team.tostring()
 	block1 += ",\"result\":\"" + result + "\""
-	block1 += ",\"roundEndTime\":" + GetTimeSinceRoundStart().tostring()
+	block1 += ",\"roundDuration\":" + GetTimeSinceRoundStart().tostring()
 
 	block1 += ",\"titan\":\"" + ls.titan + "\""
 	block1 += ",\"kit1\":\"" + ls.kit1 + "\""
