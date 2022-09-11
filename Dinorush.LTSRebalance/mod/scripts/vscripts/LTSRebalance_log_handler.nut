@@ -653,11 +653,11 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	// Can't print everything in one line if it's too long, so we segment the data into blocks.
 	string block1 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
-	block1 += ",\"name\":\"" + ls.name + "\""
 	block1 += ",\"block\":1"
 	block1 += ",\"round\":" + round.tostring()
 	block1 += ",\"matchID\":" + file.matchID.tostring()
 
+	block1 += ",\"name\":\"" + ls.name + "\""
 	block1 += ",\"rebalance\":" + LTSRebalance_Enabled().tostring()
 	block1 += ",\"perfectKits\":" + PerfectKits_Enabled().tostring()
 	block1 += ",\"mapName\":\"" + MAPNAME_TO_STRING[ GetMapName() ] + "\""
