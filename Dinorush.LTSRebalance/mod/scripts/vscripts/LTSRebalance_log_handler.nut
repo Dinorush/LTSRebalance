@@ -106,6 +106,7 @@ const table<string, string> MAPNAME_TO_STRING = {
 
 global struct LTSRebalance_LogStruct {
 	string name = ""
+	string uid = ""
 	int team = 0
 
 	string titan = ""
@@ -121,11 +122,13 @@ global struct LTSRebalance_LogStruct {
 	int damageDealtPilot = 0
 	int damageDealtAuto = 0
 	int damageDealtBlocked = 0 // Damage to defensives
+	float critRateDealt = 0.0
 	int damageTaken = 0 // Excludes damage blocked
 	int damageTakenShields = 0
 	int damageTakenTempShields = 0
 	int damageTakenAuto = 0
 	int damageTakenBlocked = 0 // Damage to defensives
+	float critRateTaken = 0.0
 
 	int kills = 0
 	int killsPilot = 0
@@ -136,7 +139,7 @@ global struct LTSRebalance_LogStruct {
 
 	int batteriesPicked = 0
 	int batteriesToSelf = 0
-	int batteriesToAlly = 0
+	int batteriesToAllyPilot = 0
 	int shieldsGained = 0
 	int tempShieldsGained = 0
 	int healthWasted = 0 // Health + permanent shield overflow and loss from ejection/termination. Damage taken includes wasted health + shield from termination.
@@ -158,6 +161,8 @@ global struct LTSRebalance_LogStruct {
 	float distanceToEnemiesPilot = 0.0
 	float distanceToCloseEnemyPilot = 0.0
 	float distanceTravelledPilot = 0.0
+
+	int[4] critRateHelper = [0, 0, 0, 0] // Non-crit counter, crit counter, non-crit received counter, crit-received counter
 }
 
 struct {
@@ -195,6 +200,7 @@ void function LTSRebalance_InitTracker( entity titan )
 	TitanLoadoutDef loadout = soul.soul.titanLoadout
 
 	ls.name = player.GetPlayerName()
+	ls.uid = player.GetUID()
 	ls.team = player.GetTeam()
 
 	ls.titan = TITANCLASS_TO_STRING[ loadout.titanClass ]
@@ -270,23 +276,11 @@ void function LTSRebalance_LogTitanDeath( entity titan, LTSRebalance_LogStruct l
 
 void function LTSRebalance_LogTracker( entity player )
 {
-	player.EndSignal( "OnDeath" )
-	player.EndSignal( "OnDestroy" )
-
 	LTSRebalance_LogStruct ls = file.trackerTable[player]
 	int[8] counters = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
 	OnThreadEnd(
-		function() : ( player, ls, counters )
+		function() : ( ls, counters )
 		{
-			if ( !IsAlive( player ) )
-			{
-				if ( player.IsTitan() )
-					ls.timeDeathTitan = GetTimeSinceRoundStart()
-				else if ( IsValid( player ) && IsAlive( player.GetPetTitan() ) )
-					thread LTSRebalance_LogTitanDeath( player.GetPetTitan(), ls )
-				ls.timeDeathPilot = GetTimeSinceRoundStart()
-			}
-
 			// Average out some values (we want the average in logs)
 			if ( counters[0] > 0 )
 			{
@@ -309,6 +303,16 @@ void function LTSRebalance_LogTracker( entity player )
 				ls.distanceToCloseEnemyPilot /= counters[7]
 			}
 
+			if ( ls.critRateHelper[0] == 0 )
+				ls.critRateDealt = ls.critRateHelper[1] > 0 ? 1.0 : 0.0
+			else
+				ls.critRateDealt = float( ls.critRateHelper[1] ) / float( ls.critRateHelper[1] + ls.critRateHelper[0] )
+
+			if ( ls.critRateHelper[2] == 0 )
+				ls.critRateTaken = ls.critRateHelper[3] > 0 ? 1.0 : 0.0
+			else
+				ls.critRateTaken = float( ls.critRateHelper[3] ) / float( ls.critRateHelper[3] + ls.critRateHelper[2] )
+
 			LTSRebalance_PrintLogTracker( ls )
 		}
 	)
@@ -324,8 +328,11 @@ void function LTSRebalance_LogTracker( entity player )
 	while ( GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA ) == curScore )
 	{
 		WaitFrame()
+		if ( !IsAlive( player ) )
+			continue
+
 		float timePassed = Time() - lastTime
-		
+
 		float closestAllyDist = 99999.0
 		float closestEnemyDist = 99999.0
 		if ( player.IsTitan() )
@@ -425,12 +432,38 @@ void function LTSRebalance_LogTracker( entity player )
 	}
 }
 
+bool function PlayerOrTitanAlive( entity player )
+{
+	if ( !IsValid( player ) )
+		return false
+	
+	return IsAlive( player ) || IsAlive( player.GetPetTitan() )
+}
+
 void function LTSRebalance_LogKill( entity victim, entity attacker, var damageInfo )
 {
+	LTSRebalance_LogStruct ornull ls
+	if ( victim.IsPlayer() )
+	{
+		ls = LTSRebalance_GetLogStruct( victim )
+		if ( ls != null )
+		{
+			expect LTSRebalance_LogStruct( ls )
+			ls.timeDeathPilot = GetTimeSinceRoundStart()
+		}
+	}
+
 	if ( !victim.IsTitan() )
 		return
 
-	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( attacker )
+	ls = LTSRebalance_GetLogStruct( victim )
+	if ( ls != null )
+	{
+		expect LTSRebalance_LogStruct( ls )
+		ls.timeDeathTitan = GetTimeSinceRoundStart()
+	}
+
+	ls = LTSRebalance_GetLogStruct( attacker )
 	if ( ls != null )
 	{
 		expect LTSRebalance_LogStruct( ls )
@@ -470,6 +503,10 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 	if ( !victim.IsTitan() )
 		return
 
+	int critHit = CritWeaponInDamageInfo( damageInfo ) ? 1 : 0
+	if ( critHit > 0 )
+		critHit = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ).tointeger() + 1
+
 	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
 	if ( ls != null )
 	{
@@ -477,6 +514,8 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 		ls.damageTaken += int( DamageInfo_GetDamage( damageInfo ) )
 		if ( victim.IsNPC() )
 			ls.damageTakenAuto += int( DamageInfo_GetDamage( damageInfo ) )
+		if ( critHit > 0 )
+			ls.critRateHelper[ critHit + 1 ]++
 	}
 
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
@@ -491,6 +530,9 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 				ls.damageDealt += int( DamageInfo_GetDamage( damageInfo ) )
 				if ( attacker.IsNPC() )
 					ls.damageDealtAuto += int( DamageInfo_GetDamage( damageInfo ) )
+
+				if ( critHit > 0 )
+					ls.critRateHelper[ critHit - 1 ]++
 			}
 			else
 				ls.damageDealtPilot += int( DamageInfo_GetDamage( damageInfo ) )
@@ -610,7 +652,8 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 		result = GetWinningTeam() == ls.team ? "Win" : "Loss"
 
 	// Can't print everything in one line if it's too long, so we segment the data into blocks.
-	string block1 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
+	string block1 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
+	block1 += ",\"name\":\"" + ls.name + "\""
 	block1 += ",\"block\":1"
 	block1 += ",\"round\":" + round.tostring()
 	block1 += ",\"matchID\":" + file.matchID.tostring()
@@ -635,9 +678,10 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"damageDealtAuto\":" + ls.damageDealtAuto.tostring()
 	block1 += ",\"damageDealtPilot\":" + ls.damageDealtPilot.tostring()
 	block1 += ",\"damageDealtBlocked\":" + ls.damageDealtBlocked.tostring()
+	block1 += ",\"critRateDealt\":" + ls.critRateDealt.tostring()
 	block1 += "}"
 
-	string block2 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
+	string block2 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
 	block2 += ",\"block\":2"
 	block2 += ",\"round\":" + round.tostring()
 	block2 += ",\"matchID\":" + file.matchID.tostring()
@@ -647,6 +691,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block2 += ",\"damageTakenTempShields\":" + ls.damageTakenTempShields.tostring()
 	block2 += ",\"damageTakenAuto\":" + ls.damageTakenAuto.tostring()
 	block2 += ",\"damageTakenBlocked\":" + ls.damageTakenBlocked.tostring()
+	block2 += ",\"critRateTaken\":" + ls.critRateTaken.tostring()
 	block2 += ",\"kills\":" + ls.kills.tostring()
 	block2 += ",\"killsPilot\":" + ls.killsPilot.tostring()
 	block2 += ",\"terminations\":" + ls.terminations.tostring()
@@ -656,14 +701,14 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	block2 += ",\"batteriesPicked\":" + ls.batteriesPicked.tostring()
 	block2 += ",\"batteriesToSelf\":" + ls.batteriesToSelf.tostring()
-	block2 += ",\"batteriesToAlly\":" + ls.batteriesToAlly.tostring()
+	block2 += ",\"batteriesToAllyPilot\":" + ls.batteriesToAllyPilot.tostring()
 	block2 += ",\"shieldsGained\":" + ls.shieldsGained.tostring()
 	block2 += ",\"tempShieldsGained\":" + ls.tempShieldsGained.tostring()
 	block2 += ",\"healthWasted\":" + ls.healthWasted.tostring()
 	block2 += ",\"shieldsWasted\":" + ls.shieldsWasted.tostring()
 	block2 += "}"
 
-	string block3 = "[LTSRebalanceData] {\"name\":\"" + ls.name + "\""
+	string block3 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
 	block3 += ",\"block\":3"
 	block3 += ",\"round\":" + round.tostring()
 	block3 += ",\"matchID\":" + file.matchID.tostring()

@@ -1938,7 +1938,7 @@ void function Rodeo_PilotAddsBatteryToFriendlyTitan( entity rider, entity titan 
 	if ( ls != null )
 	{
 		expect LTSRebalance_LogStruct( ls )
-		ls.batteriesToAlly++
+		ls.batteriesToAllyPilot++
 	}
 
 	Rodeo_ApplyBatteryToTitan( battery, titan ) //This destroys the battery
