@@ -1935,8 +1935,11 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		if ( LTSRebalance_Enabled() )
 			damage = GetProjectileDamageToParticle( projectile, false )
 
+		entity projectileOwner = projectile.GetOwner()
+		bool blockedPlayer = !IsValid( projectileOwner ) || projectileOwner.Player()
 		// Slightly innaccurate in vanilla; damage dealt to particle wall does not consider falloff in vanilla, but will be recorded as if it did
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, GetProjectileDamageToParticle( projectile ) )
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, GetProjectileDamageToParticle( projectile, true, blockedPlayer ) )
+
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
