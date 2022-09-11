@@ -1946,7 +1946,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		
 		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
 		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
 
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )

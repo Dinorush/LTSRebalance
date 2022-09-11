@@ -202,7 +202,7 @@ bool function OnWeaponVortexHitBullet_titanweapon_heat_shield( entity weapon, en
 		entity attackerWeapon		= DamageInfo_GetWeapon( damageInfo )
 		string attackerWeaponName	= attackerWeapon.GetWeaponClassName()
 
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetWeaponDamage( weapon, damageInfo, true, attacker.IsPlayer() ) )
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, LTSRebalance_GetWeaponDamage( weapon, damageInfo, true, attacker.IsPlayer() ) )
 
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, origin, damageSourceID, attackerWeaponName, "hitscan" )
 		VortexDrainedByImpact( weapon, attackerWeapon, null, null )
@@ -231,9 +231,10 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
 
+
 		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
 		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
 
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, contactPos, damageSourceID, weaponName, "projectile" )
 		VortexDrainedByImpact( weapon, projectile, projectile, null )
