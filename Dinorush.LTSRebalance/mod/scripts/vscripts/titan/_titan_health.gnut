@@ -3,6 +3,7 @@
    2. Doom skip fix
    3. Monarch 2x innate core gain
    4. Bulwark core gain removal on shields
+   5. Implement data logging (for damage to shields)
 */
 global function TitanHealth_Init
 
@@ -248,6 +249,9 @@ void function PlayerOrNPCTitanTookDamage( entity titan, var damageInfo, bool cri
 	{
 		CheckRodeoRiderHitsTitan( soul, damageInfo )
 		titanDamage.shieldDamage = ShieldHealthUpdate( titan, damageInfo, critHit )
+
+		// Have to log here because no post callbacks work if no health damage was dealt (except post shield, which does not give an attacker)
+		LTSRebalance_LogShieldDamage( titan, damageInfo, titanDamage )
 
 		// Needed to cancel core gain from Bulwark shields
 		// Could use a damage callback and do some damage handling manually, but we already replace this file and this is a smoother implementation
@@ -1054,6 +1058,13 @@ void function AddCreditToTitanCoreBuilder( entity titan, float credit )
 	if ( newTotalCredit >= 0.998 ) //JFS - the rui has a +0.001 for showing the meter as full. This fixes the case where the core meter displays 100 but can't be fired.
 		newTotalCredit = 1.0
 	SoulTitanCore_SetNextAvailableTime( soul, newTotalCredit )
+
+	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( bossPlayer )
+	if ( ls != null )
+	{
+		expect LTSRebalance_LogStruct( ls )
+		ls.coreFracEarned += newTotalCredit - oldTotalCredit
+	}
 
 	if ( IsValid( bossPlayer ) && !coreWasAvailable && IsCoreChargeAvailable( bossPlayer, soul ) )
 	{

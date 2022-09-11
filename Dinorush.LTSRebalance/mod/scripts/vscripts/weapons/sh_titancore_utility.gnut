@@ -220,6 +220,13 @@ void function CoreActivate( entity player )
 
 	if ( IsValid( soul ) && !player.ContextAction_IsMeleeExecution() )
 	{
+		LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( player )
+		if ( ls != null )
+		{
+			expect LTSRebalance_LogStruct( ls )
+			ls.coresUsed++
+		}
+
 		entity weapon = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
 		// Check < MAX_COUNT here as it gets set to 0 only when core ends for UI to look better
 		if ( IsValid( weapon ) && weapon.HasMod( "LTSRebalance_pas_ion_lasercannon") && "laserCoreCount" in weapon.s && weapon.s.laserCoreCount < LTSREBALANCE_PAS_ION_LASERCANNON_COUNT * 2 - 1 )
@@ -249,6 +256,14 @@ void function CoreDeactivate( entity player, entity weapon )
 			if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 			{
 				SoulTitanCore_SetNextAvailableTime( soul, 0.20 )
+
+				LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( player )
+				if ( ls != null )
+				{
+					expect LTSRebalance_LogStruct( ls )
+					ls.coreFracEarned += 0.20
+				}
+
 				if ( !LTSRebalance_Enabled() )
 					GiveOffhandElectricSmoke( player )
 			}

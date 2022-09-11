@@ -3,6 +3,7 @@ untyped
 global function LTSRebalance_TrackTempShields
 global function LTSRebalance_AddTempShields
 global function LTSRebalance_HandleTempShieldChange
+global function LTSRebalance_GetTempShieldHealth
 
 void function LTSRebalance_TrackTempShields( entity titan )
 {
@@ -20,12 +21,30 @@ void function LTSRebalance_TrackTempShields( entity titan )
 	#endif
 }
 
+int function LTSRebalance_GetTempShieldHealth( entity soul )
+{
+	int totalTemp = 0
+	if ( LTSRebalance_Enabled() && "tempShields" in soul.s )
+		foreach( tempShield in soul.s.tempShields )
+			totalTemp += expect int( tempShield.shield )
+
+	return totalTemp
+}
+
 void function LTSRebalance_AddTempShields( entity soul, int tempShields, int tempOverflow, float decayTime, float delay = 0 )
 {
 	#if SERVER
 	int extraShields = maxint( 0, soul.GetShieldHealth() + tempShields - soul.GetShieldHealthMax() )
 	tempOverflow += extraShields
 	tempShields -= tempOverflow
+
+	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( soul.GetTitan() )
+	if ( ls != null )
+	{
+		expect LTSRebalance_LogStruct( ls )
+		ls.tempShieldsGained += tempShields
+	}
+
 	soul.SetShieldHealth( soul.GetShieldHealth() + tempShields )
 	soul.s.tempShields.append( { shield = tempShields, overflow = tempOverflow, total = tempShields + tempOverflow, decayTime = decayTime, delay = delay } )
 	#endif
@@ -35,6 +54,19 @@ void function LTSRebalance_AddTempShields( entity soul, int tempShields, int tem
 void function LTSRebalance_HandleTempShieldChange( entity soul, int change )
 {
 	#if SERVER
+	if ( change > 0 ) // Hijacking this function to log shield gain stats
+	{
+		LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( soul.GetTitan() )
+		if ( ls != null )
+		{
+			expect LTSRebalance_LogStruct( ls )
+			int tempShields = LTSRebalance_GetTempShieldHealth( soul )
+			int shieldsGained = minint( change, soul.GetShieldHealthMax() - soul.GetShieldHealth() + tempShields )
+			ls.shieldsGained += shieldsGained
+			ls.shieldsWasted += change - shieldsGained
+		}
+	}
+
 	// Have to check whether temp shields exists since it only gets added on the first Siphon use
 	if ( !LTSRebalance_Enabled() || change == 0 || !( "tempShields" in soul.s ) || soul.s.tempShields.len() == 0 )
 		return

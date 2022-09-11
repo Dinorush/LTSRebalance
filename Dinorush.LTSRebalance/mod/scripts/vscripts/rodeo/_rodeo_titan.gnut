@@ -1,6 +1,7 @@
 /* LTS Rebalance replaces this file for the following reasons:
    1. Make changes to battery heals so that temporary shielding works
    2. Make changes to battery heals for PerfectKits Energy Thief
+   3. Implement data logging (for batteries given/obtained)
 */
 untyped //Panel.s stuff needs to be typed
 
@@ -1804,7 +1805,7 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		// Also need to convert some shields for PerfectKits Energy Thief.
 		int perfectKitsShieldsTaken = PerfectKits_EnergyThiefConvert( titan, shieldMaxHealth )
 		int shielding = minint( shieldMaxHealth - perfectKitsShieldsTaken, shieldMaxHealth - shieldHealth )
-		LTSRebalance_HandleTempShieldChange( soul, shielding ) // For Siphon temporary shield purposes
+		LTSRebalance_HandleTempShieldChange( soul, shieldMaxHealth - perfectKitsShieldsTaken ) // For Siphon temporary shield purposes
 
 		bool batteryIsAmped = IsAmpedBattery( battery )
 		float frac = batteryIsAmped ? ampedHealthSegmentFrac : healthSegmentFrac
@@ -1812,6 +1813,15 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		int addHealth = int( healingAmount * frac )
         int trgtHealth = addHealth + titan.GetHealth()
 		int totalHealth = minint( titan.GetMaxHealth(), trgtHealth )
+
+		LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( titan )
+		if ( ls != null )
+		{
+			expect LTSRebalance_LogStruct( ls )
+			ls.batteriesToSelf++
+			ls.healthWasted += maxint( 0, trgtHealth - totalHealth )
+		}
+
 		// Additional logic for Rebalance Survival of the Fittest
         if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() && trgtHealth > totalHealth )
 		{
@@ -1923,6 +1933,13 @@ void function Rodeo_PilotAddsBatteryToFriendlyTitan( entity rider, entity titan 
 
 	if ( file.applyBatteryCallback != null )
 		file.applyBatteryCallback( rider, titan, battery )
+
+	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( rider )
+	if ( ls != null )
+	{
+		expect LTSRebalance_LogStruct( ls )
+		ls.batteriesToAlly++
+	}
 
 	Rodeo_ApplyBatteryToTitan( battery, titan ) //This destroys the battery
 
