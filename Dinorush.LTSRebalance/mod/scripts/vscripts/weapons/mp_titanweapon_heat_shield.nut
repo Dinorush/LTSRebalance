@@ -2,6 +2,7 @@
    1. Implement baseline changes
    2. Fix blocking from behind enemy titans
    3. Fix despawning ground attacks
+   4. Implement data logging (for blocked damage)
 */
 untyped
 
@@ -201,6 +202,8 @@ bool function OnWeaponVortexHitBullet_titanweapon_heat_shield( entity weapon, en
 		entity attackerWeapon		= DamageInfo_GetWeapon( damageInfo )
 		string attackerWeaponName	= attackerWeapon.GetWeaponClassName()
 
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, DamageInfo_GetDamage( damageInfo ) )
+
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, origin, damageSourceID, attackerWeaponName, "hitscan" )
 		VortexDrainedByImpact( weapon, attackerWeapon, null, null )
 		if ( impactData.refireBehavior == VORTEX_REFIRE_ABSORB )
@@ -227,6 +230,8 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
+
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetProjectileDamage( projectile ) )
 
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, contactPos, damageSourceID, weaponName, "projectile" )
 		VortexDrainedByImpact( weapon, projectile, projectile, null )

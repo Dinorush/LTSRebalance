@@ -3,6 +3,7 @@
    2. Implement Perfect Kits Vortex Amplifier
    3. Fix catching friendly hitscan bullets
    4. Fix blocking from behind enemy titans
+   5. Implement data logging (for blocked damage)
 */
 untyped
 
@@ -390,6 +391,8 @@ bool function OnWeaponVortexHitBullet_titanweapon_vortex_shield( entity weapon, 
 		if ( LTSRebalance_Enabled() && attacker.GetTeam() == owner.GetTeam() )
 			return false
 
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, DamageInfo_GetDamage( damageInfo ) )
+
 		return TryVortexAbsorb( vortexSphere, attacker, origin, damageSourceID, attackerWeapon, attackerWeaponName, "hitscan", null, damageType, weapon.HasMod( "burn_mod_titan_vortex_shield" ) )
 	#endif
 }
@@ -407,6 +410,8 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 
 		if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
 			return false
+
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, LTSRebalance_GetProjectileDamage( projectile ) )
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()

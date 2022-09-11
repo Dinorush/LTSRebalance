@@ -5,6 +5,7 @@
       • This is so that you can't block someone from behind them
    4. Implement Perfect Kits Amped Vortex absorbing every attack type
    5. Fix Vortex refiring without attachments (for weapons with damage changing attachments)
+   6. Implement data logging (for blocked damage)
 */
 untyped
 
@@ -32,6 +33,7 @@ global function Vortex_HandleElectricDamage
 global function VortexSphereDrainHealthForDamage
 global function Vortex_CreateImpactEventData
 global function Vortex_SpawnHeatShieldPingFX
+global function LTSRebalance_GetProjectileDamage // Needed for logging damage blocked on Vortex/Thermal
 #endif
 
 global function Vortex_SetTagName
@@ -1932,6 +1934,9 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		float damage = float( projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value ) )
 		if ( LTSRebalance_Enabled() )
 			damage = GetProjectileDamageToParticle( projectile )
+
+		// Slightly innaccurate; damage dealt to particle wall does not consider falloff in vanilla, but will be recorded as if it did
+		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), attacker, GetProjectileDamageToParticle( projectile ) )
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
@@ -2204,6 +2209,11 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 		return damageMod / damage
 	}
 	unreachable
+}
+
+float function LTSRebalance_GetProjectileDamage( entity projectile )
+{
+	return GetProjectileDamageToParticle( projectile )
 }
 
 float function GetProjectileDamageToParticle( entity projectile )
