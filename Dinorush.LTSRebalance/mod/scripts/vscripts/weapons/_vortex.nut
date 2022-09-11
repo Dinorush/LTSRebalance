@@ -1933,7 +1933,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 
 		float damage = float( projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value ) )
 		if ( LTSRebalance_Enabled() )
-			damage = GetProjectileDamageToParticle( projectile )
+			damage = GetProjectileDamageToParticle( projectile, false )
 
 		// Slightly innaccurate in vanilla; damage dealt to particle wall does not consider falloff in vanilla, but will be recorded as if it did
 		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, GetProjectileDamageToParticle( projectile ) )
