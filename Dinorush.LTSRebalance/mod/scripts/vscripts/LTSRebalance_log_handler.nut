@@ -122,6 +122,7 @@ global struct LTSRebalance_LogStruct {
 	int damageDealtPilot = 0
 	int damageDealtAuto = 0
 	int damageDealtBlocked = 0 // Damage to defensives
+	int damageDealtSelf = 0 // Includes health, shields, temp shields. Self damage is not tracked by other dealt values
 	float critRateDealt = 0.0
 	int damageTaken = 0 // Excludes damage blocked
 	int damageTakenShields = 0
@@ -169,6 +170,7 @@ struct {
 	table< entity, LTSRebalance_LogStruct > trackerTable
 	string matchID
 	int matchTimestamp
+	bool logDistance = false
 } file
 
 
@@ -273,6 +275,7 @@ void function LTSRebalance_LogTracker( entity player )
 	OnThreadEnd(
 		function() : ( ls, counters )
 		{
+			file.logDistance = false
 			// Average out some values (we want the average in logs)
 			if ( counters[0] > 0 )
 			{
@@ -312,9 +315,12 @@ void function LTSRebalance_LogTracker( entity player )
 	int curScore = GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA )
 	bool hasBattery = false
 
-	player.WaitSignal( "PlayerEmbarkedTitan" )
-
-	vector lastOrigin = player.GetOrigin()
+	vector lastOrigin = <0, 0, 0>
+	if ( IsValid( player ) )
+	{
+		waitthread WaitUntilEmbarkOrDeath( player )
+		lastOrigin = player.GetOrigin()
+	}
 
 	float lastTime = Time()
 	while ( GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA ) == curScore )
@@ -329,43 +335,47 @@ void function LTSRebalance_LogTracker( entity player )
 		float closestEnemyDist = 99999.0
 		if ( player.IsTitan() )
 		{
-			array<entity> titans = GetPlayerArray()
-			titans.extend( GetNPCArrayByClass( "npc_titan" ) )
-			foreach ( titan in titans )
+			if ( file.logDistance )
 			{
-				if ( !titan.IsTitan() || titan == player )
-					continue
-				
-				if ( titan.GetTeam() == player.GetTeam() )
+				array<entity> titans = GetPlayerArray()
+				titans.extend( GetNPCArrayByClass( "npc_titan" ) )
+				foreach ( titan in titans )
 				{
-					counters[0]++
+					if ( !titan.IsTitan() || titan == player )
+						continue
 					
-					float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-					ls.distanceToAllies += dist
-					if ( dist < closestAllyDist )
-						closestAllyDist = dist
+					if ( titan.GetTeam() == player.GetTeam() )
+					{
+						counters[0]++
+						
+						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
+						ls.distanceToAllies += dist
+						if ( dist < closestAllyDist )
+							closestAllyDist = dist
+					}
+					else
+					{
+						counters[2]++
+						
+						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
+						ls.distanceToEnemies += dist
+						if ( dist < closestEnemyDist )
+							closestEnemyDist = dist
+					}
 				}
-				else
+
+				if ( closestAllyDist < 99999.0 )
 				{
-					counters[2]++
-					
-					float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-					ls.distanceToEnemies += dist
-					if ( dist < closestEnemyDist )
-						closestEnemyDist = dist
+					counters[1]++
+					ls.distanceToCloseAlly += closestAllyDist
+				}
+				if ( closestEnemyDist < 99999.0 )
+				{
+					counters[3]++
+					ls.distanceToCloseEnemy += closestEnemyDist 
 				}
 			}
 
-			if ( closestAllyDist < 99999.0 )
-			{
-				counters[1]++
-				ls.distanceToCloseAlly += closestAllyDist
-			}
-			if ( closestEnemyDist < 99999.0 )
-			{
-				counters[3]++
-				ls.distanceToCloseEnemy += closestEnemyDist 
-			}
 			ls.distanceTravelled += Distance( lastOrigin, player.GetOrigin() )
 			ls.timeAsTitan += timePassed
 		}
@@ -375,43 +385,47 @@ void function LTSRebalance_LogTracker( entity player )
 				ls.batteriesPicked++
 			hasBattery = PlayerHasBattery( player )
 
-			array<entity> titans = GetPlayerArray()
-			titans.extend( GetNPCArrayByClass( "npc_titan" ) )
-			foreach ( titan in titans )
+			if ( file.logDistance )
 			{
-				if ( !titan.IsTitan() || titan == player.GetPetTitan() )
-					continue
-				
-				if ( titan.GetTeam() == player.GetTeam() )
+				array<entity> titans = GetPlayerArray()
+				titans.extend( GetNPCArrayByClass( "npc_titan" ) )
+				foreach ( titan in titans )
 				{
-					counters[4]++
+					if ( !titan.IsTitan() || titan == player.GetPetTitan() )
+						continue
 					
-					float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-					ls.distanceToAlliesPilot += dist
-					if ( dist < closestAllyDist )
-						closestAllyDist = dist
+					if ( titan.GetTeam() == player.GetTeam() )
+					{
+						counters[4]++
+						
+						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
+						ls.distanceToAlliesPilot += dist
+						if ( dist < closestAllyDist )
+							closestAllyDist = dist
+					}
+					else
+					{
+						counters[6]++
+						
+						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
+						ls.distanceToEnemiesPilot += dist
+						if ( dist < closestEnemyDist )
+							closestEnemyDist = dist
+					}
 				}
-				else
+
+				if ( closestAllyDist < 99999.0 )
 				{
-					counters[6]++
-					
-					float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-					ls.distanceToEnemiesPilot += dist
-					if ( dist < closestEnemyDist )
-						closestEnemyDist = dist
+					counters[5]++
+					ls.distanceToCloseAllyPilot += closestAllyDist
+				}
+				if ( closestEnemyDist < 99999.0 )
+				{
+					counters[7]++
+					ls.distanceToCloseEnemyPilot += closestEnemyDist
 				}
 			}
 
-			if ( closestAllyDist < 99999.0 )
-			{
-				counters[5]++
-				ls.distanceToCloseAllyPilot += closestAllyDist
-			}
-			if ( closestEnemyDist < 99999.0 )
-			{
-				counters[7]++
-				ls.distanceToCloseEnemyPilot += closestEnemyDist
-			}
 			ls.timeAsPilot += timePassed
 			ls.distanceTravelledPilot += Distance( lastOrigin, player.GetOrigin() )
 		}
@@ -419,6 +433,14 @@ void function LTSRebalance_LogTracker( entity player )
 		lastOrigin = player.GetOrigin()
 		lastTime = Time()
 	}
+}
+
+void function WaitUntilEmbarkOrDeath( entity player )
+{
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "OnDestroy" )
+
+	player.WaitSignal( "PlayerEmbarkedTitan" )
 }
 
 bool function PlayerOrTitanAlive( entity player )
@@ -452,7 +474,11 @@ void function LTSRebalance_LogKill( entity victim, entity attacker, var damageIn
 		ls.timeDeathTitan = GetTimeSinceRoundStart()
 	}
 
+	if ( attacker == victim )
+		return
+
 	ls = LTSRebalance_GetLogStruct( attacker )
+
 	if ( ls != null )
 	{
 		expect LTSRebalance_LogStruct( ls )
@@ -492,7 +518,12 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 	if ( !victim.IsTitan() )
 		return
 
-	int critHit = CritWeaponInDamageInfo( damageInfo ) ? 1 : 0
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	bool selfDmg = victim == attacker
+	if ( !selfDmg )
+		file.logDistance = true
+
+	int critHit = CritWeaponInDamageInfo( damageInfo ) && !selfDmg ? 1 : 0
 	if ( critHit > 0 )
 		critHit = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ).tointeger() + 1
 
@@ -507,7 +538,6 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 			ls.critRateHelper[ critHit + 1 ]++
 	}
 
-	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	if ( IsValid( attacker ) )
 	{
 		ls = LTSRebalance_GetLogStruct( attacker )
@@ -516,12 +546,17 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 			expect LTSRebalance_LogStruct( ls )
 			if ( attacker.IsTitan() )
 			{
-				ls.damageDealt += int( DamageInfo_GetDamage( damageInfo ) )
-				if ( attacker.IsNPC() )
-					ls.damageDealtAuto += int( DamageInfo_GetDamage( damageInfo ) )
+				if ( selfDmg )
+					ls.damageDealtSelf += int( DamageInfo_GetDamage( damageInfo ) )
+				else
+				{
+					ls.damageDealt += int( DamageInfo_GetDamage( damageInfo ) )
+					if ( attacker.IsNPC() )
+						ls.damageDealtAuto += int( DamageInfo_GetDamage( damageInfo ) )
 
-				if ( critHit > 0 )
-					ls.critRateHelper[ critHit - 1 ]++
+					if ( critHit > 0 )
+						ls.critRateHelper[ critHit - 1 ]++
+				}
 			}
 			else
 				ls.damageDealtPilot += int( DamageInfo_GetDamage( damageInfo ) )
@@ -531,9 +566,10 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 
 void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, TitanDamage titanDamage )
 {
-	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
 	int tempShieldDamage = 0
 	int shieldDamage = titanDamage.shieldDamage
+
+	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
 	if ( ls != null )
 	{
 		entity soul = victim.GetTitanSoul()
@@ -557,11 +593,16 @@ void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, Titan
 			expect LTSRebalance_LogStruct( ls )
 			if ( attacker.IsTitan() )
 			{
-				ls.damageDealt += shieldDamage + tempShieldDamage
-				ls.damageDealtShields += shieldDamage
-				ls.damageDealtTempShields += tempShieldDamage
-				if ( attacker.IsNPC() )
-					ls.damageDealtAuto += shieldDamage + tempShieldDamage
+				if ( attacker == victim )
+					ls.damageDealtSelf += shieldDamage + tempShieldDamage
+				else
+				{
+					ls.damageDealt += shieldDamage + tempShieldDamage
+					ls.damageDealtShields += shieldDamage
+					ls.damageDealtTempShields += tempShieldDamage
+					if ( attacker.IsNPC() )
+						ls.damageDealtAuto += shieldDamage + tempShieldDamage
+				}
 			}
 			else
 				ls.damageDealtPilot += shieldDamage
@@ -644,6 +685,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	string block1 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
 	block1 += ",\"round\":" + round.tostring()
 	block1 += ",\"matchID\":\"" + file.matchID + "\""
+	block1 += ",\"ranked\":" + ( GetCurrentPlaylistVarInt( "ltsrebalance_log_ranked", 0 ) == 1 ).tostring()
 	block1 += ",\"matchTimestamp\":" + file.matchTimestamp.tostring()
 
 	block1 += ",\"name\":\"" + ls.name + "\""
@@ -667,6 +709,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"damageDealtAuto\":" + ls.damageDealtAuto.tostring()
 	block1 += ",\"damageDealtPilot\":" + ls.damageDealtPilot.tostring()
 	block1 += ",\"damageDealtBlocked\":" + ls.damageDealtBlocked.tostring()
+	block1 += ",\"damageDealtSelf\":" + ls.damageDealtSelf.tostring()
 	block1 += ",\"critRateDealt\":" + ls.critRateDealt.tostring()
 	block1 += "}"
 
