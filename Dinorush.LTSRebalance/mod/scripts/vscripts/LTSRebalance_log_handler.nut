@@ -520,7 +520,7 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	bool selfDmg = victim == attacker
-	if ( !selfDmg )
+	if ( !selfDmg && !IsRoundOver() )
 		file.logDistance = true
 
 	int critHit = CritWeaponInDamageInfo( damageInfo ) && !selfDmg ? 1 : 0
