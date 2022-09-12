@@ -264,16 +264,6 @@ void function LTSRebalance_LogEject( entity player )
 	ls.shieldsWasted += soul.GetShieldHealth()
 }
 
-void function LTSRebalance_LogTitanDeath( entity titan, LTSRebalance_LogStruct ls )
-{
-	svGlobal.levelEnt.EndSignal( "RoundEnd" )
-	titan.EndSignal( "OnDestroy" )
-	titan.WaitSignal( "OnDeath" )
-
-	if ( !IsRoundOver() )
-		ls.timeDeathTitan = GetTimeSinceRoundStart()
-}
-
 void function LTSRebalance_LogTracker( entity player )
 {
 	LTSRebalance_LogStruct ls = file.trackerTable[player]
@@ -382,9 +372,6 @@ void function LTSRebalance_LogTracker( entity player )
 			if ( !hasBattery && PlayerHasBattery( player ) )
 				ls.batteriesPicked++
 			hasBattery = PlayerHasBattery( player )
-		
-			if ( ls.timeDeathTitan == 0.0 && !IsAlive( player.GetPetTitan() ) )
-				ls.timeDeathTitan = GetTimeSinceRoundStart()
 
 			array<entity> titans = GetPlayerArray()
 			titans.extend( GetNPCArrayByClass( "npc_titan" ) )
@@ -653,7 +640,6 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	// Can't print everything in one line if it's too long, so we segment the data into blocks.
 	string block1 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
-	block1 += ",\"block\":1"
 	block1 += ",\"round\":" + round.tostring()
 	block1 += ",\"matchID\":" + file.matchID.tostring()
 
@@ -682,7 +668,6 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += "}"
 
 	string block2 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
-	block2 += ",\"block\":2"
 	block2 += ",\"round\":" + round.tostring()
 	block2 += ",\"matchID\":" + file.matchID.tostring()
 	
@@ -709,7 +694,6 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block2 += "}"
 
 	string block3 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
-	block3 += ",\"block\":3"
 	block3 += ",\"round\":" + round.tostring()
 	block3 += ",\"matchID\":" + file.matchID.tostring()
 
