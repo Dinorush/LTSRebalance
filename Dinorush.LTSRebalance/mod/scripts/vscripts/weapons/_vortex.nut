@@ -2219,6 +2219,7 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 		float damage = GraphCapped( explosionDist, innerRadius, outerRadius, explosionDamage, 0.0 )
 		float damageMod = GraphCapped( explosionDist, innerRadiusMod, outerRadiusMod, explosionDamageMod, 0.0 )
 
+		printt( "Rebalance Damage scale:", damage, damageMod )
 		return damageMod / damage
 	}
 	unreachable
