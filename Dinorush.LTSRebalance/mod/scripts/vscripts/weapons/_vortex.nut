@@ -2219,6 +2219,9 @@ function LTSRebalance_FixVortexRefireExplosion( projectile )
 	float innerRadiusMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_inner_radius" ) )
 	float outerRadiusMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosionradius" ) )
 
+	if ( outerRadiusMod <= 0 || ( explosionDamageMod == 0 && explosionDamageModTitan == 0 ) )
+		return
+
 	float impulseForce = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "impulse_force_explosions" ) )
 	if ( impulseForce <= 0 )
 		impulseForce = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "impulse_force" ) )
