@@ -667,7 +667,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	block1 += ",\"titan\":\"" + ls.titan + "\""
 	block1 += ",\"kit1\":\"" + ls.kit1 + "\""
-	block1 += ",\"kit1\":\"" + ls.kit2 + "\""
+	block1 += ",\"kit2\":\"" + ls.kit2 + "\""
 	block1 += ",\"core1\":\"" + ls.core1 + "\""
 	block1 += ",\"core2\":\"" + ls.core2 + "\""
 	block1 += ",\"core3\":\"" + ls.core3 + "\""
