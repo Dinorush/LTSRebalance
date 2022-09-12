@@ -167,7 +167,8 @@ global struct LTSRebalance_LogStruct {
 
 struct {
 	table< entity, LTSRebalance_LogStruct > trackerTable
-	int matchID
+	string matchID
+	int matchTimestamp
 } file
 
 
@@ -177,7 +178,8 @@ void function LTSRebalance_LogInit()
 		return
 	// Not a fallible random! Also not sure how it's seeded. Solely a shortstop to separate matches among the log for parsers. 
 	// If needed as a unique ID after pulling logs, generate a new ID instead with a more robust algorithm to ensure uniqueness.
-	file.matchID = RandomInt(10000000)
+	file.matchID = RandomInt(10000000).tostring()
+	file.matchTimestamp = GetUnixTimestamp()
 
 	AddSpawnCallback( "npc_titan", LTSRebalance_InitTracker )
 	AddCallback_OnPlayerRespawned( LTSRebalance_StartTracking )
@@ -641,7 +643,8 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	// Can't print everything in one line if it's too long, so we segment the data into blocks.
 	string block1 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
 	block1 += ",\"round\":" + round.tostring()
-	block1 += ",\"matchID\":" + file.matchID.tostring()
+	block1 += ",\"matchID\":\"" + file.matchID + "\""
+	block1 += ",\"matchTimestamp\":" + file.matchTimestamp.tostring()
 
 	block1 += ",\"name\":\"" + ls.name + "\""
 	block1 += ",\"rebalance\":" + LTSRebalance_Enabled().tostring()
@@ -669,7 +672,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	string block2 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
 	block2 += ",\"round\":" + round.tostring()
-	block2 += ",\"matchID\":" + file.matchID.tostring()
+	block2 += ",\"matchID\":\"" + file.matchID + "\""
 	
 	block2 += ",\"damageTaken\":" + ls.damageTaken.tostring()
 	block2 += ",\"damageTakenShields\":" + ls.damageTakenShields.tostring()
@@ -695,7 +698,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	string block3 = "[LTSRebalanceData] {\"uid\":\"" + ls.uid + "\""
 	block3 += ",\"round\":" + round.tostring()
-	block3 += ",\"matchID\":" + file.matchID.tostring()
+	block3 += ",\"matchID\":\"" + file.matchID + "\""
 
 	block3 += ",\"timeAsTitan\":" + ls.timeAsTitan.tostring()
 	block3 += ",\"timeDeathTitan\":" + ls.timeDeathTitan.tostring()
