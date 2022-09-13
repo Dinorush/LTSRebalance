@@ -385,13 +385,17 @@ void function RestorePlayerWeapons( entity player, StoredWeapon storedWeapon )
 		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
 			bool shouldSetActive = IsValid( titan.GetActiveWeapon() ) && titan.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_shift_core_sword"
+
 			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
 			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
-				block.RemoveMod( "LTSRebalance_core_regen" )
-			titan.TakeWeaponNow( "mp_titanweapon_shift_core_sword" )
+				block.RemoveMod( "LTSRebalance_core_regen" )			
 
+			titan.TakeWeaponNow( "mp_titanweapon_shift_core_sword" )
 			if ( storedWeapon.name != "" )
-				GiveWeaponsFromStoredArray( titan, [storedWeapon] )
+				GiveStoredMainWeapon( titan, storedWeapon )
+
+			if ( shouldSetActive )
+				titan.SetActiveWeaponBySlot( 0 )
 		}
 		else if ( titan.GetMainWeapons().len() > 0 )
 			titan.GetMainWeapons()[0].AllowUse( true )
@@ -433,6 +437,31 @@ StoredWeapon function StoreMainWeapon( entity player )
 	sw.isProScreenOwner = weapon.GetProScreenOwner() == player
 
 	return sw
+}
+
+void function GiveStoredMainWeapon( entity player, StoredWeapon storedWeapon )
+{
+	entity weapon = player.GiveWeapon( storedWeapon.name, storedWeapon.mods )
+	weapon.SetWeaponSkin( storedWeapon.skinIndex )
+	weapon.SetWeaponCamo( storedWeapon.camoIndex )
+
+	#if MP
+	if ( storedWeapon.isProScreenOwner )
+	{
+		weapon.SetProScreenOwner( player )
+		if ( weapon.HasMod( "pro_screen" ) )
+			UpdateProScreen( player, weapon )
+	}
+	string weaponCategory = ""
+	if ( IsWeaponKeyFieldDefined(weapon.GetWeaponClassName(), "menu_category") )
+	{
+		weaponCategory = GetWeaponInfoFileKeyField_GlobalString( weapon.GetWeaponClassName(), "menu_category" )
+	}
+	#endif
+
+	weapon.SetWeaponPrimaryAmmoCount( storedWeapon.ammoCount )
+	if ( weapon.GetWeaponPrimaryClipCountMax() > 0 )
+		weapon.SetWeaponPrimaryClipCount( storedWeapon.clipCount )
 }
 
 void function Shift_Core_UseMeter( entity player )

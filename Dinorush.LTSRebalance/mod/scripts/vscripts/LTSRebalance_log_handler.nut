@@ -251,9 +251,11 @@ void function LTSRebalance_LogEject( entity player )
 {
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
-	svGlobal.levelEnt.EndSignal( "RoundEnd" )
 
 	player.WaitSignal( "TitanEjectionStarted" )
+
+	if ( IsRoundOver() )
+		return
 
 	LTSRebalance_LogStruct ls = file.trackerTable[player]
 	ls.ejection = true
@@ -321,6 +323,8 @@ void function LTSRebalance_LogTracker( entity player )
 		waitthread WaitUntilEmbarkOrDeath( player )
 		lastOrigin = player.GetOrigin()
 	}
+
+	thread LTSRebalance_LogEject( player )
 
 	float lastTime = Time()
 	while ( GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA ) == curScore )
@@ -566,6 +570,9 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 
 void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, TitanDamage titanDamage )
 {
+	if ( GAMETYPE != LAST_TITAN_STANDING )
+		return
+
 	int tempShieldDamage = 0
 	int shieldDamage = titanDamage.shieldDamage
 
