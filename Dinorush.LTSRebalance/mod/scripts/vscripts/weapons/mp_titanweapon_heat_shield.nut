@@ -225,12 +225,16 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
         if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
             return false
 
-		if ( projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_ignores_vortex" ) == "mirror" )
-			return false
+		if ( LTSRebalance_Enabled() )
+		{
+			if ( projectile.ProjectileGetWeaponInfoFileKeyField( "projectile_ignores_vortex" ) == "mirror" )
+				return false
+			else if ( !projectile.IsSolid() || ( Time() == projectile.GetProjectileCreationTime() && projectile.GetVelocity() == <0, 0, 0> ) )
+				return false
+		}
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
-
 
 		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
 		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
