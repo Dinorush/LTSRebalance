@@ -62,8 +62,6 @@ var function OnWeaponPrimaryAttack_titanweapon_flightcore_rockets( entity weapon
 			TraceResults hitResult = TraceLine( owner.EyePosition(), owner.EyePosition() + attackParams.dir*50000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
 			entity hitEnt = hitResult.hitEnt
 
-			// TODO: May want to check if the target entity is a Vortex Shield/Gun Shield. Don't know if they share the velocity of their owner; needs testing.
-
 			// Check that the target is a living titan.
 			if (IsAlive(hitEnt) && hitEnt.GetArmorType() == ARMOR_TYPE_HEAVY)
 			{
