@@ -1,6 +1,7 @@
 global function LTSRebalance_LogInit
 global function LTSRebalance_GetLogStruct
 global function LTSRebalance_LogDamageBlocked
+global function LTSRebalance_LogDamageBlockedRaw
 global function LTSRebalance_LogShieldDamage
 
 const table<string, string> PASSIVE_TO_STRING = {
@@ -122,13 +123,18 @@ global struct LTSRebalance_LogStruct {
 	int damageDealtPilot = 0
 	int damageDealtAuto = 0
 	int damageDealtBlocked = 0 // Damage to defensives
+	int damageDealtBlockedTarget = 0 // Damage to defensives that would've hit an enemy titan
 	int damageDealtSelf = 0 // Includes health, shields, temp shields. Self damage is not tracked by other dealt values
+	int damageDealtCloseAlly = 0
+	int damageDealtCloseEnemy = 0
 	float critRateDealt = 0.0
+
 	int damageTaken = 0 // Excludes damage blocked
 	int damageTakenShields = 0
 	int damageTakenTempShields = 0
 	int damageTakenAuto = 0
 	int damageTakenBlocked = 0 // Damage to defensives
+	int damageTakenBlockedTarget = 0 // Damage to defensives that would've hit a friendly titan (exc. self blocked damage)
 	float critRateTaken = 0.0
 
 	int kills = 0
@@ -154,9 +160,17 @@ global struct LTSRebalance_LogStruct {
 
 	float distanceToAllies = 0.0 // All distance values except 'travelled' are averages.
 	float distanceToCloseAlly = 0.0
+	float distanceToCenterAllies = 0.0
 	float distanceToEnemies = 0.0
 	float distanceToCloseEnemy = 0.0
+	float distanceToCenterEnemies = 0.0
+	float distanceToBatteries = 0.0
+	float distanceToCloseBattery = 0.0
+	float distanceBetweenCenters = 0.0
+	float distanceOnCritDealt = 0.0
+	float distanceOnNonCritDealt = 0.0
 	float distanceTravelled = 0.0
+
 	float distanceToAlliesPilot = 0.0
 	float distanceToCloseAllyPilot = 0.0
 	float distanceToEnemiesPilot = 0.0
@@ -164,6 +178,7 @@ global struct LTSRebalance_LogStruct {
 	float distanceTravelledPilot = 0.0
 
 	int[4] critRateHelper = [0, 0, 0, 0] // Non-crit counter, crit counter, non-crit received counter, crit-received counter
+	array<entity> closeTitanDamageHelper
 }
 
 struct {
@@ -171,6 +186,7 @@ struct {
 	string matchID
 	int matchTimestamp
 	bool logDistance = false
+	array< entity > batteries
 } file
 
 
@@ -178,7 +194,7 @@ void function LTSRebalance_LogInit()
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING || GetMapName() == "mp_lobby" )
 		return
-	// Not a fallible random! Also not sure how it's seeded. Solely a shortstop to separate matches among the log for parsers. 
+	// Not a unique random! Also not sure how it's seeded. Solely a shortstop to separate matches among the log for parsers. 
 	// If needed as a unique ID after pulling logs, generate a new ID instead with a more robust algorithm to ensure uniqueness.
 	file.matchID = RandomInt(10000000).tostring()
 	file.matchTimestamp = GetUnixTimestamp()
@@ -191,6 +207,17 @@ void function LTSRebalance_LogInit()
 	AddCallback_OnPlayerKilled( LTSRebalance_LogKill )
 	AddCallback_OnNPCKilled( LTSRebalance_LogKill )
 	AddSyncedMeleeServerCallback( GetSyncedMeleeChooser( "titan", "titan" ), LTSRebalance_LogTermination )
+
+	// Tracks battery entities spawned (excluding the ones that spawn every minute naturally, until they are picked up)
+	AddSpawnCallback( "item_titan_battery", LTSRebalance_TrackBattery )
+	// Assuming batteries are the only power up. The power up has no ties to the spawner, so dunno how to work without that assumption
+	AddSpawnCallback( "item_powerup", LTSRebalance_TrackBattery )
+}
+
+void function LTSRebalance_TrackBattery( entity batt )
+{
+	// Adds the entity so we can later get its origin
+	file.batteries.append( batt )
 }
 
 void function LTSRebalance_InitTracker( entity titan )
@@ -273,33 +300,58 @@ void function LTSRebalance_LogEject( entity player )
 void function LTSRebalance_LogTracker( entity player )
 {
 	LTSRebalance_LogStruct ls = file.trackerTable[player]
-	int[8] counters = [ 0, 0, 0, 0, 0, 0, 0, 0 ]
+	table< string, array<int> > counters = {
+		allies = [0, 0],
+		enemies = [0, 0],
+		centers = [0, 0, 0],
+		batteries = [0, 0],
+		alliesPilot = [0, 0],
+		enemiesPilot = [0, 0]
+	}
+
 	OnThreadEnd(
 		function() : ( ls, counters )
 		{
-			file.logDistance = false
 			// Average out some values (we want the average in logs)
-			if ( counters[0] > 0 )
+			if ( counters.allies[0] > 0 )
 			{
-				ls.distanceToAllies /= counters[0]
-				ls.distanceToCloseAlly /= counters[1]
-			}
-			if ( counters[2] > 0 )
-			{
-				ls.distanceToEnemies /= counters[2]
-				ls.distanceToCloseEnemy /= counters[3]
-			}
-			if ( counters[4] > 0 )
-			{
-				ls.distanceToAlliesPilot /= counters[4]
-				ls.distanceToCloseAllyPilot /= counters[5]
-			}
-			if ( counters[6] > 0 )
-			{
-				ls.distanceToEnemiesPilot /= counters[6]
-				ls.distanceToCloseEnemyPilot /= counters[7]
+				ls.distanceToAllies /= counters.allies[0]
+				ls.distanceToCloseAlly /= counters.allies[1]
 			}
 
+			if ( counters.enemies[0] > 0 )
+			{
+				ls.distanceToEnemies /= counters.enemies[0]
+				ls.distanceToCloseEnemy /= counters.enemies[1]
+			}
+
+			if ( counters.centers[0] > 0 )
+				ls.distanceToCenterAllies /= counters.centers[0]
+			if ( counters.centers[1] > 0 )
+				ls.distanceToCenterEnemies /= counters.centers[1]
+			if ( counters.centers[2] > 0 )
+				ls.distanceBetweenCenters /= counters.centers[2]
+
+			if ( counters.batteries[0] > 0 )
+			{
+				ls.distanceToBatteries /= counters.batteries[0]
+				ls.distanceToCloseBattery /= counters.batteries[1]
+			}
+
+			if ( counters.alliesPilot[0] > 0 )
+			{
+				ls.distanceToAlliesPilot /= counters.alliesPilot[0]
+				ls.distanceToCloseAllyPilot /= counters.alliesPilot[1]
+			}
+			
+			if ( counters.enemiesPilot[0] > 0 )
+			{
+				ls.distanceToEnemiesPilot /= counters.enemiesPilot[0]
+				ls.distanceToCloseEnemyPilot /= counters.enemiesPilot[1]
+			}
+
+			ls.distanceOnCritDealt = ls.distanceOnCritDealt > 0 ? ls.distanceOnCritDealt / ls.critRateHelper[1] : 0.0
+			ls.distanceOnNonCritDealt = ls.distanceOnNonCritDealt > 0 ? ls.distanceOnNonCritDealt / ls.critRateHelper[0] : 0.0
 			if ( ls.critRateHelper[0] == 0 )
 				ls.critRateDealt = ls.critRateHelper[1] > 0 ? 1.0 : 0.0
 			else
@@ -326,6 +378,7 @@ void function LTSRebalance_LogTracker( entity player )
 
 	thread LTSRebalance_LogEject( player )
 
+	entity[2] closeTitans = [null, null] // Ally, enemy
 	float lastTime = Time()
 	while ( GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA ) == curScore )
 	{
@@ -335,51 +388,11 @@ void function LTSRebalance_LogTracker( entity player )
 
 		float timePassed = Time() - lastTime
 
-		float closestAllyDist = 99999.0
-		float closestEnemyDist = 99999.0
+		if ( file.logDistance )
+			LTSRebalance_LogDistanceToOthers( player, ls, counters, closeTitans )
+
 		if ( player.IsTitan() )
 		{
-			if ( file.logDistance )
-			{
-				array<entity> titans = GetPlayerArray()
-				titans.extend( GetNPCArrayByClass( "npc_titan" ) )
-				foreach ( titan in titans )
-				{
-					if ( !titan.IsTitan() || titan == player )
-						continue
-					
-					if ( titan.GetTeam() == player.GetTeam() )
-					{
-						counters[0]++
-						
-						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-						ls.distanceToAllies += dist
-						if ( dist < closestAllyDist )
-							closestAllyDist = dist
-					}
-					else
-					{
-						counters[2]++
-						
-						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-						ls.distanceToEnemies += dist
-						if ( dist < closestEnemyDist )
-							closestEnemyDist = dist
-					}
-				}
-
-				if ( closestAllyDist < 99999.0 )
-				{
-					counters[1]++
-					ls.distanceToCloseAlly += closestAllyDist
-				}
-				if ( closestEnemyDist < 99999.0 )
-				{
-					counters[3]++
-					ls.distanceToCloseEnemy += closestEnemyDist 
-				}
-			}
-
 			ls.distanceTravelled += Distance( lastOrigin, player.GetOrigin() )
 			ls.timeAsTitan += timePassed
 		}
@@ -389,49 +402,8 @@ void function LTSRebalance_LogTracker( entity player )
 				ls.batteriesPicked++
 			hasBattery = PlayerHasBattery( player )
 
-			if ( file.logDistance )
-			{
-				array<entity> titans = GetPlayerArray()
-				titans.extend( GetNPCArrayByClass( "npc_titan" ) )
-				foreach ( titan in titans )
-				{
-					if ( !titan.IsTitan() || titan == player.GetPetTitan() )
-						continue
-					
-					if ( titan.GetTeam() == player.GetTeam() )
-					{
-						counters[4]++
-						
-						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-						ls.distanceToAlliesPilot += dist
-						if ( dist < closestAllyDist )
-							closestAllyDist = dist
-					}
-					else
-					{
-						counters[6]++
-						
-						float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
-						ls.distanceToEnemiesPilot += dist
-						if ( dist < closestEnemyDist )
-							closestEnemyDist = dist
-					}
-				}
-
-				if ( closestAllyDist < 99999.0 )
-				{
-					counters[5]++
-					ls.distanceToCloseAllyPilot += closestAllyDist
-				}
-				if ( closestEnemyDist < 99999.0 )
-				{
-					counters[7]++
-					ls.distanceToCloseEnemyPilot += closestEnemyDist
-				}
-			}
-
-			ls.timeAsPilot += timePassed
 			ls.distanceTravelledPilot += Distance( lastOrigin, player.GetOrigin() )
+			ls.timeAsPilot += timePassed
 		}
 		
 		lastOrigin = player.GetOrigin()
@@ -453,6 +425,182 @@ bool function PlayerOrTitanAlive( entity player )
 		return false
 	
 	return IsAlive( player ) || IsAlive( player.GetPetTitan() )
+}
+
+void function LTSRebalance_LogDistanceToOthers( entity player, LTSRebalance_LogStruct ls, table< string, array<int> > counters, entity[2] closeTitans )
+{
+	bool isTitan = player.IsTitan()
+
+	float closestAllyDist = 99999.0
+	entity closestAlly = null
+	float closestEnemyDist = 99999.0
+	entity closestEnemy = null
+	vector allyCenter = <0, 0, 0>
+	vector enemyCenter = <0, 0, 0>
+	int allyCounter = 0
+	int enemyCounter = 0
+
+	array<entity> titans = GetPlayerArray()
+	titans.extend( GetNPCArrayByClass( "npc_titan" ) )
+	foreach ( titan in titans )
+	{	
+		if ( !titan.IsTitan() )
+			continue
+
+		if ( titan == player )
+			continue
+
+		if ( titan.GetTeam() == player.GetTeam() )
+		{
+			
+
+			if ( isTitan )
+			{
+				allyCounter++
+				allyCenter += titan.GetOrigin()
+				counters.allies[0]++
+			}
+			else
+				counters.alliesPilot[0]++
+			
+			float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
+			if ( isTitan )
+				ls.distanceToAllies += dist
+			else
+				ls.distanceToAlliesPilot += dist
+
+			if ( dist < closestAllyDist )
+			{
+				closestAllyDist = dist
+				closestAlly = titan
+			}
+		}
+		else
+		{
+			if ( isTitan )
+			{
+				enemyCounter++
+				enemyCenter += titan.GetOrigin()
+				counters.enemies[0]++
+			}
+			else
+				counters.enemiesPilot[0]++
+			
+			float dist = Distance( titan.GetOrigin(), player.GetOrigin() )
+			if ( isTitan )
+				ls.distanceToEnemies += dist
+			else
+				ls.distanceToEnemiesPilot += dist
+
+			if ( dist < closestEnemyDist )
+			{
+				closestEnemyDist = dist
+				closestEnemy = titan
+			}
+		}
+	}
+
+	if ( isTitan )
+	{
+		LTSRebalance_LogStruct ornull cls
+		if ( closestAlly != closeTitans[0] )
+		{
+			cls = LTSRebalance_GetLogStruct( closeTitans[0] )
+			if ( cls != null )
+				( expect LTSRebalance_LogStruct( cls ) ).closeTitanDamageHelper.fastremovebyvalue( player )
+
+			cls = LTSRebalance_GetLogStruct( closestAlly )
+			if ( cls != null )
+				( expect LTSRebalance_LogStruct( cls ) ).closeTitanDamageHelper.append( player )
+
+			closeTitans[0] = closestAlly
+		}
+		if ( closestEnemy != closeTitans[1] )
+		{
+			cls = LTSRebalance_GetLogStruct( closeTitans[1] )
+			if ( cls != null )
+				( expect LTSRebalance_LogStruct( cls ) ).closeTitanDamageHelper.fastremovebyvalue( player )
+
+			cls = LTSRebalance_GetLogStruct( closestEnemy )
+			if ( cls != null )
+				( expect LTSRebalance_LogStruct( cls ) ).closeTitanDamageHelper.append( player )
+
+			closeTitans[1] = closestEnemy
+		}
+	}
+
+	if ( closestAllyDist < 99999.0 )
+	{
+		
+		if ( isTitan )
+		{
+			ls.distanceToCloseAlly += closestAllyDist
+			counters.allies[1]++
+		}
+		else
+		{
+			ls.distanceToCloseAllyPilot += closestAllyDist
+			counters.alliesPilot[1]++
+		}
+	}
+	if ( closestEnemyDist < 99999.0 )
+	{
+		if ( isTitan )
+		{
+			ls.distanceToCloseEnemy += closestEnemyDist
+			counters.enemies[1]++
+		}
+		else
+		{
+			ls.distanceToCloseEnemyPilot += closestEnemyDist
+			counters.enemiesPilot[1]++
+		} 
+	}
+
+	if ( allyCounter > 1 )
+	{
+		allyCenter /= allyCounter
+		ls.distanceToCenterAllies += Distance( player.GetOrigin(), allyCenter )
+		counters.centers[0]++
+	}
+	if ( enemyCounter > 1 )
+	{
+		enemyCenter /= enemyCounter
+		ls.distanceToCenterEnemies += Distance( player.GetOrigin(), enemyCenter )
+		counters.centers[1]++
+	}
+	if ( allyCounter > 1 && enemyCounter > 1 )
+	{
+		ls.distanceBetweenCenters += Distance( allyCenter, enemyCenter )
+		counters.centers[2]++
+	}
+	if ( !isTitan )
+		return
+
+	float closestBattDist = 99999.0
+	for ( int i = file.batteries.len() - 1; i >= 0; i-- )
+	{
+		entity batt = file.batteries[i]
+		if ( !IsValid( batt ) )
+		{
+			file.batteries.remove( i )
+			continue
+		}
+		
+		counters.batteries[0]++
+
+		float dist = Distance( player.GetOrigin(), batt.GetOrigin() )
+		ls.distanceToBatteries += dist
+
+		if ( dist < closestBattDist )
+			closestBattDist = dist
+	}
+
+	if ( closestBattDist < 99999.0 )
+	{
+		ls.distanceToCloseBattery += closestBattDist
+		counters.batteries[1]++
+	}
 }
 
 void function LTSRebalance_LogKill( entity victim, entity attacker, var damageInfo )
@@ -557,9 +705,16 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 					ls.damageDealt += int( DamageInfo_GetDamage( damageInfo ) )
 					if ( attacker.IsNPC() )
 						ls.damageDealtAuto += int( DamageInfo_GetDamage( damageInfo ) )
+					LTSRebalance_LogCloseTitanDamage( ls, int( DamageInfo_GetDamage( damageInfo ) ) )
 
 					if ( critHit > 0 )
+					{
+						if ( critHit == 1 )
+							ls.distanceOnNonCritDealt += DamageInfo_GetDistFromAttackOrigin( damageInfo )
+						else
+							ls.distanceOnCritDealt += DamageInfo_GetDistFromAttackOrigin( damageInfo )
 						ls.critRateHelper[ critHit - 1 ]++
+					}
 				}
 			}
 			else
@@ -609,6 +764,7 @@ void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, Titan
 					ls.damageDealtTempShields += tempShieldDamage
 					if ( attacker.IsNPC() )
 						ls.damageDealtAuto += shieldDamage + tempShieldDamage
+					LTSRebalance_LogCloseTitanDamage( ls, shieldDamage + tempShieldDamage )
 				}
 			}
 			else
@@ -617,7 +773,60 @@ void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, Titan
 	}
 }
 
-void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, float damage )
+void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, entity inflictor, var damageInfo = null )
+{
+	if ( GAMETYPE != LAST_TITAN_STANDING )
+		return
+	
+	if ( !IsValid( victim ) )
+	{
+		print( "LTS Rebalance tracker log error: Tried to log damage blocked for invalid victim")
+		return
+	}
+
+	if ( !IsValid( inflictor ) )
+		return
+	
+	bool isPlayer = !IsValid( attacker ) || attacker.IsPlayer()
+	float damage = 0.0
+	bool hit = false
+	if ( inflictor.IsProjectile() )
+	{
+		damage = LTSRebalance_GetProjectileDamage( inflictor, true, isPlayer )
+		TraceResults hitResult = TraceLine( inflictor.GetOrigin(), inflictor.GetOrigin() + Normalize( inflictor.GetVelocity() )*5000, [ inflictor, attacker ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
+		hit = IsValid( hitResult.hitEnt ) && hitResult.hitEnt.IsTitan() && hitResult.hitEnt.GetTeam() == victim.GetTeam() && victim != attacker
+	}
+	else
+	{
+		vector hitPos = DamageInfo_GetDamagePosition( damageInfo )
+		damage = LTSRebalance_GetWeaponDamage( inflictor, true, isPlayer )
+		TraceResults hitResult = TraceLine( hitPos, hitPos + Normalize( hitPos - attacker.EyePosition() )*5000, [ attacker ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
+		hit = IsValid( hitResult.hitEnt ) && hitResult.hitEnt.IsTitan() && hitResult.hitEnt.GetTeam() == victim.GetTeam() && victim != attacker
+	}
+
+	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
+	if ( ls != null )
+	{
+		expect LTSRebalance_LogStruct( ls )
+		ls.damageTakenBlocked += int( damage + 0.5 )
+		if ( hit )
+			ls.damageTakenBlockedTarget += int( damage + 0.5 )
+	}
+
+	if ( !IsValid( attacker ) || !attacker.IsTitan() )
+		return
+
+	ls = LTSRebalance_GetLogStruct( attacker )
+	if ( ls != null )
+	{
+		expect LTSRebalance_LogStruct( ls )
+		ls.damageDealtBlocked += int( damage + 0.5 )
+		if ( hit )
+			ls.damageDealtBlockedTarget += int( damage + 0.5 )
+	}
+}
+
+void function LTSRebalance_LogDamageBlockedRaw( entity victim, entity attacker, float damage, bool hit = false )
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
 		return
@@ -633,6 +842,8 @@ void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, flo
 	{
 		expect LTSRebalance_LogStruct( ls )
 		ls.damageTakenBlocked += int( damage + 0.5 )
+		if ( hit )
+			ls.damageTakenBlockedTarget += int( damage + 0.5 )
 	}
 
 	if ( !IsValid( attacker ) || !attacker.IsTitan() )
@@ -643,6 +854,31 @@ void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, flo
 	{
 		expect LTSRebalance_LogStruct( ls )
 		ls.damageDealtBlocked += int( damage + 0.5 )
+		if ( hit )
+			ls.damageDealtBlockedTarget += int( damage + 0.5 )
+	}
+}
+
+void function LTSRebalance_LogCloseTitanDamage( LTSRebalance_LogStruct ls, int damage )
+{
+	for ( int i = ls.closeTitanDamageHelper.len() - 1; i >= 0; i-- )
+	{
+		entity closeTitan = ls.closeTitanDamageHelper[i]
+		if ( !IsValid( closeTitan ) )
+		{
+			ls.closeTitanDamageHelper.remove( i )
+			continue
+		}
+		
+		LTSRebalance_LogStruct ornull cls = LTSRebalance_GetLogStruct( closeTitan )
+		if ( cls == null )
+			continue
+
+		expect LTSRebalance_LogStruct( cls )
+		if ( closeTitan.GetTeam() == ls.team )
+			cls.damageDealtCloseAlly += damage
+		else
+			cls.damageDealtCloseEnemy += damage
 	}
 }
 
@@ -716,7 +952,10 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"damageDealtAuto\":" + ls.damageDealtAuto.tostring()
 	block1 += ",\"damageDealtPilot\":" + ls.damageDealtPilot.tostring()
 	block1 += ",\"damageDealtBlocked\":" + ls.damageDealtBlocked.tostring()
+	block1 += ",\"damageDealtBlockedTarget\":" + ls.damageDealtBlockedTarget.tostring()
 	block1 += ",\"damageDealtSelf\":" + ls.damageDealtSelf.tostring()
+	block1 += ",\"damageDealtCloseAlly\":" + ls.damageDealtCloseAlly.tostring()
+	block1 += ",\"damageDealtCloseEnemy\":" + ls.damageDealtCloseEnemy.tostring()
 	block1 += ",\"critRateDealt\":" + ls.critRateDealt.tostring()
 	block1 += "}"
 
@@ -729,6 +968,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block2 += ",\"damageTakenTempShields\":" + ls.damageTakenTempShields.tostring()
 	block2 += ",\"damageTakenAuto\":" + ls.damageTakenAuto.tostring()
 	block2 += ",\"damageTakenBlocked\":" + ls.damageTakenBlocked.tostring()
+	block2 += ",\"damageTakenBlockedTarget\":" + ls.damageTakenBlockedTarget.tostring()
 	block2 += ",\"critRateTaken\":" + ls.critRateTaken.tostring()
 	block2 += ",\"kills\":" + ls.kills.tostring()
 	block2 += ",\"killsPilot\":" + ls.killsPilot.tostring()
@@ -758,8 +998,16 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 	block3 += ",\"avgDistanceToAllies\":" + ls.distanceToAllies.tostring()
 	block3 += ",\"avgDistanceToCloseAlly\":" + ls.distanceToCloseAlly.tostring()
+	block3 += ",\"avgDistanceToCenterAllies\":" + ls.distanceToCenterAllies.tostring()
 	block3 += ",\"avgDistanceToEnemies\":" + ls.distanceToEnemies.tostring()
 	block3 += ",\"avgDistanceToCloseEnemy\":" + ls.distanceToCloseEnemy.tostring()
+	block3 += ",\"avgDistanceToCenterEnemies\":" + ls.distanceToCenterEnemies.tostring()
+	block3 += ",\"avgDistanceBetweenCenters\":" + ls.distanceBetweenCenters.tostring()
+	block3 += ",\"avgDistanceToBatteries\":" + ls.distanceToBatteries.tostring()
+	block3 += ",\"avgDistanceToCloseBattery\":" + ls.distanceToCloseBattery.tostring()
+	block3 += ",\"avgDistanceOnCritDealt\":" + ls.distanceOnCritDealt.tostring()
+	block3 += ",\"avgDistanceOnNonCritDealt\":" + ls.distanceOnNonCritDealt.tostring()
+
 	block3 += ",\"avgDistanceToAlliesPilot\":" + ls.distanceToAlliesPilot.tostring()
 	block3 += ",\"avgDistanceToCloseAllyPilot\":" + ls.distanceToCloseAllyPilot.tostring()
 	block3 += ",\"avgDistanceToEnemiesPilot\":" + ls.distanceToEnemiesPilot.tostring()
@@ -775,5 +1023,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 
 void function LTSRebalance_ClearLogTrackers()
 {
+	file.logDistance = false
 	file.trackerTable.clear()
+	file.batteries.clear()
 }
