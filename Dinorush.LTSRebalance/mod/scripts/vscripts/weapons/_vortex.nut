@@ -1779,12 +1779,10 @@ bool function CodeCallback_OnVortexHitBullet( entity weapon, entity vortexSphere
 		entity weapon = DamageInfo_GetWeapon( damageInfo )
 		float damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
-		entity attacker = DamageInfo_GetAttacker( damageInfo )
-		bool isPlayer = !IsValid( attacker ) || attacker.IsPlayer()
 		entity logWeapon = IsValid( weapon ) ? weapon : DamageInfo_GetInflictor( damageInfo )
 		if ( logWeapon.IsPlayer() || logWeapon.IsNPC() )
 			logWeapon = null
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, GetWeaponDamageToParticle( weapon, damageInfo, true, isPlayer ) )
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), DamageInfo_GetAttacker( damageInfo ), logWeapon, damageInfo )
 
 
 		Assert( damage >= 0, "Bug 159851 - Damage should be greater than or equal to 0.")
@@ -1949,8 +1947,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 			damage = GetProjectileDamageToParticle( projectile, false )
 		
 		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
-		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), logAttacker, LTSRebalance_GetProjectileDamage( projectile, true, isPlayer ) )
+		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), logAttacker, projectile )
 
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )

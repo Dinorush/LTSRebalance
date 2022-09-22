@@ -3066,7 +3066,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			if ( !LTSRebalance_Enabled() || passVortex == "" )
 			{
 				if ( i == maxCount - 1 )
-					LTSRebalance_LogDamageBlocked( owner, vortexHit.vortex.GetOwner(), float( damageNearValueTitanArmor ) )
+					LTSRebalance_LogDamageBlockedRaw( vortexHit.vortex.GetOwner(), owner, float( damageNearValueTitanArmor ) )
 				WaitFrame()
 				continue
 			}
