@@ -2,7 +2,11 @@
 
 **Required by Server and Client**
 
-Does a comprehensive rebalancing of titans and titan kits focused on LTS balance.
+Does a comprehensive rebalancing of titans and titan kits focused on LTS balance. The changes are numerous and significantly alter the power of several titans and kits, but the gameplay of each titan should remain fairly close to Vanilla. The mod is usable outside of LTS; the balance merely does not consider other modes.
+
+## Balance Changelog
+
+All balancing/changes can be viewed in [this changelog document](https://docs.google.com/document/d/10mZtK7w7MOTv9kGNQru96G7XpEZqv8_dUw_I29RhDj4/edit?usp=sharing).
 
 ### Installation
 
@@ -12,10 +16,6 @@ Download the zip from the [latest release](https://github.com/Dinorush/LTSRebala
 
 This mod enables a new setting, "LTS Rebalance", under the "Promode" category in private match settings. When turned on, LTS Rebalance changes will apply.
 
-## Balance Changelog
-
-All balancing/changes can be viewed in [this changelog document](https://docs.google.com/document/d/10mZtK7w7MOTv9kGNQru96G7XpEZqv8_dUw_I29RhDj4/edit?usp=sharing).
-
 ### Weapon Cosmetic Mod Conflictions
 
 These weapons have limitations that prevent them from working with certain mods that attempt to add reticles or effects to a set list of weapons:
@@ -24,6 +24,10 @@ These weapons have limitations that prevent them from working with certain mods 
   - Weapon is entirely replaced. No mods that reference this weapon specifically or modify its reticle will work.
 - 40mm Tracker Cannon
   - Reticles are replaced. Reticle mods that use KeyValue modding will not work.
+
+### Logging
+
+When playing LTS, the mod tracks a multitude of player stats and prints them at the end of each round (server-side) for those interested in stats and data.
 
 ## FAQs
 
