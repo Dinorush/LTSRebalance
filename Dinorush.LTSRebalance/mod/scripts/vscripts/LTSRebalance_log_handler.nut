@@ -799,7 +799,7 @@ void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, ent
 	else
 	{
 		vector hitPos = DamageInfo_GetDamagePosition( damageInfo )
-		damage = LTSRebalance_GetWeaponDamage( inflictor, true, isPlayer )
+		damage = LTSRebalance_GetWeaponDamage( inflictor, damageInfo, true, isPlayer )
 		TraceResults hitResult = TraceLine( hitPos, hitPos + Normalize( hitPos - attacker.EyePosition() )*5000, [ attacker ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
 		hit = IsValid( hitResult.hitEnt ) && hitResult.hitEnt.IsTitan() && hitResult.hitEnt.GetTeam() == victim.GetTeam() && victim != attacker
 	}
