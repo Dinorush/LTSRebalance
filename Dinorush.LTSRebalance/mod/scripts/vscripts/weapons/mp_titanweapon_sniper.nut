@@ -24,8 +24,8 @@ const INSTANT_SHOT_DAMAGE 				= 1200
 //const INSTANT_SHOT_MAX_CHARGES		= 2 // can't change this without updating crosshair
 //const INSTANT_SHOT_TIME_PER_CHARGE	= 0
 const SNIPER_PROJECTILE_SPEED			= 10000
-const float THREAT_OPTICS_SONARMIN      = 0.85
-const float THREAT_OPTICS_SONARCHARGE   = 0.15
+const float THREAT_OPTICS_SONARMIN      = 1.8
+const float THREAT_OPTICS_SONARCHARGE   = 0.0
 
 const float PERFECTKITS_VIPER_HEIGHT_MIN = 750
 const float PERFECTKITS_VIPER_HEIGHT_CONV = 0.0005
