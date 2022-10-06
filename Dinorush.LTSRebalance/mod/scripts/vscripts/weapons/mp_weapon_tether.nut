@@ -333,6 +333,9 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 			AddTitanTether( owner, projectile, titan, tetherEnts, projectile, tetherEndEntForPlayer, tetherEndEntForOthers, isExplosiveTether )
 			if ( LTSRebalance_Enabled() )
 			{
+				AddEntityCallback_OnDamaged( projectile, LTSRebalance_PreventNormalMeleeDamage )
+				SetObjectCanBeMeleed( projectile, true )
+				SetVisibleEntitiesInConeQueriableEnabled( projectile, true )
 				StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.5, 0.5 )
 				StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.5, 0.5 )
 			}
@@ -352,6 +355,12 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 
 		WaitFrame()
 	}
+}
+
+void function LTSRebalance_PreventNormalMeleeDamage( entity tether, var damageInfo )
+{
+	if ( DamageInfo_GetDamageType( damageInfo ) == DMG_MELEE_ATTACK && DamageInfo_GetDamageSourceIdentifier( damageInfo ) != eDamageSourceId.mp_titancore_shift_core )
+		DamageInfo_SetDamage( damageInfo, 0 )
 }
 
 void function ParentEntityToPlayerScreen( entity ent )
