@@ -20,7 +20,7 @@ const float LTSREBALANCE_RICOCHET_SEEK_DOT_MIN = 0.87
 const float LTSREBALANCE_RICOCHET_SEEK_DOT_MAX = 1
 const float LTSREBALANCE_RICOCHET_SEEK_RANGE_MAX = LEADWALL_LIFETIME_MAX * LTSREBALANCE_LEADWALL_VELOCITY // max lifetime * velocity * scalar
 const float LTSREBALANCE_RICOCHET_SEEK_RANGE_MIN = LEADWALL_LIFETIME_MAX * LTSREBALANCE_LEADWALL_VELOCITY * 0.25 // max lifetime * velocity * scalar
-const float LTSREBALANCE_RICOCHET_SPREAD_MOD = 5 // Increase spread of ricochet'd shots to better match normal spread fired at the target
+const float LTSREBALANCE_RICOCHET_SPREAD_MOD = 4 // Increase spread of ricochet'd shots to better match normal spread fired at the target
 const float LTSREBALANCE_RICOCHET_MAX_COMPENSATE = 10
 global const int LTSREBALANCE_PHASE_REFLEX_AMMO = 2
 
