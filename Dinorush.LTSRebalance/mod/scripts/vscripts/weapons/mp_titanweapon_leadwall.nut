@@ -22,6 +22,7 @@ const float LTSREBALANCE_RICOCHET_SEEK_RANGE_MAX = LEADWALL_LIFETIME_MAX * LTSRE
 const float LTSREBALANCE_RICOCHET_SEEK_RANGE_MIN = LEADWALL_LIFETIME_MAX * LTSREBALANCE_LEADWALL_VELOCITY * 0.25 // max lifetime * velocity * scalar
 const float LTSREBALANCE_RICOCHET_SPREAD_MOD = 5 // Increase spread of ricochet'd shots to better match normal spread fired at the target
 const float LTSREBALANCE_RICOCHET_MAX_COMPENSATE = 10
+global const int LTSREBALANCE_PHASE_REFLEX_AMMO = 2
 
 struct
 {
@@ -225,7 +226,7 @@ void function LTSRebalance_RicochetSeek( entity projectile, vector normal )
 		float dist = sqrt( distSqr )
 		float minDot = GraphCapped( dist, LTSREBALANCE_RICOCHET_SEEK_RANGE_MIN, LTSREBALANCE_RICOCHET_SEEK_RANGE_MAX, LTSREBALANCE_RICOCHET_SEEK_DOT_MIN, LTSREBALANCE_RICOCHET_SEEK_DOT_MAX )
 		float dot = ricochetDir.Dot( Normalize( titan.GetWorldSpaceCenter() - projectilePos ) )
-		printt( "DOTS", dot, minDot )
+
 		if ( dot < minDot )
 			continue
 

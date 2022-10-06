@@ -268,7 +268,7 @@ void function WatchForPhaseReflex( entity titan, StoredWeapon storedWeapon, int 
 			if ( "PerfectReflexForced" in titanDotS && titanDotS.PerfectReflexForced )
 				continue
 
-			storedWeapon.clipCount = clipSize
+			storedWeapon.clipCount = minint( storedWeapon.clipCount + LTSREBALANCE_PHASE_REFLEX_AMMO, clipSize )
 			return
 		}
 		WaitFrame()
