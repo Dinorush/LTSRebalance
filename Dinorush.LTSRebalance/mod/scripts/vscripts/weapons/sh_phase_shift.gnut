@@ -530,14 +530,16 @@ void function PhaseReflexReloadMain( entity titan )
 			return
 
 		array<entity> weapons = titan.GetMainWeapons()
-		if( weapons.len() > 0 ) // During Sword Core, Leadwall doesn't exist
+		if ( weapons.len() > 0 && !weapons[0].GetWeaponSettingBool( eWeaponVar.ammo_no_remove_from_clip ) )
 		{
-			if( weapons[0].IsReloading() )
+			int newClip = minint( weapons[0].GetWeaponPrimaryClipCount() + LTSREBALANCE_PHASE_REFLEX_AMMO, weapons[0].GetWeaponPrimaryClipCountMax() )
+			weapons[0].SetWeaponPrimaryClipCount( newClip )
+
+			if( weapons[0].GetWeaponPrimaryClipCountMax() == weapons[0].GetWeaponPrimaryClipCount() && titan.GetActiveWeapon() == weapons[0] && weapons[0].IsReloading() )
 			{
 				titan.HolsterWeapon()
 				titan.DeployWeapon()
 			}
-			weapons[0].SetWeaponPrimaryClipCount( weapons[0].GetWeaponPrimaryClipCountMax() )
 		}
 	}
 }
