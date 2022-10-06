@@ -18,6 +18,7 @@ const FX_TITAN_GUN_SHIELD_BREAK = $"P_xo_armor_break_CP"
 global const float TITAN_GUN_SHIELD_RADIUS = 105
 global const int TITAN_GUN_SHIELD_HEALTH = 2500
 global const int PAS_LEGION_SHEILD_HEALTH = 5000
+const float LTSREBALANCE_BULWARK_SHIELD_FRAC = 0.8
 
 #if CLIENT
 struct
@@ -66,7 +67,7 @@ var function OnWeaponPrimaryAttack_gun_shield( entity weapon, WeaponPrimaryAttac
 		if ( ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_GUNSHIELD ) ) || weapon.HasMod( "fd_gun_shield" ) )
 		{
 			LTSRebalance_TrackTempShields( weaponOwner )
-			LTSRebalance_AddTempShields( soul, soul.GetShieldHealthMax(), 0, 0, weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration ) )
+			LTSRebalance_AddTempShields( soul, int( soul.GetShieldHealthMax() * LTSREBALANCE_BULWARK_SHIELD_FRAC ), 0, 0, weapon.GetWeaponSettingFloat( eWeaponVar.fire_duration ) )
 			table soulDotS = expect table( soul.s )
 			soulDotS.bulwarkShields <- true
 		}

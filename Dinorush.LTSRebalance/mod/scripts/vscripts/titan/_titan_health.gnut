@@ -253,11 +253,11 @@ void function PlayerOrNPCTitanTookDamage( entity titan, var damageInfo, bool cri
 		// Have to log here because no post callbacks work if no health damage was dealt (except post shield, which does not give an attacker)
 		LTSRebalance_LogShieldDamage( titan, damageInfo, titanDamage )
 
-		// Needed to cancel core gain from Bulwark shields
+		// Needed to reduce core gain from Bulwark shields
 		// Could use a damage callback and do some damage handling manually, but we already replace this file and this is a smoother implementation
 		table soulDotS = expect table( soul.s )
 		if ( "bulwarkShields" in soulDotS && soulDotS.bulwarkShields )
-			titanDamage.shieldDamage = 0
+			titanDamage.shieldDamage /= 2
 	}
 
 	HandleKillshot( titan, damageInfo, titanDamage )
