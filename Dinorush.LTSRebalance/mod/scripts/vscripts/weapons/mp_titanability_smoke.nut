@@ -11,7 +11,7 @@ global function MpTitanAbilitySmoke_Init
 
 const SHIELD_BODY_FX			= $"P_xo_armor_body_CP"
 
-global const float LTSREBALANCE_COUNTER_READY_REGEN_TIME = 30.0
+global const float LTSREBALANCE_COUNTER_READY_REGEN_TIME = 24.0
 
 void function MpTitanAbilitySmoke_Init()
 {
