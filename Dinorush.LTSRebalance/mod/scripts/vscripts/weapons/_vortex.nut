@@ -1333,6 +1333,7 @@ function Vortex_ProjectileCommonSetup( entity projectile, impactData )
 	if ( LTSRebalance_Enabled() )
 	{
 		projectile.s.storedReflectMods <- impactData.storedReflectMods
+		LTSRebalance_FixTetherReflect( projectile )
 		AddEntityDestroyedCallback( projectile, LTSRebalance_FixVortexRefireExplosion )
 	}
 
@@ -1395,6 +1396,17 @@ function DecrementAmpCountOnDestroy( projectile )
         delete ampDamageSourceIdCounts[id]
         shGlobal.damageSourceIdCallbacks[id].fastremovebyvalue( OnDamageAmpProjectile )
     }
+}
+
+void function LTSRebalance_FixTetherReflect( entity projectile )
+{
+	if ( projectile.ProjectileGetWeaponClassName() != "mp_titanability_tether_trap" )
+		return
+	
+	projectile.proj.onlyAllowSmartPistolDamage = false
+	SetCustomSmartAmmoTarget( projectile, true ) // prevent friendly target lockon
+	projectile.e.spawnTime = Time()
+	projectile.e.noOwnerFriendlyFire = true
 }
 #endif // SERVER
 
