@@ -137,15 +137,21 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 
 			if ( desiredEarnMeterMode == eEarnMeterMode.DEFAULT ) // Only occurs when auto titan dies. Resets reward progress and reverts it back to boost.
 				EarnMeterMP_ReplaceReward( player, pilotReward, pilotRewardFrac )
-			else if ( desiredEarnMeterMode == eEarnMeterMode.CORE ) // Replace the pilot's earn meter reward with smoke when they enter their titan.
+			else if ( desiredEarnMeterMode == eEarnMeterMode.CORE || desiredEarnMeterMode == eEarnMeterMode.CORE_ACTIVE ) // Replace the pilot's earn meter reward with smoke when they enter their titan.
 			{
-				float smokeFrac = PlayerEarnMeter_GetSmokeFrac( player )
-				EarnMeterMP_ReplaceReward( player, EarnObject_GetByRef( "core_electric_smoke" ), smokeFrac )
-				if( SoulTitanCore_GetNextAvailableTime( player.GetTitanSoul() ) >= smokeFrac )
-					PlayerEarnMeter_SetRewardUsed( player )
+				// Don't show smoke if Monarch can't earn it
+				entity soul = player.GetTitanSoul()
+				if ( soul.GetTitanSoulNetInt( "upgradeCount" ) % 2 != 0 )
+					PlayerEarnMeter_Reset( player )
+				else
+				{
+					float smokeFrac = PlayerEarnMeter_GetSmokeFrac( player )
+					EarnMeterMP_ReplaceReward( player, EarnObject_GetByRef( "core_electric_smoke" ), smokeFrac )
+
+					if ( SoulTitanCore_GetNextAvailableTime( player.GetTitanSoul() ) >= smokeFrac )
+						PlayerEarnMeter_SetRewardUsed( player )
+				}
 			}
-			else if ( desiredEarnMeterMode == eEarnMeterMode.CORE_ACTIVE ) // Enables smoke after core use (doesn't show up during active, so looks fine)
-				PlayerEarnMeter_EnableReward( player )
 
 			lastEarnMeterMode = desiredEarnMeterMode
 		}
