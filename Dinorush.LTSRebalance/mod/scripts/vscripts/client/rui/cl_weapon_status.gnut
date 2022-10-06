@@ -221,7 +221,11 @@ void function InitAmmoCounterRui( var rui, entity player, entity weapon )
 	RuiTrackFloat( rui, "clipAmmoFrac", player, RUI_TRACK_WEAPON_CLIP_AMMO_FRACTION )
 	RuiTrackFloat( rui, "remainingAmmoFrac", player, RUI_TRACK_WEAPON_REMAINING_AMMO_FRACTION )
 	RuiTrackFloat( rui, "lifetimeShots", player, RUI_TRACK_WEAPON_LIFETIME_SHOTS )
-	RuiTrackFloat( rui, "ammoRegenRate", player, RUI_TRACK_WEAPON_AMMO_REGEN_RATE )
+	
+	if ( weapon.GetWeaponClassName() == "mp_titanweapon_predator_cannon_ltsrebalance" )
+		RuiSetFloat( rui, "ammoRegenRate", 0 )
+	else
+		RuiTrackFloat( rui, "ammoRegenRate", player, RUI_TRACK_WEAPON_AMMO_REGEN_RATE )
 
 	RuiTrackImage( rui, "hudIcon", player, RUI_TRACK_WEAPON_HUD_ICON )
 }
