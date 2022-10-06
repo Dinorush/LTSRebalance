@@ -102,7 +102,6 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 		if ( attackParams.burstIndex == 0 )
 		{
 			int level = weapon.GetWeaponChargeLevel()
-			thread LTSRebalance_Drain40mmCharge( weapon )
 			weapon.SetWeaponBurstFireCount( maxint( 1, level ) )
 		}
 	}
