@@ -473,6 +473,14 @@ void function JFS_PlayerEarnMeter_CoreRewardUpdate( entity titan, float starting
 	float smokeFrac = PlayerEarnMeter_GetSmokeFrac( titan )
 	if ( startingCoreValue < smokeFrac && newCoreValue >= smokeFrac )
 	{
+		entity soul = titan.GetTitanSoul()
+		array passiveList = expect array( soul.passives )
+		if ( LTSRebalance_Enabled() && passiveList.len() > GetNumPassives() && SoulHasPassive( soul, ePassives.PAS_UNSTABLE_REACTOR ) )
+			return
+
+		if ( soul.GetTitanSoulNetInt( "upgradeCount" ) % 2 != 0 ) // Prevent Monarch from getting smoke every other core
+			return
+
 		GiveOffhandElectricSmoke( titan )
 
 		if ( titan.IsPlayer() )
