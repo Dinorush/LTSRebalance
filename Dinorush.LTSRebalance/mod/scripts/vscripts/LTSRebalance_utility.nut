@@ -6,6 +6,7 @@ global function LTSRebalance_EnabledOnInit
 global function LTSRebalance_Precache
 global function PerfectKits_Enabled
 global function PerfectKits_EnabledOnInit
+global function LTSRebalance_DamageInfo_GetWeapon
 
 global function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse
 global function WeaponHasAmmoToUse
@@ -37,18 +38,15 @@ void function LTSRebalance_Init()
 	file.ltsrebalance_enabled = LTSRebalance_EnabledOnInit()
 	file.perfectkits_enabled = PerfectKits_EnabledOnInit()
 
-	// If spawn callbacks call LTSRebalance first, it will mess up kit checks, so call it in Rebalance if both are on
-	if ( file.perfectkits_enabled )
+	if ( !file.ltsrebalance_enabled )
 	{
-
+		// If spawn callbacks call LTSRebalance first, it will mess up kit checks, so call it in Rebalance if both are on
 		#if SERVER
-		if ( !file.ltsrebalance_enabled )
+		if ( file.perfectkits_enabled )
 			AddSpawnCallback( "npc_titan", PerfectKits_HandleAttachments )
 		#endif
-	}
-
-	if ( !file.ltsrebalance_enabled )
 		return
+	}
 
 	LTSRebalance_WeaponInit()
 	#if SERVER
@@ -264,7 +262,7 @@ void function LTSRebalance_HandleAttachments( entity titan )
 			string rebalMod = prefix + weaponMods[i]
 			if ( globalMods.contains( rebalMod ) )
 			{
-				weaponMods.remove(i)
+				weaponMods.remove( i )
 				weaponMods.append( rebalMod )
 			}
 		}
@@ -275,6 +273,12 @@ void function LTSRebalance_HandleAttachments( entity titan )
 			case "mp_titanability_hover":
 				if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
 					weaponMods.append( "LTSRebalance_pas_northstar_hover" )
+			case "mp_titanweapon_laser_lite":
+				if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_ION_LASERCANNON ) )
+					weaponMods.append( "LTSRebalance_pas_ion_lasercannon" )
+			case "mp_titanability_particle_wall":
+				if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
+					weaponMods.append( "LTSRebalance_pas_tone_wall" )
 			default:
 		}
 
@@ -390,4 +394,17 @@ bool function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse( entity weapon )
 		return true
 
 	return WeaponHasAmmoToUse( weapon )
+}
+
+entity function LTSRebalance_DamageInfo_GetWeapon( var damageInfo, entity defaultWeapon = null )
+{
+	entity ent = DamageInfo_GetWeapon( damageInfo )
+	
+	if ( !IsValid( ent ) )
+		ent = DamageInfo_GetInflictor( damageInfo )
+	
+	if ( !IsValid( ent ) || ent.IsPlayer() || ent.IsNPC() )
+		ent = defaultWeapon
+
+	return ent
 }
