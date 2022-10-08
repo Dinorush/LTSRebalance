@@ -227,11 +227,6 @@ void function CoreActivate( entity player )
 			ls.coresUsed++
 		}
 
-		entity weapon = player.GetOffhandWeapon( OFFHAND_EQUIPMENT )
-		// Check < MAX_COUNT here as it gets set to 0 only when core ends for UI to look better
-		if ( IsValid( weapon ) && weapon.HasMod( "LTSRebalance_pas_ion_lasercannon") && "laserCoreCount" in weapon.s && weapon.s.laserCoreCount < LTSREBALANCE_PAS_ION_LASERCANNON_COUNT * 2 - 1 )
-			return
-
 		if ( TitanDamageRewardsTitanCoreTime() )
 			SoulTitanCore_SetNextAvailableTime( soul, 0.0 )
 		else
@@ -249,10 +244,6 @@ void function CoreDeactivate( entity player, entity weapon )
 	{
 		if ( TitanDamageRewardsTitanCoreTime() )
 		{
-			// Check == 0 here since counter should reset on the last use
-			if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon") && "laserCoreCount" in weapon.s && weapon.s.laserCoreCount > 0 )
-				return
-
 			if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 			{
 				SoulTitanCore_SetNextAvailableTime( soul, 0.20 )
