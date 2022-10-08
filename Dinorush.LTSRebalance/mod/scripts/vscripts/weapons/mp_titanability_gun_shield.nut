@@ -18,7 +18,7 @@ const FX_TITAN_GUN_SHIELD_BREAK = $"P_xo_armor_break_CP"
 global const float TITAN_GUN_SHIELD_RADIUS = 105
 global const int TITAN_GUN_SHIELD_HEALTH = 2500
 global const int PAS_LEGION_SHEILD_HEALTH = 5000
-const float LTSREBALANCE_BULWARK_SHIELD_FRAC = 0.8
+const float LTSREBALANCE_BULWARK_SHIELD_FRAC = 0.75
 
 #if CLIENT
 struct
