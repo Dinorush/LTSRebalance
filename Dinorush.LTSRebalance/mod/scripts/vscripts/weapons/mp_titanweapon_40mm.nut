@@ -37,6 +37,7 @@ global const TRACKER_LIFETIME = 60.0
 global const TRACKER_LIFETIME = 15.0
 global const LTSREBALANCE_TRACKER_LIFETIME = 12.0
 #endif
+const float LTSREBALANCE_PAS_TONE_WEAPON_BUFF_TIME = 2.0
 
 void function MpTitanweapon40mm_Init()
 {
@@ -53,7 +54,7 @@ void function MpTitanweapon40mm_Init()
 
 	RegisterSignal("TrackerRocketsFired")
 	RegisterSignal("DisembarkingTitan")
-
+	RegisterSignal( "EnhancedTrackerFired" )
 }
 
 void function OnWeaponDeactivate_titanweapon_40mm( entity weapon )
@@ -148,6 +149,7 @@ int function FireWeaponPlayerAndNPC( WeaponPrimaryAttackParams attackParams, boo
 
         if ( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
         {
+			weapon.Signal( "EnhancedTrackerFired" )
 			weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
 			weapon.EmitWeaponSound_1p3p( "Weapon_40mm_Fire_Amped_1P", "Weapon_40mm_Fire_Amped_3P" )
         }
@@ -172,9 +174,6 @@ void function LTSRebalance_Drain40mmCharge( entity weapon )
 void function OnWeaponReload_titanweapon_40mm( entity weapon, int milestone )
 {
 	#if SERVER
-    if( weapon.HasMod( "LTSRebalance_pas_tone_weapon_on" ) )
-        weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
-
 	if ( weapon.IsChargeWeapon() )
 		weapon.SetWeaponChargeFractionForced( 0 )
 	#endif
@@ -463,8 +462,18 @@ void function Tracker40mm_DamagedTarget( entity ent, var damageInfo )
 	{
 		entity weapon = attacker.GetMainWeapons()[0]
 		if ( IsValid( weapon ) && ent.IsTitan() )
-			weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
+			thread LTSRebalance_give_pas_tone_weapon_buff( weapon )
 	}
+}
+
+void function LTSRebalance_give_pas_tone_weapon_buff( entity weapon )
+{
+	weapon.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "EnhancedTrackerFired" )
+
+	weapon.AddMod( "LTSRebalance_pas_tone_weapon_on" )
+	wait LTSREBALANCE_PAS_TONE_WEAPON_BUFF_TIME
+	weapon.RemoveMod( "LTSRebalance_pas_tone_weapon_on" )
 }
 
 void function PerfectKits_EnhancedTrackerSonarThink( entity enemy, vector position, entity owner )
