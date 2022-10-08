@@ -32,6 +32,9 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( entity weapon
 {
 	entity owner = weapon.GetWeaponOwner()
 	int curCost = weapon.GetWeaponCurrentEnergyCost()
+	if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
+		curCost = weapon.GetWeaponDefaultEnergyCost( 1 )
+
 	bool canUse = owner.CanUseSharedEnergy( curCost )
 
 	#if CLIENT
@@ -42,17 +45,29 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( entity weapon
 	return canUse
 }
 
+bool function LTSRebalance_HasEnergyToFire( entity weapon, int burstIndex )
+{
+	if ( burstIndex > 0 )
+		return true
+	
+	return OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( weapon )
+}
+
 var function OnWeaponPrimaryAttack_titanweapon_laser_lite( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
     entity weaponOwner = weapon.GetWeaponOwner()
-    // Prevent from firing without required energy
-    if ( LTSRebalance_Enabled() && !weaponOwner.ContextAction_IsBusy() && !OnWeaponAttemptOffhandSwitch_titanweapon_laser_lite( weapon ) )
+
+    if ( LTSRebalance_Enabled() && !weaponOwner.ContextAction_IsBusy() && !LTSRebalance_HasEnergyToFire( weapon, attackParams.burstIndex ) )
         return 0
 
     weapon.s.entitiesHit <- {}
 	weapon.s.perfectKitsRefrac <- false
 
 	#if CLIENT
+		// Sync up energy consumption
+		if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
+			weapon.SetWeaponEnergyCost( weapon.GetWeaponCurrentEnergyCost() / weapon.GetWeaponBurstFireCount() )
+
 		if ( !weapon.ShouldPredictProjectiles() )
 			return 1
 	#endif
@@ -74,7 +89,13 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_lite( entity weapon, Weapon
 		weapon.ResetWeaponToDefaultEnergyCost()
 	}
 	else
+	{
+		weapon.ResetWeaponToDefaultEnergyCost()
+		if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
+			weapon.SetWeaponEnergyCost( weapon.GetWeaponCurrentEnergyCost() / weapon.GetWeaponBurstFireCount() )
+
 		ShotgunBlast( weapon, attackParams.pos, attackParams.dir, 1, DF_GIB | DF_EXPLOSION )
+	}
 
 	weapon.EmitWeaponNpcSound( LOUD_WEAPON_AI_SOUND_RADIUS_MP, 0.2 )
 	weapon.SetWeaponChargeFractionForced(1.0)

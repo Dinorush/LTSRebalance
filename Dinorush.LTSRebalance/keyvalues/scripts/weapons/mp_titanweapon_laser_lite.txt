@@ -11,6 +11,43 @@ WeaponData
 			"fire_rate"   									"2"
 			"holster_time"									"0.5"
 			"deploy_time" 									"0.52"
+			"ammo_no_remove_from_clip"						"1"
+		}	
+		LTSRebalance_pas_ion_lasercannon
+		{
+			"damage_near_value"								"*0.165"
+			"damage_far_value"								"*0.165"
+			"npc_damage_near_value"							"*0.165"
+			"npc_damage_far_value"							"*0.165"
+			"damage_near_value_titanarmor"					"*0.165"
+			"damage_far_value_titanarmor" 					"*0.165"
+			"explosion_damage"								"*0.165"
+			"explosion_damage_heavy_armor"					"*0.165"
+
+			"fire_rate"   									"++12" //14
+			"burst_fire_count"								"8"
+			"burst_fire_delay"								"0.5"
+
+			"viewkick_pitch_base" 							"-0.2"
+			"viewkick_pitch_random"   						"0.1"
+			"viewkick_yaw_random" 							"0.1"
+
+			"looping_sounds"								"1"
+
+			"fire_sound_1_player_1p"						""
+			"fire_sound_1_player_3p"						""
+
+			"burst_or_looping_fire_sound_start_1p"			"Weapon_ShoulderLaser_Fire_1P"
+			"burst_or_looping_fire_sound_middle_1p"			"Titan_Core_Laser_FireStart_1P"
+			"burst_or_looping_fire_sound_end_1p"			"Titan_Core_Laser_FireStop_1P"
+
+			"burst_or_looping_fire_sound_start_3p"			"Weapon_ShoulderLaser_Fire_3P"
+			"burst_or_looping_fire_sound_middle_3p"			"Titan_Core_Laser_FireStart_3P"
+			"burst_or_looping_fire_sound_end_3p"			"Titan_Core_Laser_FireStop_3P"
+
+			"burst_or_looping_fire_sound_start_npc"			"Weapon_ShoulderLaser_Fire_3P"
+			"burst_or_looping_fire_sound_middle_npc"		"Titan_Core_Laser_FireStart_3P"
+			"burst_or_looping_fire_sound_end_npc"			"Titan_Core_Laser_FireStop_3P"
 		}
 		PerfectKits_refrac_balance
 		{
