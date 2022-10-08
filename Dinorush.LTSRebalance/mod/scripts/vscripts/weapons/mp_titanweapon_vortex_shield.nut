@@ -36,33 +36,6 @@ global const float PAS_ION_VORTEX_AMP = 1.35
 const float PERFECTKITS_PAS_ION_VORTEX_ENERGY = 0.9
 
 #if CLIENT
-global enum LTSRebalance_eDirection 
-{
-    down, 
-    up,
-    left,
-    right
-}
-
-global struct LTSRebalance_TopoData {
-    vector position = Vector( 0.0, 0.0, 0.0 )
-    vector size = Vector( 0.0, 0.0, 0.0 )
-    vector angles = Vector( 0.0, 0.0, 0.0 )
-    var topo
-}
-
-global struct LTSRebalance_BarTopoData {
-    vector position = Vector( 0.0, 0.0, 0.0 )
-    vector size = Vector( 0.0, 0.0, 0.0 )
-    vector angles = Vector( 0.0, 0.0, 0.0 )
-    int segments = 1
-    array<var> imageRuis
-    array<LTSRebalance_TopoData> topoData
-    int direction
-	float fill
-    void functionref( entity ) updateFunc = null
-}
-
 struct {
 	table< string, LTSRebalance_BarTopoData > LTSRebalance_vortex_ui
 } file
@@ -84,7 +57,7 @@ function MpTitanweaponVortexShield_Init()
 		LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
 		LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, 2, 0.12 )
 		foreach ( var rui in charges.imageRuis )
-			RuiSetFloat( rui, "basicImageAlpha", 0.6 )
+			RuiSetFloat( rui, "basicImageAlpha", 0.7 )
 		LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
 		file.LTSRebalance_vortex_ui["bg"] <- bg
 		file.LTSRebalance_vortex_ui["charges"] <- charges
