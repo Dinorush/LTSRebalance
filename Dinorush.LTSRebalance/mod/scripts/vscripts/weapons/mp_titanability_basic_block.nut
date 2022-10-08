@@ -19,20 +19,97 @@ global function OnWeaponAttemptOffhandSwitch_ability_swordblock
 global function OnWeaponPrimaryAttack_ability_swordblock
 global function OnWeaponChargeBegin_ability_swordblock
 
+#if CLIENT
+global enum LTSRebalance_eDirection 
+{
+    down, 
+    up,
+    left,
+    right
+}
+
+global struct LTSRebalance_TopoData {
+    vector position = Vector( 0.0, 0.0, 0.0 )
+    vector size = Vector( 0.0, 0.0, 0.0 )
+    vector angles = Vector( 0.0, 0.0, 0.0 )
+    var topo
+}
+
+global struct LTSRebalance_BarTopoData {
+    vector position = Vector( 0.0, 0.0, 0.0 )
+    vector size = Vector( 0.0, 0.0, 0.0 )
+    vector angles = Vector( 0.0, 0.0, 0.0 )
+    int segments = 1
+    array<var> imageRuis
+    array<LTSRebalance_TopoData> topoData
+    int direction
+	float fill
+    void functionref( entity ) updateFunc = null
+}
+struct
+{
+	float earn_meter_titan_multiplier = 1.0
+	table< string, LTSRebalance_BarTopoData > LTSRebalance_block_ui
+	var LTSRebalance_block_text
+} file
+#else
 struct
 {
 	float earn_meter_titan_multiplier = 1.0
 } file
+#endif
 
 void function MpTitanAbilityBasicBlock_Init()
 {
 #if SERVER
 	AddDamageFinalCallback( "player", BasicBlock_OnDamage )
 	AddDamageFinalCallback( "npc_titan", BasicBlock_OnDamage )
+#else
+	if ( LTSRebalance_EnabledOnInit() )
+	{
+		LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
+		RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+		LTSRebalance_BarTopoData charge = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
+		RuiSetFloat( charge.imageRuis[0], "basicImageAlpha", 0.0 )
+		LTSRebalance_BasicImageBar_SetFillFrac( charge, 0.0 )
+
+		// vector angles = <0, 0.1, 0>
+		// vector _angles = Vector( angles.y * COCKPIT_RUI_HEIGHT, -angles.x * COCKPIT_RUI_WIDTH, angles.z )
+		// var topo = CreateBar( <0, 0, 0>, _angles, COCKPIT_RUI_WIDTH * 0.1, COCKPIT_RUI_HEIGHT * 0.1 )
+		var text = RuiCreate( $"ui/cockpit_console_text_center.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, -1 )
+		RuiSetInt( text, "maxLines", 1 )
+		RuiSetInt( text, "lineNum", 1 )
+		RuiSetFloat2( text, "msgPos", <0, 0.095, 0> )
+		RuiSetFloat3( text, "msgColor", <0.4, 1.0, 0.4> )
+		RuiSetString( text, "msgText", "0" )
+		RuiSetFloat( text, "msgFontSize", 40.0 )
+		RuiSetFloat( text, "msgAlpha", 0.0 )
+		RuiSetFloat( text, "thicken", 0.0 )
+		file.LTSRebalance_block_text = text
+		file.LTSRebalance_block_ui["bg"] <- bg
+		file.LTSRebalance_block_ui["charge"] <- charge
+	}
 #endif
 	PrecacheParticleSystem( $"P_impact_xo_sword" )
 	file.earn_meter_titan_multiplier = GetCurrentPlaylistVarFloat( "earn_meter_titan_multiplier", 1.0 )
 }
+
+#if CLIENT
+var function CreateBar( vector posOffset, vector angles, float hudWidth, float hudHeight )
+{
+    var topo = RuiTopology_CreateSphere( 
+        COCKPIT_RUI_OFFSET + posOffset, // 
+        AnglesToRight( angles ), // right
+        AnglesToUp( angles ) * -1, // down 
+        COCKPIT_RUI_RADIUS, 
+        hudWidth, 
+        hudHeight, 
+        COCKPIT_RUI_SUBDIV // 3.5
+    ) 
+    return topo
+}
+#endif
 
 const int TITAN_BLOCK = 1
 const int PILOT_BLOCK = 2
@@ -107,14 +184,100 @@ void function OnActivate( entity weapon, int blockType )
 			PlayerUsedOffhand( weaponOwner, weapon )
 		StartShield( weapon )
 	}
+
+	#if CLIENT
+		if ( LTSRebalance_Enabled() && !IsWatchingReplay() && IsLocalViewPlayer( weaponOwner ) )
+		{
+			RuiSetFloat( file.LTSRebalance_block_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
+			RuiSetFloat( file.LTSRebalance_block_ui["charge"].imageRuis[0], "basicImageAlpha", 0.7 )
+			RuiSetFloat( file.LTSRebalance_block_text, "msgAlpha", 0.7 )
+			thread ClLTSRebalance_BlockUIThink( weaponOwner, weapon )
+		}
+	#endif
+
     entity offhandWeapon = weaponOwner.GetOffhandWeapon( OFFHAND_MELEE )
     if ( IsValid( offhandWeapon ) && ( offhandWeapon.HasMod( "super_charged" ) || offhandWeapon.HasMod( "LTSRebalance_super_charged" ) ) )
 		thread BlockSwordCoreFXThink( weapon, weaponOwner )
 }
 
+
+#if CLIENT
+void function ClLTSRebalance_BlockUIThink( entity player, entity weapon )
+{
+	player.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "WeaponDeactivateEvent" )
+
+	OnThreadEnd(
+		function() : ()
+		{
+			RuiSetFloat( file.LTSRebalance_block_ui["charge"].imageRuis[0], "basicImageAlpha", 0.0 )
+			RuiSetFloat( file.LTSRebalance_block_ui["bg"].imageRuis[0], "basicImageAlpha", 0.0 )
+			RuiSetFloat( file.LTSRebalance_block_text, "msgAlpha", 0.0 )
+		}
+	)
+
+	while ( true )
+	{
+		if ( !IsLocalViewPlayer( weapon.GetWeaponOwner() ) )
+			return
+
+		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
+		RuiSetFloat3( file.LTSRebalance_block_text, "msgColor", GetBlockTextColor( ammoFrac ) )
+		RuiSetString( file.LTSRebalance_block_text, "msgText", format( "%.0f%%", ( 1.0 - LTSRebalance_GetCurrentBlock( weapon ) ) * 100.0 ) )
+		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_block_ui["charge"], ammoFrac )
+		WaitFrame()
+	}
+}
+
+vector function GetBlockTextColor( float chargeFrac )
+{
+	return GetTriLerpColor( 1 - chargeFrac, <0.3, 1.0, 0.3>, <0.8, 0.6, 0.4>, <1.0, 0.1, 0.1> )
+}
+
+// Copied from vortex, since it's not a global func
+vector function GetTriLerpColor( float fraction, vector color1, vector color2, vector color3 )
+{
+	float crossover1 = 0.4  // from zero to this fraction, fade between color1 and color2
+	float crossover2 = 0.95 // from crossover1 to this fraction, fade between color2 and color3
+
+	float r, g, b
+
+	// 0 = full charge, 1 = no charge remaining
+	if ( fraction < crossover1 )
+	{
+		r = Graph( fraction, 0, crossover1, color1.x, color2.x )
+		g = Graph( fraction, 0, crossover1, color1.y, color2.y )
+		b = Graph( fraction, 0, crossover1, color1.z, color2.z )
+		return <r, g, b>
+	}
+	else if ( fraction < crossover2 )
+	{
+		r = Graph( fraction, crossover1, crossover2, color2.x, color3.x )
+		g = Graph( fraction, crossover1, crossover2, color2.y, color3.y )
+		b = Graph( fraction, crossover1, crossover2, color2.z, color3.z )
+		return <r, g, b>
+	}
+	else
+	{
+		// for the last bit of overload timer, keep it max danger color
+		r = color3.x
+		g = color3.y
+		b = color3.z
+		return <r, g, b>
+	}
+
+	unreachable
+}
+#endif
+
 void function OnDeactivate( entity weapon, int blockType )
 {
 	EndShield( weapon )
+
+	#if CLIENT
+	weapon.Signal( "WeaponDeactivateEvent" )
+	#endif
 
 	asset first_fx
 	asset third_fx
@@ -206,7 +369,34 @@ void function EndShield( entity weapon )
 #endif
 }
 
+const float TITAN_BLOCK_DAMAGE_REDUCTION = 0.3
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION = 0.25
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT = 1.15
+const float SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.15
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.125
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.27
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT = 1000.0
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_PER_INCREMENT = 1500.0
+const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT_MIN = pow( LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT, 1.0 / LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) - 1.0
+const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT_MIN = pow( LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT, 1.0 / LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) - 1.0
 
+#if CLIENT
+// Assumes LTS Rebalance is on and user is player. For block UI
+float function LTSRebalance_GetCurrentBlock( entity weapon )
+{
+	float initial = LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION
+	float exponent = LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT
+	float damageIncrement = LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT
+	if ( weapon.HasMod( "LTSRebalance_core_regen" ) )
+	{
+		initial = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION
+		exponent = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT
+		damageIncrement = LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_PER_INCREMENT
+	}
+	float power = float( weapon.GetWeaponPrimaryClipCountMax() - weapon.GetWeaponPrimaryClipCount() ) / ( damageIncrement / 10.0 )
+	return initial * pow( exponent, power )
+}
+#endif
 
 #if SERVER
 void function IncrementChargeBlockAnim( entity blockingEnt, var damageInfo )
@@ -223,17 +413,6 @@ void function IncrementChargeBlockAnim( entity blockingEnt, var damageInfo )
 		oldIdx = ((oldIdx + 1) % CHARGE_ACTIVITY_ANIM_COUNT)
 	weapon.SetChargeAnimIndex( newIdx )
 }
-
-const float TITAN_BLOCK_DAMAGE_REDUCTION = 0.3
-const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_REDUCTION = 0.25
-const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT = 1.15
-const float SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.15
-const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_REDUCTION = 0.125
-const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT = 1.27
-const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT = 1000.0
-const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_PER_INCREMENT = 1500.0
-const float LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT_MIN = pow( LTSREBALANCE_TITAN_BLOCK_DAMAGE_EXPONENT, 1.0 / LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) - 1.0
-const float LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT_MIN = pow( LTSREBALANCE_SWORD_CORE_BLOCK_DAMAGE_EXPONENT, 1.0 / LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) - 1.0
 
 float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var damageInfo )
 {
