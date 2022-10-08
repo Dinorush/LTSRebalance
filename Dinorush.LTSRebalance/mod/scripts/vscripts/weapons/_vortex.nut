@@ -1791,9 +1791,7 @@ bool function CodeCallback_OnVortexHitBullet( entity weapon, entity vortexSphere
 		entity weapon = DamageInfo_GetWeapon( damageInfo )
 		float damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
-		entity logWeapon = IsValid( weapon ) ? weapon : DamageInfo_GetInflictor( damageInfo )
-		if ( logWeapon.IsPlayer() || logWeapon.IsNPC() )
-			logWeapon = null
+		entity logWeapon = LTSRebalance_DamageInfo_GetWeapon( damageInfo )
 		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), DamageInfo_GetAttacker( damageInfo ), logWeapon, damageInfo )
 
 
