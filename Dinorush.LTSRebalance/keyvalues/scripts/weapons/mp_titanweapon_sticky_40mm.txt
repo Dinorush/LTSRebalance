@@ -27,7 +27,7 @@ WeaponData
 		}
 		LTSRebalance_pas_tone_burst
 		{
-			"charge_time" 									"2.5"
+			"charge_time" 									"3.75"
 			"charge_cooldown_time"							"0.2"
 			"charge_cooldown_delay"   						"999.0"
 			"charge_end_forces_fire"						"0"

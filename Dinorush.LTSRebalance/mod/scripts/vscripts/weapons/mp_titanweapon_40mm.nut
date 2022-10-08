@@ -535,8 +535,16 @@ void function OnWeaponStartZoomIn_titanweapon_sticky_40mm( entity weapon )
 {
 	if ( weapon.IsReadyToFire() )
 	{
-		if ( weapon.HasMod( "pas_tone_burst") || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
+		if ( weapon.HasMod( "pas_tone_burst") )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
+		{
+			if ( weapon.GetWeaponChargeFraction() < 0.33 )
+			{
+				weapon.SetWeaponChargeFractionForced( 0.33 ) // Doing this instead of using 2 charge levels to get the reticle to cooperate
+				weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+			}
+		}
 	}
 }
 
@@ -545,7 +553,15 @@ void function OnWeaponReadyToFire_titanweapon_sticky_40mm( entity weapon )
 {
 	if ( weapon.IsWeaponInAds() && weapon.GetWeaponPrimaryClipCount() > 0 )
     {
-		if ( weapon.HasMod( "pas_tone_burst") || weapon.HasMod( "LTSRebalance_pas_tone_burst" ) )
+		if ( weapon.HasMod( "pas_tone_burst") )
 			weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+		else if ( weapon.HasMod( "LTSRebalance_pas_tone_burst" )  )
+		{
+			if ( weapon.GetWeaponChargeFraction() < 0.33 )
+			{
+				weapon.SetWeaponChargeFractionForced( 0.33 ) // Doing this instead of using 2 charge levels to get the reticle to cooperate
+				weapon.EmitWeaponSound( "weapon_40mm_burstloader_leveltick_1" )
+			}
+		}
     }
 }
