@@ -10,6 +10,12 @@ WeaponData
 			"ammo_per_shot"									"90"
 			"ammo_stockpile_max"							"90"
 		}
+		LTSRebalance_pas_tone_wall
+		{
+			"ammo_min_to_fire"								"*.5"
+			"ammo_per_shot"									"*.5"
+			"regen_ammo_refill_rate"						"*.5625" // Match downtime (4 up/5 down -> 3 up/5 down)
+		}
 		PerfectKits_pas_tone_wall
 		{
 			"regen_ammo_refill_rate"						"*2"
