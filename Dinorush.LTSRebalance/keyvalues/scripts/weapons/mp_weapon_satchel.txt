@@ -4,11 +4,7 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"ammo_per_shot"									"200"
-			"ammo_min_to_fire"								"200"
-			"regen_ammo_refill_rate"						"10"
-
-			"explosion_damage_heavy_armor"					"2000"
+			"explosion_damage_heavy_armor"					"1000"
 			"projectile_inherit_owner_velocity_scale"		"0.5"
 		}
 	}
