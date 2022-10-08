@@ -27,6 +27,7 @@ const float PAS_VANGUARD_SHIELD_DECAY_TIME = 4.0
 const float TEMP_SHIELD_TICK_RATE = 0.1
 const int STUN_LASER_TRANSFER_PERM_SHIELD = 750
 const int PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD = 250
+const float STUN_LASER_TRANSFER_CORE = 0.025
 
 struct
 {
@@ -107,12 +108,8 @@ var function OnWeaponNPCPrimaryAttack_titanweapon_stun_laser( entity weapon, Wea
 void function StunLaser_DamagedTarget( entity target, var damageInfo )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
-	entity weapon = DamageInfo_GetInflictor( damageInfo )
+	entity weapon = LTSRebalance_DamageInfo_GetWeapon( damageInfo, attacker.GetOffhandWeapon( OFFHAND_LEFT ) )
 
-	// Unsure why, but sometimes the inflictor is not the weapon.
-	if ( weapon.IsPlayer() || weapon.IsNPC() )
-		weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
-	
 	if ( attacker == target )
 	{
 		DamageInfo_SetDamage( damageInfo, 0 )
@@ -134,6 +131,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 	}
 
 	float mod = ( IsValid( weapon ) && "burstFireCount" in weapon.s ) ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.25 ) / float( weapon.s.burstFireCount ) : 1.0
+	bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" ) || weapon.HasMod( "LTSRebalance_energy_field_energy_transfer" )
 
 	if ( attacker.GetTeam() == target.GetTeam() )
 	{
@@ -142,7 +140,6 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 		
 		if ( !IsValid( weapon ) )
 			return
-		bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" ) || weapon.HasMod( "LTSRebalance_energy_field_energy_transfer" )
 		if ( target.IsTitan() && IsValid( attackerSoul ) && hasEnergyTransfer )
 		{
 			entity soul = target.GetTitanSoul()
@@ -175,6 +172,7 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 				
 				LTSRebalance_HandleTempShieldChange( attackerSoul, shieldRestoreAmount )
 				attackerSoul.SetShieldHealth( min( attackerSoul.GetShieldHealth() + shieldRestoreAmount, attackerSoul.GetShieldHealthMax() ) )
+				AddCreditToTitanCoreBuilder( attacker, STUN_LASER_TRANSFER_CORE * mod )
 
 				if ( attacker.IsPlayer() )
 					MessageToPlayer( attacker, eEventNotifications.VANGUARD_ShieldGain, attacker )
@@ -218,6 +216,9 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 			soul.SetShieldHealth( newShield )
 			if ( LTSRebalance_Enabled() && target.GetArmorType() == ARMOR_TYPE_HEAVY )
 			{
+				if ( hasEnergyTransfer )
+					AddCreditToTitanCoreBuilder( attacker, STUN_LASER_TRANSFER_CORE * mod )
+
 				int tempShieldAmount = int( STUN_LASER_TEMP_SHIELD * mod )
 				tempShieldAmount -= PerfectKits_EnergyThiefTake( attacker, tempShieldAmount )
 				PerfectKits_EnergyThiefConvert( attacker, PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD ) // Bonus shield to compensate for not using temp shields
