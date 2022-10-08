@@ -208,16 +208,19 @@ void function LTSRebalance_LogInit()
 	AddCallback_OnNPCKilled( LTSRebalance_LogKill )
 	AddSyncedMeleeServerCallback( GetSyncedMeleeChooser( "titan", "titan" ), LTSRebalance_LogTermination )
 
-	// Tracks battery entities spawned (excluding the ones that spawn every minute naturally, until they are picked up)
-	AddSpawnCallback( "item_titan_battery", LTSRebalance_TrackBattery )
-	// Assuming batteries are the only power up. The power up has no ties to the spawner, so dunno how to work without that assumption
-	AddSpawnCallback( "item_powerup", LTSRebalance_TrackBattery )
+	AddSpawnCallbackEditorClass( "script_ref", "script_power_up_other", LTSRebalance_TrackBattery )
+	// // Tracks battery entities spawned (excluding the ones that spawn every minute naturally, until they are picked up)
+	// AddSpawnCallback( "item_titan_battery", LTSRebalance_TrackBattery )
+	// // Assuming batteries are the only power up. The power up has no ties to the spawner, so dunno how to work without that assumption
+	// AddSpawnCallback( "item_powerup", LTSRebalance_TrackBattery )
 }
 
 void function LTSRebalance_TrackBattery( entity batt )
 {
 	// Adds the entity so we can later get its origin
-	file.batteries.append( batt )
+	PowerUp powerupDef = GetPowerUpFromItemRef( expect string( batt.kv.powerUpType ) )
+	if ( powerupDef.spawnFunc() )
+		file.batteries.append( batt )
 }
 
 void function LTSRebalance_InitTracker( entity titan )
