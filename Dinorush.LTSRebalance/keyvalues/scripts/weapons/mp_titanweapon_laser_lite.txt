@@ -15,14 +15,14 @@ WeaponData
 		}	
 		LTSRebalance_pas_ion_lasercannon
 		{
-			"damage_near_value"								"*0.165"
-			"damage_far_value"								"*0.165"
-			"npc_damage_near_value"							"*0.165"
-			"npc_damage_far_value"							"*0.165"
-			"damage_near_value_titanarmor"					"*0.165"
-			"damage_far_value_titanarmor" 					"*0.165"
-			"explosion_damage"								"*0.165"
-			"explosion_damage_heavy_armor"					"*0.165"
+			"damage_near_value"								"*0.17"
+			"damage_far_value"								"*0.17"
+			"npc_damage_near_value"							"*0.17"
+			"npc_damage_far_value"							"*0.17"
+			"damage_near_value_titanarmor"					"*0.15625"
+			"damage_far_value_titanarmor" 					"*0.15625"
+			"explosion_damage"								"*0.17"
+			"explosion_damage_heavy_armor"					"*0.15625"
 
 			"fire_rate"   									"++12" //14
 			"burst_fire_count"								"8"
