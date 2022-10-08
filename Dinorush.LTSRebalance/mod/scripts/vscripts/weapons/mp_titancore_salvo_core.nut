@@ -354,7 +354,7 @@ void function CalculateGuidancePoint( entity weapon, entity weaponOwner )
 			if ( SoulHasPassive( soul, ePassives.PAS_SALVO_CORE ) )
 			{
 				ArrayRemoveInvalid( weapon.w.salvoMissileArray )
-				if ( weapon.w.salvoMissileArray.len() == 0 && ( !LTSRebalance_Enabled() || weapon.GetBurstFireShotsPending() == 0 ) )
+				if ( weapon.w.salvoMissileArray.len() == 0 && ( !LTSRebalance_Enabled() || weapon.GetBurstFireShotsPending() == weapon.GetWeaponBurstFireCount() ) )
 					break
 			}
 		#endif
