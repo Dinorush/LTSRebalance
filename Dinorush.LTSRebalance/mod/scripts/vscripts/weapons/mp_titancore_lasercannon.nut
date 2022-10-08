@@ -74,8 +74,6 @@ void function LaserCore_OnPlayedOrNPCKilled( entity victim, entity attacker, var
 	float duration
 	if ( weapon.HasMod( "pas_ion_lasercannon") || weapon.HasMod( "PerfectKitsReplace_pas_ion_lasercannon" ) )
 		duration = 5.0
-	else if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
-		duration = 1.2
 	else
 		duration = 3.0
 	float coreFrac = min( 1.0, remainingTime / duration )
@@ -92,19 +90,6 @@ void function LaserCore_OnPlayedOrNPCKilled( entity victim, entity attacker, var
 
 bool function OnAbilityCharge_LaserCannon( entity weapon )
 {
-	#if CLIENT
-	if ( !IsSpectating() && weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
-	#else
-	if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
-	#endif
-	{
-		table weaponDotS = expect table( weapon.s )
-		if ( !( "laserCoreCount" in weaponDotS ) )
-			weaponDotS.laserCoreCount <- 1
-		else if ( expect int( weaponDotS.laserCoreCount ) % 2 == 0 ) // Guard against double-calls on client
-			weaponDotS.laserCoreCount += 1
-	}
-
 	OnAbilityCharge_TitanCore( weapon )
 
 #if CLIENT
@@ -250,21 +235,6 @@ void function OnAbilityEnd_LaserCannon( entity weapon )
 {
 	weapon.Signal( "OnSustainedDischargeEnd" )
 	weapon.StopWeaponEffect( FX_LASERCANNON_MUZZLEFLASH, FX_LASERCANNON_MUZZLEFLASH )
-
-	#if CLIENT
-	if ( !IsSpectating() && weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
-	#else
-	if ( weapon.HasMod( "LTSRebalance_pas_ion_lasercannon" ) )
-	#endif
-	{
-		table weaponDotS = expect table( weapon.s )
-		if ( "laserCoreCount" in weaponDotS )
-		{
-			if ( expect int( weaponDotS.laserCoreCount ) % 2 == 1 ) // Guard against double-calls
-				weaponDotS.laserCoreCount += 1
-			weaponDotS.laserCoreCount %= ( LTSREBALANCE_PAS_ION_LASERCANNON_COUNT * 2 )
-		}
-	}
 
 	#if SERVER
 
