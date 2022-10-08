@@ -37,7 +37,7 @@ WeaponData
 
 			"deploy_time" 									"0.2"
 
-            "charge_cooldown_time"							"9.0"
+            "charge_cooldown_time"							"8.0"
             "charge_cooldown_delay"   						"1.0"
 
             "smart_ammo_max_targeted_burst"					"9"
