@@ -37,7 +37,6 @@ global const NPC_METEOR_DAMAGE_TICK_PILOT = 20.0
 
 global const float PAS_SCORCH_FLAMEWALL_AMMO_FOR_DAMAGE = 0.08
 global const float PAS_SCORCH_FLAMECORE_MOD = 1.3
-const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
 const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.22
 global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.16
 
@@ -52,6 +51,8 @@ global struct MeteorRadiusDamage
 
 #endif // #if SERVER
 
+const float LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS = 1.0
+const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
 const float PAS_SCORCH_SELFDMG_GRACE_PERIOD = 1.5
 
 #if CLIENT
@@ -419,6 +420,12 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	{
 		thermiteLifetimeMin = 1 * GetThermiteDurationBonus( owner )
 		thermiteLifetimeMax = 1.25 * GetThermiteDurationBonus( owner )
+
+		if ( IsValid( hitEnt ) && hitEnt.IsWorld() )
+		{
+			thermiteLifetimeMin += LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS
+			thermiteLifetimeMax += LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS
+		}
 	}
 
 	if ( IsSingleplayer() )
