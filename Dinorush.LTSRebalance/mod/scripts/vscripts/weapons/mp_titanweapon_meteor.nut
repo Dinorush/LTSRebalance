@@ -418,14 +418,17 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 
 	if ( LTSRebalance_Enabled() )
 	{
-		thermiteLifetimeMin = 1 * GetThermiteDurationBonus( owner )
-		thermiteLifetimeMax = 1.25 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMin = 1
+		thermiteLifetimeMax = 1.25
 
 		if ( IsValid( hitEnt ) && hitEnt.IsWorld() )
 		{
 			thermiteLifetimeMin += LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS
 			thermiteLifetimeMax += LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS
 		}
+
+		thermiteLifetimeMin *= GetThermiteDurationBonus( owner )
+		thermiteLifetimeMax *= GetThermiteDurationBonus( owner )
 	}
 
 	if ( IsSingleplayer() )
