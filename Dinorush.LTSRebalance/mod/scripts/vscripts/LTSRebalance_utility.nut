@@ -51,7 +51,7 @@ void function LTSRebalance_Init()
 	LTSRebalance_WeaponInit()
 	#if SERVER
 		if ( GAMETYPE == LAST_TITAN_STANDING && GetConVarBool( "randomize_rebal_lts_spawn" ) && RandomFloat( 1.0 ) < 0.5 )
-			AddCallback_OnClientConnected( LTSRebalance_FlipTeams )
+			AddSpawnCallback( "info_spawnpoint_titan_start", LTSRebalance_FlipSpawns )
 		AddSpawnCallback( "npc_titan", LTSRebalance_ApplyChanges )
 		AddSoulTransferFunc( LTSRebalance_TransferSharedEnergy )
 		AddCallback_OnPlayerRespawned( LTSRebalance_GiveWeaponMod )
@@ -120,9 +120,9 @@ void function LTSRebalance_GiveWeaponMod( entity player )
 	player.GiveExtraWeaponMod( "LTSRebalance" )
 }
 
-void function LTSRebalance_FlipTeams( entity player )
+void function LTSRebalance_FlipSpawns( entity spawn )
 {
-	SetTeam( player, TEAM_IMC + TEAM_MILITIA - player.GetTeam() )
+	SetTeam( spawn, TEAM_IMC + TEAM_MILITIA - spawn.GetTeam() )
 }
 
 void function LTSRebalance_ApplyChanges( entity titan )
