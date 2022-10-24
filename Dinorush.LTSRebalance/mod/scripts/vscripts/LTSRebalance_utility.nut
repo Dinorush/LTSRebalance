@@ -120,9 +120,17 @@ void function LTSRebalance_GiveWeaponMod( entity player )
 	player.GiveExtraWeaponMod( "LTSRebalance" )
 }
 
+// We have to delay this so map-specific spawn point editors can run their code first
 void function LTSRebalance_FlipSpawns( entity spawn )
 {
-	SetTeam( spawn, TEAM_IMC + TEAM_MILITIA - spawn.GetTeam() )
+	thread LTSRebalance_FlipSpawnDelayed( spawn )
+}
+
+void function LTSRebalance_FlipSpawnDelayed( entity spawn )
+{
+	WaitEndFrame()
+	if ( IsValid( spawn ) )
+		SetTeam( spawn, TEAM_IMC + TEAM_MILITIA - spawn.GetTeam() )
 }
 
 void function LTSRebalance_ApplyChanges( entity titan )
