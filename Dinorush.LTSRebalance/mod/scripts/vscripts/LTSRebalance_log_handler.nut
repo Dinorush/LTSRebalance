@@ -209,10 +209,6 @@ void function LTSRebalance_LogInit()
 	AddSyncedMeleeServerCallback( GetSyncedMeleeChooser( "titan", "titan" ), LTSRebalance_LogTermination )
 
 	AddSpawnCallbackEditorClass( "script_ref", "script_power_up_other", LTSRebalance_TrackBattery )
-	// // Tracks battery entities spawned (excluding the ones that spawn every minute naturally, until they are picked up)
-	// AddSpawnCallback( "item_titan_battery", LTSRebalance_TrackBattery )
-	// // Assuming batteries are the only power up. The power up has no ties to the spawner, so dunno how to work without that assumption
-	// AddSpawnCallback( "item_powerup", LTSRebalance_TrackBattery )
 }
 
 void function LTSRebalance_TrackBattery( entity batt )
@@ -223,6 +219,7 @@ void function LTSRebalance_TrackBattery( entity batt )
 		file.batteries.append( batt )
 }
 
+// Initializes the data for a player's log struct tracker and stores it in the tracker table.
 void function LTSRebalance_InitTracker( entity titan )
 {
 	entity player = GetPetTitanOwner( titan )
@@ -277,6 +274,7 @@ void function LTSRebalance_StartTracking( entity player )
 	thread LTSRebalance_LogTracker( player )
 }
 
+// Logs the ejection stat and health/shields wasted as a result.
 void function LTSRebalance_LogEject( entity player )
 {
 	player.EndSignal( "OnDeath" )
@@ -295,11 +293,14 @@ void function LTSRebalance_LogEject( entity player )
 	if ( !IsValid( soul ) )
 		return
 	
-	if ( soul.IsDoomed() )
+	if ( !soul.IsDoomed() )
 		ls.healthWasted += 2500
 	ls.shieldsWasted += soul.GetShieldHealth()
 }
 
+// Main log tracker thread for a given player. Tracks data that lacks callbacks.
+// Namely, batteries, time as class, distance values, and ejections.
+// Stops collecting data on player death/disconnect and prints the results at the end of the round.
 void function LTSRebalance_LogTracker( entity player )
 {
 	LTSRebalance_LogStruct ls = file.trackerTable[player]
@@ -430,6 +431,7 @@ bool function PlayerOrTitanAlive( entity player )
 	return IsAlive( player ) || IsAlive( player.GetPetTitan() )
 }
 
+// Logs all distance values excluding crit-related distance stats.
 void function LTSRebalance_LogDistanceToOthers( entity player, LTSRebalance_LogStruct ls, table< string, array<int> > counters, entity[2] closeTitans )
 {
 	bool isTitan = player.IsTitan()
@@ -606,6 +608,7 @@ void function LTSRebalance_LogDistanceToOthers( entity player, LTSRebalance_LogS
 	}
 }
 
+// Logs kills and the victim's time of death.
 void function LTSRebalance_LogKill( entity victim, entity attacker, var damageInfo )
 {
 	LTSRebalance_LogStruct ornull ls
@@ -644,6 +647,7 @@ void function LTSRebalance_LogKill( entity victim, entity attacker, var damageIn
 	}
 }
 
+// Logs terminations and the damage they've dealt, as well as the health and shields wasted on the victim.
 void function LTSRebalance_LogTermination( SyncedMeleeChooser actions, SyncedMelee action, entity attacker, entity victim )
 {
 	int shieldHealth = 0
@@ -668,6 +672,7 @@ void function LTSRebalance_LogTermination( SyncedMeleeChooser actions, SyncedMel
 	}
 }
 
+// Logs health damage done to a titan, as well as crit-related stats.
 void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 {
 	if ( !victim.IsTitan() )
@@ -726,6 +731,7 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 	}
 }
 
+// Logs shield damage done to a titan.
 void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, TitanDamage titanDamage )
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
@@ -776,6 +782,8 @@ void function LTSRebalance_LogShieldDamage( entity victim, var damageInfo, Titan
 	}
 }
 
+// Logs damage blocked from a source entity. If inflictor is a weapon, damageInfo must exist. Otherwise, inflictor must be a projectile.
+// Will check whether the damage blocked would have hit an enemy by tracing along the travel path for weapons or the velocity for projectiles.
 void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, entity inflictor, var damageInfo = null )
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
@@ -829,6 +837,8 @@ void function LTSRebalance_LogDamageBlocked( entity victim, entity attacker, ent
 	}
 }
 
+// Logs damage blocked by a given amount. Hit boolean controls whether the damage would have hit the target.
+// Primarily for functions that can already assume whether the shot would have hit (e.g. damage reduction).
 void function LTSRebalance_LogDamageBlockedRaw( entity victim, entity attacker, float damage, bool hit = false )
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
@@ -862,6 +872,7 @@ void function LTSRebalance_LogDamageBlockedRaw( entity victim, entity attacker, 
 	}
 }
 
+// Logs damage dealt by a player to all players who register it as their closest titan.
 void function LTSRebalance_LogCloseTitanDamage( LTSRebalance_LogStruct ls, int damage )
 {
 	for ( int i = ls.closeTitanDamageHelper.len() - 1; i >= 0; i-- )
@@ -885,6 +896,8 @@ void function LTSRebalance_LogCloseTitanDamage( LTSRebalance_LogStruct ls, int d
 	}
 }
 
+// Returns the log struct corresponding to an ent, or null if not found.
+// Can find the log struct for the auto titan or titan soul of the player, or the player themselves.
 LTSRebalance_LogStruct ornull function LTSRebalance_GetLogStruct( entity ent )
 {
 	if ( GAMETYPE != LAST_TITAN_STANDING )
@@ -920,6 +933,7 @@ float function GetTimeSinceRoundStart()
 	return Time() - expect float( GetServerVar( "roundStartTime" ) )
 }
 
+// Prints out all the data for a given log struct.
 void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 {
 	int round = GetRoundsPlayed() + 1
