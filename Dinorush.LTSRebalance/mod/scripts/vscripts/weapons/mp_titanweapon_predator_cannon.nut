@@ -28,7 +28,6 @@ const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 
 const float PAS_LEGION_SMARTCORE_DAMAGE_MOD = 0.251 // 0.25 causes rounding errors for PS
 const float PAS_LEGION_SMARTCORE_EFFECT_DURATION = 2.0
-const float PAS_LEGION_WEAPON_RESTORE_FRAC = 0.7
 
 void function MpTitanWeaponpredatorcannon_Init()
 {
@@ -388,18 +387,6 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 					thread SensorArray_StartStatusEffects( attacker, target, weapon.s.sensorArrayTargets )
 
 				weapon.s.sensorArrayTargets[target] = Time()
-			}
-		}
-		else if ( weapon.HasMod( "pas_legion_weapon" ) )
-		{
-			bool isCritical = IsCriticalHit( attacker, target, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) )
-			if ( isCritical )
-			{
-				weapon.s.ammoRestoreBuffer += ( weapon.HasMod( "LongRangeAmmo" ) ? 2.0 : 1.0 ) * PAS_LEGION_WEAPON_RESTORE_FRAC
-				int regenAmt = int( weapon.s.ammoRestoreBuffer )
-				weapon.s.ammoRestoreBuffer -= float( regenAmt )
-				int newAmmo = minint( weapon.GetWeaponPrimaryClipCountMax(), weapon.GetWeaponPrimaryClipCount() + regenAmt )
-				weapon.SetWeaponPrimaryClipCount( newAmmo )
 			}
 		}
 	}
