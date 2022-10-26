@@ -15,7 +15,7 @@ void function OnProjectileCollision_ClusterRocket( entity projectile, vector pos
 			mods.append( expect string( mod ) )
 	}
     bool enhanced = mods.contains( "pas_northstar_cluster" ) || mods.contains( "LTSRebalance_pas_northstar_cluster" )
-	float duration = enhanced ? ( LTSRebalance_Enabled() ? 7.5 : PAS_NORTHSTAR_CLUSTER_ROCKET_DURATION ) : CLUSTER_ROCKET_DURATION
+	float duration = enhanced ? ( LTSRebalance_Enabled() ? 6.25 : PAS_NORTHSTAR_CLUSTER_ROCKET_DURATION ) : CLUSTER_ROCKET_DURATION
     float range = CLUSTER_ROCKET_BURST_RANGE * ( enhanced ? 1.2 : 1.0 )
 
 	#if SERVER
