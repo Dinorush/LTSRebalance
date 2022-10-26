@@ -35,6 +35,14 @@ WeaponData
 			"spread_crouch_ads"   							"0"
 			"spread_air_ads"  								"0"
 		}
+		LTSRebalance_pas_scorch_weapon
+		{
+			"damage_near_value_titanarmor"					"1000"
+	   		"damage_far_value_titanarmor" 					"1000"
+			"reload_time" 									"++0.6"
+			"reloadempty_time"								"++0.6"
+			"reloadsegment_time_loop"						"++0.5"
+		}
 		LTSRebalance_fd_wpn_upgrade_1
 		{
 			"reload_time" 									"1.6"
