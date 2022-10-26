@@ -451,7 +451,8 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 			mods.append( expect string( mod ) )
 	}
 
-	bool PerfectKits_wildfire = ( PerfectKits_Enabled() && mods.contains( "pas_scorch_weapon" ) )
+	bool wildfire = mods.contains( "pas_scorch_weapon" ) || mods.contains( "LTSRebalance_pas_scorch_weapon" )
+	bool PerfectKits_wildfire = PerfectKits_Enabled() && wildfire
 	entity inflictor = CreateOncePerTickDamageInflictorHelper( thermiteLifetimeMax * float( PerfectKits_wildfire ? PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT + 1 : 1 ))
 	entity base = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, velocity, thermiteLifetimeMax, METEOR_FX_BASE, eDamageSourceId.mp_titanweapon_meteor_thermite, PerfectKits_wildfire ? 0 : -1 )
 
@@ -463,7 +464,7 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	int fireCount
 	float fireSpeed
 
-	if ( mods.contains( "pas_scorch_weapon" ) )
+	if ( wildfire )
 	{
 		fireCount = PerfectKits_wildfire ? 2 : 8
 		fireSpeed = 200
