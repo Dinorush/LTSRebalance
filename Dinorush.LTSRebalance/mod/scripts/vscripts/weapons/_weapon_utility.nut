@@ -1593,13 +1593,13 @@ function ClusterRocket_Detonate( entity rocket, vector normal, entity stickEnt =
 		   The actual delay is (""base delay"" - delay).
 
 		   Base: 25 subexplosions, 0.75s average delay, 3.75s duration
-		   Enhanced: 35 subexplosions, 5.25s duration
+		   Enhanced: 30 subexplosions, 4.5s duration
 
 		   Vanilla payload actually has larger average delay due to a bad duration for the int cast,
 		   plus it spawns less explosions than it should because the cluster gets killed early.
 		*/  
-		count = 30
-		duration = 7.5
+		count = 25
+		duration = 6.25
 		range = CLUSTER_ROCKET_BURST_RANGE * 1.2
 	}
 	else

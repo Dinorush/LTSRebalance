@@ -16,8 +16,8 @@ WeaponData
 		}
 		LTSRebalance_pas_northstar_cluster
 		{
-            "explosion_inner_radius"                        "*1.25"
-            "explosionradius"                               "*1.25"
+            "explosion_inner_radius"                        "*1.2"
+            "explosionradius"                               "*1.2"
             "impact_effect_table" 							"40mm_splasher_rounds"
 		}
 		PerfectKits_pas_northstar_cluster
