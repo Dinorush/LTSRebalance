@@ -313,9 +313,13 @@ void function LTSRebalance_LogTracker( entity player )
 		enemiesPilot = [0, 0]
 	}
 
+	bool print = false
 	OnThreadEnd(
-		function() : ( ls, counters )
+		function() : ( print, ls, counters )
 		{
+			if ( !print )
+				return
+
 			// Average out some values (we want the average in logs)
 			if ( counters.allies[0] > 0 )
 			{
@@ -371,24 +375,29 @@ void function LTSRebalance_LogTracker( entity player )
 	)
 
 	int curScore = GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA )
-	bool hasBattery = false
 
-	vector lastOrigin = <0, 0, 0>
 	if ( IsValid( player ) )
-	{
 		waitthread WaitUntilEmbarkOrDeath( player )
-		lastOrigin = player.GetOrigin()
-	}
 
+	if ( !IsValid( player ) )
+		return
+	
+	print = true
 	thread LTSRebalance_LogEject( player )
+	waitthread LTSRebalance_LogThink( player, ls, counters )
+}
 
+void function LTSRebalance_LogThink( entity player, LTSRebalance_LogStruct ls, table< string, array<int> > counters )
+{
+	svGlobal.levelEnt.EndSignal( "RoundEnd" )
+
+	vector lastOrigin = player.GetOrigin()
 	entity[2] closeTitans = [null, null] // Ally, enemy
+	bool hasBattery = false
 	float lastTime = Time()
-	while ( GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA ) == curScore )
+	while ( IsAlive( player ) )
 	{
 		WaitFrame()
-		if ( !IsAlive( player ) )
-			continue
 
 		float timePassed = Time() - lastTime
 
@@ -413,6 +422,9 @@ void function LTSRebalance_LogTracker( entity player )
 		lastOrigin = player.GetOrigin()
 		lastTime = Time()
 	}
+
+	// Thread uses Round End signal to end
+	WaitForever()
 }
 
 void function WaitUntilEmbarkOrDeath( entity player )
@@ -947,6 +959,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"matchID\":\"" + file.matchID + "\""
 	block1 += ",\"ranked\":" + ( GetCurrentPlaylistVarInt( "ltsrebalance_log_ranked", 0 ) == 1 ).tostring()
 	block1 += ",\"matchTimestamp\":" + file.matchTimestamp.tostring()
+	block1 += ",\"version\":\"" + GetConVarString( "ltsrebalance_version_num" ) + "\""
 
 	block1 += ",\"name\":\"" + ls.name + "\""
 	block1 += ",\"rebalance\":" + LTSRebalance_Enabled().tostring()
