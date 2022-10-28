@@ -9,6 +9,8 @@ global function SetPlayerVelocityFromInput
 #endif
 
 const PHASE_DASH_SPEED = 1000
+const float LTSREBALANCE_REFLEX_CONTACT_DIST = 200.0
+const float LTSREBALANCE_REFLEX_CONTACT_DAMAGE = 100.0
 
 var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
@@ -65,6 +67,13 @@ void function PhaseDash( entity weapon, entity player )
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect * 1.5
 	else
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect
+
+	if ( LTSRebalance_Enabled() )
+	{
+		entity soul = player.GetTitanSoul()
+		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+			thread LTSRebalance_ReflexContact( player )
+	}
 	bool perfectPhase = weapon.HasMod( "PerfectKitsReplace_pas_ronin_phase" )
 	SetPlayerVelocityFromInput( player, moveSpeed, <0,0,200>, perfectPhase )
 }
@@ -83,6 +92,41 @@ void function SetPlayerVelocityFromInput( entity player, float scale, vector bas
 	}
 
 	player.SetVelocity( directionForward * scale + baseVel )
+}
+
+void function LTSRebalance_ReflexContact( entity player )
+{
+	player.EndSignal( "StopPhaseShift" )
+	player.EndSignal( "ForceStopPhaseShift" )
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDeath" )
+
+	float restoreAmount = expect float( GetSettingsForPlayer_DodgeTable( player )["dodgePowerDrain"] )
+	array<entity> hitEnts = []
+	while( true )
+	{
+		array<entity> titans = GetNPCArrayEx( "npc_titan", TEAM_ANY, player.GetTeam(), player.GetWorldSpaceCenter(), LTSREBALANCE_REFLEX_CONTACT_DIST )
+		array<entity> players = GetPlayerArrayEx( "any", TEAM_ANY, player.GetTeam(), player.GetWorldSpaceCenter(), LTSREBALANCE_REFLEX_CONTACT_DIST )
+		foreach ( enemy in players )
+			if ( enemy.IsTitan() )
+				titans.append( enemy )
+
+		foreach ( titan in titans )
+		{
+			if ( hitEnts.contains( titan ) )
+				continue
+
+			hitEnts.append( titan )
+			StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.0, 0.5 )
+			StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.0, 0.5 )
+			
+			MessageToPlayer( player, eEventNotifications.Rodeo_PilotAppliedBatteryToYou, player, false )
+			titan.TakeDamage( LTSREBALANCE_REFLEX_CONTACT_DAMAGE, player, player, { damageSourceId = eDamageSourceId.phase_shift, scriptType = DF_ELECTRICAL } );
+			player.Server_SetDodgePower( min( 100.0, player.GetDodgePower() + restoreAmount ) )
+		}
+		WaitFrame()
+	}
+	
 }
 #endif
 
