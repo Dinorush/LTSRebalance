@@ -210,8 +210,8 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 
 			titan.TakeWeaponNow( storedWeapon.name )
 			// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
-			if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-				thread WatchForPhaseReflex( titan, storedWeapon, clipSize )
+			// if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+			// 	thread WatchForPhaseReflex( titan, storedWeapon, clipSize )
 
 			array<string> mods = []
 			if( meleeWeapon.HasMod( "modelset_prime" ) )

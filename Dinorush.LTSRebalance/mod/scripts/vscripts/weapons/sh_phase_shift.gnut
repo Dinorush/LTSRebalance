@@ -182,7 +182,7 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 		if ( ent.IsTitan() )
 		{
 			UntrackAllToneMarks( ent )
-			PhaseReflexReloadMain( ent )
+			// PhaseReflexReloadMain( ent )
 			entity titanSoul = ent.GetTitanSoul()
 			if ( titanSoul != null )
 			{
