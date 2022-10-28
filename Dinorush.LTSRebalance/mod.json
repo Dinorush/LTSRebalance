@@ -10,10 +10,22 @@
 			"Name": "randomize_rebal_lts_spawn",
 			"Description": "Randomizes initial spawn sides in LTS when LTS Rebalance is on.",
 			"DefaultValue": "1"
+		},
+		{
+			"Name": "ltsrebalance_version_num",
+			"Description": "Used to pass version num from UI to server.",
+			"DefaultValue": "Unknown"
 		}
 	],
 
 	"Scripts": [
+		{
+			"Path": "LTSRebalance_ui_conn.nut",
+			"RunOn": "UI",
+			"UICallback": {
+				"After": "LTSRebalance_SetVersionNum"
+			}
+		},
 		{
 			"Path": "client/LTSRebalance_basic_image_bar.gnut",
 			"RunOn": "CLIENT"
