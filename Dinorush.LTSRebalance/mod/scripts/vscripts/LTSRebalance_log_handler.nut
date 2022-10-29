@@ -394,8 +394,6 @@ void function LTSRebalance_LogThink( entity player, LTSRebalance_LogStruct ls, t
 	float lastTime = Time()
 	while ( IsAlive( player ) )
 	{
-		WaitFrame()
-
 		float timePassed = Time() - lastTime
 
 		if ( file.logDistance )
@@ -418,6 +416,8 @@ void function LTSRebalance_LogThink( entity player, LTSRebalance_LogStruct ls, t
 		
 		lastOrigin = player.GetOrigin()
 		lastTime = Time()
+
+		WaitFrame()
 	}
 
 	// Thread uses Round End signal to end
