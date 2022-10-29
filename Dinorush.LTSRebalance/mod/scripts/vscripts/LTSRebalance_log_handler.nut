@@ -313,12 +313,18 @@ void function LTSRebalance_LogTracker( entity player )
 		enemiesPilot = [0, 0]
 	}
 
-	bool print = false
+
+	int curScore = GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA )
+
+	if ( IsValid( player ) )
+		waitthread WaitUntilEmbarkOrDeath( player )
+
+	if ( !IsValid( player ) )
+		return
+
 	OnThreadEnd(
-		function() : ( print, ls, counters )
+		function() : ( ls, counters )
 		{
-			if ( !print )
-				return
 
 			// Average out some values (we want the average in logs)
 			if ( counters.allies[0] > 0 )
@@ -373,16 +379,7 @@ void function LTSRebalance_LogTracker( entity player )
 			LTSRebalance_PrintLogTracker( ls )
 		}
 	)
-
-	int curScore = GameRules_GetTeamScore2( TEAM_IMC ) + GameRules_GetTeamScore2( TEAM_MILITIA )
-
-	if ( IsValid( player ) )
-		waitthread WaitUntilEmbarkOrDeath( player )
-
-	if ( !IsValid( player ) )
-		return
 	
-	print = true
 	thread LTSRebalance_LogEject( player )
 	waitthread LTSRebalance_LogThink( player, ls, counters )
 }
@@ -948,7 +945,7 @@ float function GetTimeSinceRoundStart()
 // Prints out all the data for a given log struct.
 void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 {
-	int round = GetRoundsPlayed() + 1
+	int round = GetRoundsPlayed()
 	string result = "Draw"
 	if ( GetWinningTeam() != TEAM_UNASSIGNED )
 		result = GetWinningTeam() == ls.team ? "Win" : "Loss"
