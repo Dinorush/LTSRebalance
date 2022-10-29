@@ -401,6 +401,13 @@ bool function ShouldEntitySelfKill( entity ent, entity largeTelefragTarget )
 	if ( IsSingleplayer() )
 		return false
 
+	if ( ent.IsTitan() && LTSRebalance_Enabled() )
+	{
+		entity soul = ent.GetTitanSoul()
+		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+			return false
+	}
+
 	return ( DistanceSqr( largeTelefragTarget.GetOrigin(), ent.GetOrigin() ) < 4096.0 )
 }
 

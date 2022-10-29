@@ -117,6 +117,7 @@ void function LTSRebalance_ReflexContact( entity player )
 				continue
 
 			hitEnts.append( titan )
+			titan.SetVelocity( < 0, 0, titan.GetVelocity().z > )
 			StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.0, 0.5 )
 			StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.0, 0.5 )
 			
