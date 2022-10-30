@@ -102,6 +102,7 @@ void function LTSRebalance_Precache()
 void function LTSRebalance_WeaponInit()
 {
 	MpTitanweaponShiftCoreSword_Init()
+	MpTitanabilityPhaseDashInit()
 	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
 }
 

@@ -6,5 +6,10 @@ WeaponData
 		{
 
 		}
+		LTSRebalance_reflex_helper
+		{
+			"ammo_min_to_fire"				"1"
+			"sound_weapon_ready"			""
+		}
 	}
 }
