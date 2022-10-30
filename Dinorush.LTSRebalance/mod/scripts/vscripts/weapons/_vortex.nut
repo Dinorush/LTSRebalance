@@ -1373,8 +1373,8 @@ void function OnFireAmpProjectile( entity projectile )
     {
         ampDamageSourceIdCounts[id] <- 0
         AddDamageCallbackSourceID( id, OnDamageAmpProjectile )
-        AddEntityDestroyedCallback( projectile, DecrementAmpCountOnDestroy )
     }
+	AddEntityDestroyedCallback( projectile, DecrementAmpCountOnDestroy )
     ampDamageSourceIdCounts[id]++
 }
 
@@ -2090,6 +2090,7 @@ float function HandleWeakToPilotWeapons( entity vortexSphere, string weaponName,
 	return damage
 }
 
+// Main callback used to fix damage dealt by reflected Vortex projectiles.
 void function LTSRebalance_FixVortexRefire( entity victim, var damageInfo )
 {
 	// Only affect reflected attacks
@@ -2102,7 +2103,8 @@ void function LTSRebalance_FixVortexRefire( entity victim, var damageInfo )
 
 	if ( !IsValid( projectile ) || !projectile.IsProjectile() )
 		return
-	
+
+	// Check for mods stored on our custom table
 	array var_mods = ( "storedReflectMods" in projectile.s ) ? expect array( projectile.s.storedReflectMods ) : []
 	array<string> mods
 	foreach ( str in var_mods )
@@ -2119,6 +2121,8 @@ void function LTSRebalance_FixVortexRefire( entity victim, var damageInfo )
 }
 
 // Returns the amount that a projectile's damage should be scaled to match its damage with mods (attachments).
+// Used to fix projectile damage from reflected Vortex projectiles.
+// We don't return raw damage because other damage callbacks could have adjusted the damage.
 float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, string weaponName, array<string> mods )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
@@ -2129,6 +2133,7 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 
 	bool heavyArmor = victim.GetArmorType() == ARMOR_TYPE_HEAVY
 
+	// Direct hit if statement
 	if ( ( DamageInfo_GetCustomDamageType( damageInfo ) & DF_IMPACT ) )
 	{
 		entity projectile = DamageInfo_GetInflictor( damageInfo )
@@ -2145,6 +2150,9 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 		if ( critHit )
 			critScale = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "critical_hit_damage_scale" ) / GetWeaponInfoFileKeyField_Global( weaponName, "critical_hit_damage_scale" ) )
 
+		// Get the damage value we should be getting
+		// NPCs default to player values if not available
+		// Damage defaults to normal damage against heavy armor targets if titanarmor doesn't exist
 		array<string> keys = [ "npc_damage_near_value_titanarmor", "npc_damage_near_value", 
 							"damage_near_value_titanarmor", "damage_near_value" ]
 
@@ -2196,8 +2204,11 @@ float function GetProjectileDamageScaleToMods( entity victim, var damageInfo, st
 	return 0.0 
 }
 
+// Fixes explosions by triggering an entirely new, invisible explosion that does the proper amount of damage.
+// This is because we can't fix the splash radius on the original explosion.
 function LTSRebalance_FixVortexRefireExplosion( projectile )
 {
+	// Ignore projectiles we don't need to fix
 	expect entity( projectile )
 	if ( !( "storedFlags" in projectile.s ) )
 		return
@@ -2211,6 +2222,9 @@ function LTSRebalance_FixVortexRefireExplosion( projectile )
 	if ( mods.len() == 0 )
 		return
 
+	// Get the damage value we should be getting
+	// NPCs default to player values if not available
+	// Damage defaults to normal damage against heavy armor targets if titanarmor doesn't exist
 	array<string> keys = [ "npc_explosion_damage_heavy_armor", "npc_explosion_damage", 
 							"explosion_damage_heavy_armor", "explosion_damage" ]
 
@@ -2226,18 +2240,21 @@ function LTSRebalance_FixVortexRefireExplosion( projectile )
 	float innerRadiusMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_inner_radius" ) )
 	float outerRadiusMod = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosionradius" ) )
 
+	// No need to do a new explosion if explosion radius doesn't exist or there is no explosion damage
 	if ( outerRadiusMod <= 0 || ( explosionDamageMod == 0 && explosionDamageModTitan == 0 ) )
 		return
 
+	// Impulse force falls back to normal value if explosion one doesn't exist
 	float impulseForce = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "impulse_force_explosions" ) )
 	if ( impulseForce <= 0 )
 		impulseForce = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "impulse_force" ) )
-	
+
+	// Makes the explosion invisible
 	int flags = SF_ENVEXPLOSION_MASK_BRUSHONLY | SF_ENVEXPLOSION_NO_NPC_SOUND_EVENT
 	if ( !( expect bool( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "explosion_damages_owner" ) ) ) )
 		flags = flags | SF_ENVEXPLOSION_NO_DAMAGEOWNER
 	
-	// At this stage the projectile is not valid but still not null, so it will not have its damage set to 0 by Refire's damage callback
+	// At this stage the projectile is not valid but still not null, so this explosion will not have its damage set to 0 by Refire's damage callback
 	RadiusDamage(
 		projectile.GetOrigin(),
 		owner,
@@ -2254,21 +2271,30 @@ function LTSRebalance_FixVortexRefireExplosion( projectile )
 		)
 }
 
+// Global version of the function with proper naming
 float function LTSRebalance_GetProjectileDamage( entity projectile, bool heavyArmor = true, bool isPlayer = true )
 {
 	return GetProjectileDamageToParticle( projectile, heavyArmor, isPlayer )
 }
 
+// Global version of the function with proper naming
 float function LTSRebalance_GetWeaponDamage( entity weapon, var damageInfo = null, bool heavyArmor = true, bool isPlayer = true )
 {
 	return GetWeaponDamageToParticle( weapon, damageInfo, heavyArmor, isPlayer )
 }
 
+// Returns the damage a hitscan weapon should have done given a weapon, its damage info,
+// whether the target is heavy armor, and whether the user is a player.
+// Primarily for logging how much damage was blocked by a particle entity.
+// Assumes no very far damage exists for the weapon.
 float function GetWeaponDamageToParticle( entity weapon, var damageInfo = null, bool heavyArmor = true, bool isPlayer = true )
 {
 	if ( !IsValid( weapon ) )
 		return 0.0
 
+	// Get the damage value we should be getting
+	// NPCs default to player values if not available
+	// Damage defaults to normal damage against heavy armor targets if titanarmor doesn't exist
 	float nearDamage = 0.0
 	array<int> keys = [ eWeaponVar.npc_damage_near_value_titanarmor, eWeaponVar.npc_damage_near_value, 
 						   eWeaponVar.damage_near_value_titanarmor, eWeaponVar.damage_near_value ]
@@ -2299,12 +2325,16 @@ float function GetWeaponDamageToParticle( entity weapon, var damageInfo = null, 
 	if ( farDamage <= 0 || farDamage >= nearDamage || damageInfo == null )
 		return nearDamage
 
+	// Calculate the damage we should do
 	float dist = DamageInfo_GetDistFromAttackOrigin( damageInfo )
 	float nearDistance = weapon.GetWeaponSettingFloat( eWeaponVar.damage_near_distance )
 	float farDistance = weapon.GetWeaponSettingFloat( eWeaponVar.damage_far_distance )
 	return GraphCapped( dist, nearDistance, farDistance, nearDamage, farDamage )
 }
 
+// Returns the damage a projectile should have done given a projectile,
+// whether the target is heavy armor, and whether the user is a player.
+// Used to fix Vortex reflected projectile damage and for logging damage blocked.
 float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor = true, bool isPlayer = true )
 {
 	string weaponName = projectile.ProjectileGetWeaponClassName()
@@ -2315,6 +2345,9 @@ float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor
 			mods.append( expect string( mod ) )
 	}
 	
+	// Get the damage value we should be getting
+	// NPCs default to player values if not available
+	// Damage defaults to normal damage against heavy armor targets if titanarmor doesn't exist
 	float nearDamage = 0.0
 	array<string> keys = [ "npc_damage_near_value_titanarmor", "npc_damage_near_value", 
 						   "damage_near_value_titanarmor", "damage_near_value" ]
@@ -2345,6 +2378,8 @@ float function GetProjectileDamageToParticle( entity projectile, bool heavyArmor
 	if ( farDamage <= 0 || farDamage >= nearDamage )
 		return nearDamage
 
+	// Calculate the travel distance of the projectile by its velocity and time alive
+	// Not fully accurate (bullet drop and grav star exist), but good enough
 	float nearDistance = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_near_distance" ) )
 	float farDistance = expect float( GetWeaponInfoFileKeyField_WithMods_Global( weaponName, mods, "damage_far_distance" ) )
 	float speed = Length( projectile.GetVelocity() )
