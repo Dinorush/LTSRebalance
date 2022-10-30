@@ -1,7 +1,9 @@
 /* LTS Rebalance replaces this file for the following reasons:
    1. Implement Perfect Kits Temporal Anomaly
+   2. Implement Rebalance Phase Reflex
 */
 global function OnWeaponPrimaryAttack_titanability_phase_dash
+global function MpTitanabilityPhaseDashInit
 
 #if SERVER
 global function OnWeaponNPCPrimaryAttack_titanability_phase_dash
@@ -11,6 +13,20 @@ global function SetPlayerVelocityFromInput
 const PHASE_DASH_SPEED = 1000
 const float LTSREBALANCE_REFLEX_CONTACT_DIST = 200.0
 const float LTSREBALANCE_REFLEX_CONTACT_DAMAGE = 100.0
+
+void function MpTitanabilityPhaseDashInit()
+{
+	#if SERVER
+		AddCallback_OnTitanBecomesPilot( LTSRebalance_ClearReflexOnDisembark )
+	#endif
+}
+
+void function LTSRebalance_ClearReflexOnDisembark( entity player, entity oldTitan )
+{
+	entity phaseDash = oldTitan.GetOffhandWeapon( OFFHAND_TITAN_CENTER )
+	if ( IsValid( phaseDash ) && phaseDash.HasMod( "LTSRebalance_reflex_helper" ) )
+		phaseDash.RemoveMod( "LTSRebalance_reflex_helper" )
+}
 
 var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
@@ -29,14 +45,34 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 
 				#if SERVER
 					EmitSoundOnEntityExceptToPlayer( player, player, "Stryder.Dash" )
-					thread PhaseDash( weapon, player )
 					entity soul = player.GetTitanSoul()
+					if ( LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+					{
+						table weaponDotS = expect table( weapon.s )
+						if ( weapon.GetWeaponPrimaryClipCount() < weapon.GetAmmoPerShot() && weapon.HasMod( "LTSRebalance_reflex_helper" ) )
+						{
+							weapon.RemoveMod( "LTSRebalance_reflex_helper" )
+							player.SetOrigin( expect vector( weaponDotS.savedOrigin ) )
+							return weapon.GetWeaponPrimaryClipCount()
+						}
+						else
+						{
+							weaponDotS.savedOrigin <- player.GetOrigin()
+							if ( !weapon.HasMod( "LTSRebalance_reflex_helper" ) )
+								weapon.AddMod( "LTSRebalance_reflex_helper" )
+						}
+					}
+					thread PhaseDash( weapon, player )
+
 					if ( soul == null )
 						soul = player
 
 					float fade = 0.5
 					StatusEffect_AddTimed( soul, eStatusEffect.move_slow, 0.6, shiftTime + fade, fade )
 				#elseif CLIENT
+					if ( LTSRebalance_Enabled() && weapon.GetWeaponPrimaryClipCount() < weapon.GetAmmoPerShot() )
+						return weapon.GetWeaponPrimaryClipCount()
+
 					float xAxis = InputGetAxis( ANALOG_LEFT_X )
 					float yAxis = InputGetAxis( ANALOG_LEFT_Y ) * -1
 					vector angles = player.EyeAngles()
@@ -68,12 +104,12 @@ void function PhaseDash( entity weapon, entity player )
 	else
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect
 
-	if ( LTSRebalance_Enabled() )
-	{
-		entity soul = player.GetTitanSoul()
-		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-			thread LTSRebalance_ReflexContact( player )
-	}
+	// if ( LTSRebalance_Enabled() )
+	// {
+	// 	entity soul = player.GetTitanSoul()
+	// 	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
+	// 		thread LTSRebalance_ReflexContact( player )
+	// }
 	bool perfectPhase = weapon.HasMod( "PerfectKitsReplace_pas_ronin_phase" )
 	SetPlayerVelocityFromInput( player, moveSpeed, <0,0,200>, perfectPhase )
 }
