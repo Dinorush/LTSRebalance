@@ -46,7 +46,15 @@ void function LTSRebalance_AddTempShields( entity soul, int tempShields, int tem
 	}
 
 	soul.SetShieldHealth( soul.GetShieldHealth() + tempShields )
-	soul.s.tempShields.append( { shield = tempShields, overflow = tempOverflow, total = tempShields + tempOverflow, decayTime = decayTime, delay = delay } )
+	soul.s.tempShields.append(
+		{ 
+			shield = tempShields,
+			overflow = tempOverflow,
+			total = tempShields + tempOverflow,
+			decayTime = decayTime,
+			delay = delay
+		} 
+	)
 	#endif
 }
 
@@ -149,9 +157,7 @@ void function LTSRebalance_DecayTempShields( entity soul, float passedTime )
 			tempShields.remove(i)
 	}
 }
-#endif
 
-#if SERVER
 void function LTSRebalance_HandleTempShieldChange_Internal( entity soul, int change, bool isGain = false )
 {	
 	array tempShields = expect array( soul.s.tempShields )
