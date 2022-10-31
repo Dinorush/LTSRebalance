@@ -18,15 +18,31 @@ void function MpTitanabilityPhaseDashInit()
 {
 	#if SERVER
 		AddCallback_OnTitanBecomesPilot( LTSRebalance_ClearReflexOnDisembark )
+	#else
+		AddServerToClientStringCommandCallback( "ltsrebalance_refresh_reflex_hud", LTSRebalance_RefreshReflexHUD )
 	#endif
 }
 
+#if SERVER
 void function LTSRebalance_ClearReflexOnDisembark( entity player, entity oldTitan )
 {
 	entity phaseDash = oldTitan.GetOffhandWeapon( OFFHAND_TITAN_CENTER )
 	if ( IsValid( phaseDash ) && phaseDash.HasMod( "LTSRebalance_reflex_helper" ) )
 		phaseDash.RemoveMod( "LTSRebalance_reflex_helper" )
 }
+#else
+void function LTSRebalance_RefreshReflexHUD( array<string> args )
+{
+	thread LTSRebalance_RefreshReflexHUDThink()
+}
+
+void function LTSRebalance_RefreshReflexHUDThink()
+{
+	wait 0.1
+	if ( !IsSpectating() && !IsWatchingReplay() )
+		ClWeaponStatus_RefreshWeaponStatus( GetLocalClientPlayer() )
+}
+#endif
 
 var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
@@ -53,13 +69,17 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 						{
 							weapon.RemoveMod( "LTSRebalance_reflex_helper" )
 							player.SetOrigin( expect vector( weaponDotS.savedOrigin ) )
+							ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
 							return weapon.GetWeaponPrimaryClipCount()
 						}
 						else
 						{
 							weaponDotS.savedOrigin <- player.GetOrigin()
 							if ( !weapon.HasMod( "LTSRebalance_reflex_helper" ) )
+							{
 								weapon.AddMod( "LTSRebalance_reflex_helper" )
+								ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
+							}
 						}
 					}
 					thread PhaseDash( weapon, player )
