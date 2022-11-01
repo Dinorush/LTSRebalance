@@ -65,7 +65,7 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 							weapon.RemoveMod( "LTSRebalance_reflex_helper" )
 							player.SetOrigin( expect vector( weaponDotS.savedOrigin ) )
 							player.SetVelocity( <0, 0, 0> )
-							return weapon.GetWeaponPrimaryClipCount()
+							return weapon.GetAmmoPerShot()
 						}
 						else
 						{
