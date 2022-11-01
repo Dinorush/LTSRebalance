@@ -11,26 +11,21 @@ global function SetPlayerVelocityFromInput
 #endif
 
 const PHASE_DASH_SPEED = 1000
-const float LTSREBALANCE_REFLEX_CONTACT_DIST = 200.0
-const float LTSREBALANCE_REFLEX_CONTACT_DAMAGE = 100.0
+const float LTSREBALANCE_REFLEX_START_DELAY = 4.0
+const float LTSREBALANCE_REFLEX_DURATION = 5.0
 
+// Only ran in LTSRebalance
 void function MpTitanabilityPhaseDashInit()
 {
 	#if SERVER
-		AddCallback_OnTitanBecomesPilot( LTSRebalance_ClearReflexOnDisembark )
+		PrecacheParticleSystem( $"arcball_CH_dlight" )
+		PrecacheParticleSystem( $"arcball_CH_elec_rope" )
 	#else
 		AddServerToClientStringCommandCallback( "ltsrebalance_refresh_reflex_hud", LTSRebalance_RefreshReflexHUD )
 	#endif
 }
 
-#if SERVER
-void function LTSRebalance_ClearReflexOnDisembark( entity player, entity oldTitan )
-{
-	entity phaseDash = oldTitan.GetOffhandWeapon( OFFHAND_TITAN_CENTER )
-	if ( IsValid( phaseDash ) && phaseDash.HasMod( "LTSRebalance_reflex_helper" ) )
-		phaseDash.RemoveMod( "LTSRebalance_reflex_helper" )
-}
-#else
+#if CLIENT
 void function LTSRebalance_RefreshReflexHUD( array<string> args )
 {
 	thread LTSRebalance_RefreshReflexHUDThink()
@@ -69,17 +64,12 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 						{
 							weapon.RemoveMod( "LTSRebalance_reflex_helper" )
 							player.SetOrigin( expect vector( weaponDotS.savedOrigin ) )
-							ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
 							return weapon.GetWeaponPrimaryClipCount()
 						}
 						else
 						{
 							weaponDotS.savedOrigin <- player.GetOrigin()
-							if ( !weapon.HasMod( "LTSRebalance_reflex_helper" ) )
-							{
-								weapon.AddMod( "LTSRebalance_reflex_helper" )
-								ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
-							}
+							thread LTSRebalance_CreateReflexGate( player, weapon )
 						}
 					}
 					thread PhaseDash( weapon, player )
@@ -124,12 +114,6 @@ void function PhaseDash( entity weapon, entity player )
 	else
 		moveSpeed = PHASE_DASH_SPEED * movestunEffect
 
-	// if ( LTSRebalance_Enabled() )
-	// {
-	// 	entity soul = player.GetTitanSoul()
-	// 	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-	// 		thread LTSRebalance_ReflexContact( player )
-	// }
 	bool perfectPhase = weapon.HasMod( "PerfectKitsReplace_pas_ronin_phase" )
 	SetPlayerVelocityFromInput( player, moveSpeed, <0,0,200>, perfectPhase )
 }
@@ -150,40 +134,50 @@ void function SetPlayerVelocityFromInput( entity player, float scale, vector bas
 	player.SetVelocity( directionForward * scale + baseVel )
 }
 
-void function LTSRebalance_ReflexContact( entity player )
+entity function LTSRebalance_CreateReflexGate( entity player, entity weapon )
 {
-	player.EndSignal( "StopPhaseShift" )
-	player.EndSignal( "ForceStopPhaseShift" )
+	weapon.EndSignal( "OnDestroy" )
 	player.EndSignal( "OnDestroy" )
-	player.EndSignal( "OnDeath" )
+	player.EndSignal( "DisembarkingTitan" )
 
-	float restoreAmount = expect float( GetSettingsForPlayer_DodgeTable( player )["dodgePowerDrain"] )
-	array<entity> hitEnts = []
-	while( true )
-	{
-		array<entity> titans = GetNPCArrayEx( "npc_titan", TEAM_ANY, player.GetTeam(), player.GetWorldSpaceCenter(), LTSREBALANCE_REFLEX_CONTACT_DIST )
-		array<entity> players = GetPlayerArrayEx( "any", TEAM_ANY, player.GetTeam(), player.GetWorldSpaceCenter(), LTSREBALANCE_REFLEX_CONTACT_DIST )
-		foreach ( enemy in players )
-			if ( enemy.IsTitan() )
-				titans.append( enemy )
-
-		foreach ( titan in titans )
-		{
-			if ( hitEnts.contains( titan ) )
-				continue
-
-			hitEnts.append( titan )
-			titan.SetVelocity( < 0, 0, titan.GetVelocity().z > )
-			StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.0, 0.5 )
-			StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.0, 0.5 )
-			
-			MessageToPlayer( player, eEventNotifications.Rodeo_PilotAppliedBatteryToYou, player, false )
-			titan.TakeDamage( LTSREBALANCE_REFLEX_CONTACT_DAMAGE, player, player, { damageSourceId = eDamageSourceId.phase_shift, scriptType = DF_ELECTRICAL } );
-			player.Server_SetDodgePower( min( 100.0, player.GetDodgePower() + restoreAmount ) )
-		}
-		WaitFrame()
-	}
+	vector origin = player.GetWorldSpaceCenter()
+	array<entity> fxEnts = []
 	
+	OnThreadEnd(
+		function() : ( weapon, player, fxEnts )
+		{
+			if ( IsValid( weapon ) && weapon.HasMod( "LTSRebalance_reflex_helper" ) )
+				weapon.RemoveMod( "LTSRebalance_reflex_helper" )
+			
+			if ( IsValid( player ) )
+				ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
+
+			foreach ( entity fx in fxEnts ) 
+				if ( IsValid( fx ) )
+					EffectStop( fx )
+		}
+	)
+
+	// Create initial gate FX, toned down to show it doesn't exist yet
+	int fxID = GetParticleSystemIndex( $"arcball_CH_dlight" )
+	fxEnts.append( StartParticleEffectInWorld_ReturnEntity( fxID, origin, <0, 0, 0> ) )
+	fxID = GetParticleSystemIndex( $"arcball_CH_elec_rope" )
+	fxEnts.append( StartParticleEffectInWorld_ReturnEntity( fxID, origin, <0, 0, 0> ) )
+	wait LTSREBALANCE_REFLEX_START_DELAY
+	EffectStop( fxEnts[0] )
+	EffectStop( fxEnts[1] )
+
+	// Enable warping and start full gate FX
+	weapon.AddMod( "LTSRebalance_reflex_helper" )
+	ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
+	fxID = GetParticleSystemIndex( $"P_wpn_arcball_trail" )
+	fxEnts[0] = StartParticleEffectInWorld_ReturnEntity( fxID, origin, <0, 0, 0> )
+
+	float endTime = Time() + LTSREBALANCE_REFLEX_DURATION
+	while( weapon.HasMod( "LTSRebalance_reflex_helper" ) && Time() < endTime )
+		WaitFrame()
+
+	// Effects and attachments are cleaned up on thread end
 }
 #endif
 
