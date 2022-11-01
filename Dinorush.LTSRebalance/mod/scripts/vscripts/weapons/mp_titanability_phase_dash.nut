@@ -60,10 +60,11 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 					if ( LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
 					{
 						table weaponDotS = expect table( weapon.s )
-						if ( weapon.GetWeaponPrimaryClipCount() < weapon.GetAmmoPerShot() && weapon.HasMod( "LTSRebalance_reflex_helper" ) )
+						if ( weapon.HasMod( "LTSRebalance_reflex_helper" ) )
 						{
 							weapon.RemoveMod( "LTSRebalance_reflex_helper" )
 							player.SetOrigin( expect vector( weaponDotS.savedOrigin ) )
+							player.SetVelocity( <0, 0, 0> )
 							return weapon.GetWeaponPrimaryClipCount()
 						}
 						else
