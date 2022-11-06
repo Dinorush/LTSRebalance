@@ -224,10 +224,7 @@ void function Sv_CreateGunShields( entity titan, entity weapon, entity shieldWea
 				if ( LTSRebalance_Enabled() )
 				{
 					if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
-					{
-						while( vortexWeapon.GetForcedADS() )
-							vortexWeapon.ClearForcedADS()
-					}
+						PredatorCannon_ClearADS( vortexWeapon )
 
 					entity owner = vortexWeapon.GetWeaponOwner()
 					if ( IsValid( owner ) )
@@ -335,10 +332,7 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 				if ( LTSRebalance_Enabled() )
 				{
 					if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
-					{
-						while( vortexWeapon.GetForcedADS() )
-							vortexWeapon.ClearForcedADS()
-					}
+						PredatorCannon_ClearADS( vortexWeapon )
 
 					entity owner = vortexWeapon.GetWeaponOwner()
 					if ( IsValid( owner ) )

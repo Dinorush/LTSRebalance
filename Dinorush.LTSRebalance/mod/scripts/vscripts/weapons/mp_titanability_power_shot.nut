@@ -184,10 +184,8 @@ void function PowerShotCleanup( entity owner, entity weapon, array<string> modNa
 	if ( IsValid( weapon ) )
 	{
 		if ( !weapon.e.gunShieldActive && !weapon.HasMod( "SiegeMode" ) )
-		{
-			while( weapon.GetForcedADS() )
-				weapon.ClearForcedADS()
-		}
+			thread PredatorCannon_ClearADS( weapon )
+
 		#if SERVER
 		array<string> mods = weapon.GetMods()
         mods.fastremovebyvalue( "BasePowerShot" )
