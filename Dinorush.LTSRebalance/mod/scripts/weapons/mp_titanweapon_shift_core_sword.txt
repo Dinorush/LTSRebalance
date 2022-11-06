@@ -13,6 +13,7 @@ WeaponData
 	"fire_mode"   									"auto"
 	//"body_type"										"battle_rifle"
 	"never_drop"									"1"
+	"flyoutEnabled"									"0"
 
 	"OnWeaponActivate"								"OnWeaponActivate_titanweapon_shift_core_sword"
 	"OnWeaponDeactivate"							"OnWeaponDeactivate_titanweapon_shift_core_sword"
@@ -36,7 +37,7 @@ WeaponData
 	"zoom_effects"									"0"
 	"deploy_time"									"0.01"
 	"raise_time"									"0.01"
-	"holster_time"									"0.5"
+	"holster_time"									"0.01"
 
 	"ammo_stockpile_max"							"120"
 	"ammo_clip_size"   								"120"
