@@ -384,18 +384,14 @@ void function RestorePlayerWeapons( entity player, StoredWeapon storedWeapon )
 
 		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
-			bool shouldSetActive = IsValid( titan.GetActiveWeapon() ) && titan.GetActiveWeapon().GetWeaponClassName() == "mp_titanweapon_shift_core_sword"
-
 			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
 			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
 				block.RemoveMod( "LTSRebalance_core_regen" )			
 
-			titan.TakeWeaponNow( "mp_titanweapon_shift_core_sword" )
 			if ( storedWeapon.name != "" )
 				GiveStoredMainWeapon( titan, storedWeapon )
 
-			if ( shouldSetActive )
-				titan.SetActiveWeaponBySlot( 0 )
+			titan.TakeWeapon( "mp_titanweapon_shift_core_sword" )
 		}
 		else if ( titan.GetMainWeapons().len() > 0 )
 			titan.GetMainWeapons()[0].AllowUse( true )
