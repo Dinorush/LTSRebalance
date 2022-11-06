@@ -68,7 +68,7 @@ const table<string, string> LTSREBALANCE_PASSIVE_TO_STRING = {
 	pas_enhanced_titan_ai =     "Big Punch",
 	pas_build_up_nuclear_core = "Unstable Reactor",
 
-	pas_ion_lasercannon =       "Light Cannon"
+	pas_tone_wall =       "Light Particle Wall"
 }
 
 const table<string, string> TITANCLASS_TO_STRING = {
@@ -466,8 +466,6 @@ void function LTSRebalance_LogDistanceToOthers( entity player, LTSRebalance_LogS
 
 		if ( titan.GetTeam() == player.GetTeam() )
 		{
-			
-
 			if ( isTitan )
 			{
 				allyCounter++
