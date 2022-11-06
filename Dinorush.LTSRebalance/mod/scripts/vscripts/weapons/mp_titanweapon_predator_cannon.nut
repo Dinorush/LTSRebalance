@@ -17,6 +17,7 @@ global function OnWeaponStartZoomOut_titanweapon_predator_cannon
 global function OnWeaponOwnerChanged_titanweapon_predator_cannon
 global function OnWeaponChargeBegin_titanweapon_predator_cannon
 global function IsPredatorCannonActive
+global function PredatorCannon_ClearADS
 
 #if SERVER
 global function OnWeaponNpcPrimaryAttack_titanweapon_predator_cannon
@@ -424,3 +425,13 @@ void function SensorArray_StartStatusEffects( entity owner, entity target, var s
 	sensorArrayTable[target] = 0
 }
 #endif
+
+void function PredatorCannon_ClearADS( entity weapon )
+{
+	weapon.EndSignal( "OnDestroy" )
+	while ( weapon.GetForcedADS() )
+	{
+		weapon.ClearForcedADS()
+		WaitFrame()
+	}
+}
