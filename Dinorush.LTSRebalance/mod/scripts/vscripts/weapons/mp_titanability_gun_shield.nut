@@ -218,39 +218,7 @@ void function Sv_CreateGunShields( entity titan, entity weapon, entity shieldWea
 	OnThreadEnd(
 		function() : ( titan, vortexSpheres, vortexWeapon, shieldWallFXs, centerHelper )
 		{
-			if ( IsValid( vortexWeapon ) )
-			{
-                // Remove Shield debuffs when it breaks
-				if ( LTSRebalance_Enabled() )
-				{
-					if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
-						thread PredatorCannon_ClearADS( vortexWeapon )
-
-					entity owner = vortexWeapon.GetWeaponOwner()
-					if ( IsValid( owner ) )
-					{
-						if ( owner.IsPlayer() )
-							owner.ClearMeleeDisabled()
-						owner.Signal( "GunShieldEnd" )
-					}
-
-					vortexWeapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
-					vortexWeapon.e.gunShieldActive = false
-				}
-
-				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_1p" )
-				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
-				if ( IsValid( titan ) && titan.IsPlayer() )
-				{
-					EmitSoundOnEntityOnlyToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_1p" )
-					EmitSoundOnEntityExceptToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_3p" )
-				}
-				else
-				{
-					EmitSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_stop_3p" )
-				}
-				vortexWeapon.SetWeaponUtilityEntity( null )
-			}
+			GunShield_Break( titan, vortexWeapon )
 
 			foreach ( shieldWallFX in shieldWallFXs )
 				if ( IsValid( shieldWallFX ) )
@@ -326,39 +294,7 @@ void function Sv_CreateGunShield( entity titan, entity weapon, entity shieldWeap
 	OnThreadEnd(
 		function() : ( titan, vortexSphere, vortexWeapon, shieldWallFX )
 		{
-			if ( IsValid( vortexWeapon ) )
-			{
-                // Remove Shield debuffs when it breaks
-				if ( LTSRebalance_Enabled() )
-				{
-					if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
-						thread PredatorCannon_ClearADS( vortexWeapon )
-
-					entity owner = vortexWeapon.GetWeaponOwner()
-					if ( IsValid( owner ) )
-					{
-						if ( owner.IsPlayer() )
-							owner.ClearMeleeDisabled()
-						owner.Signal( "GunShieldEnd" )
-					}
-
-					vortexWeapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
-					vortexWeapon.e.gunShieldActive = false
-				}
-
-				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_1p" )
-				StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
-				if ( IsValid( titan ) && titan.IsPlayer() )
-				{
-					EmitSoundOnEntityOnlyToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_1p" )
-					EmitSoundOnEntityExceptToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_3p" )
-				}
-				else
-				{
-					EmitSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_stop_3p" )
-				}
-				vortexWeapon.SetWeaponUtilityEntity( null )
-			}
+			GunShield_Break( titan, vortexWeapon )
 
 			if ( IsValid( shieldWallFX ) )
 				EffectStop( shieldWallFX )
@@ -484,6 +420,43 @@ entity function CreateGunShieldVortexSphere( entity player, entity vortexWeapon,
 	}
 
 	return vortexSphere
+}
+
+void function GunShield_Break( entity titan, entity vortexWeapon )
+{
+	if ( IsValid( vortexWeapon ) )
+	{
+		// Remove Shield debuffs when it breaks
+		if ( LTSRebalance_Enabled() )
+		{
+			if ( !vortexWeapon.HasMod( "BasePowerShot" ) && !vortexWeapon.HasMod( "SiegeMode" ) )
+				thread PredatorCannon_ClearADS( vortexWeapon )
+
+			entity owner = vortexWeapon.GetWeaponOwner()
+			if ( IsValid( owner ) )
+			{
+				if ( owner.IsPlayer() )
+					owner.ClearMeleeDisabled()
+				owner.Signal( "GunShieldEnd" )
+			}
+
+			vortexWeapon.StopWeaponEffect( FX_TITAN_GUN_SHIELD_VM, FX_TITAN_GUN_SHIELD_WALL )
+			vortexWeapon.e.gunShieldActive = false
+		}
+
+		StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_1p" )
+		StopSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_start_3p" )
+		if ( IsValid( titan ) && titan.IsPlayer() )
+		{
+			EmitSoundOnEntityOnlyToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_1p" )
+			EmitSoundOnEntityExceptToPlayer( vortexWeapon, titan, "weapon_predator_mountedshield_stop_3p" )
+		}
+		else
+		{
+			EmitSoundOnEntity( vortexWeapon, "weapon_predator_mountedshield_stop_3p" )
+		}
+		vortexWeapon.SetWeaponUtilityEntity( null )
+	}
 }
 
 void function UpdateGunShieldColor( entity vortexSphere )
