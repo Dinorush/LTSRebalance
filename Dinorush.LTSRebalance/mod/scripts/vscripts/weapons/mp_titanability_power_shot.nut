@@ -107,6 +107,9 @@ var function OnWeaponPrimaryAttack_power_shot( entity weapon, WeaponPrimaryAttac
 
 void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
 {
+	primaryWeapon.EndSignal( "OnDestroy" )
+	weaponOwner.EndSignal( "OnDestroy" )
+
     do {
         weaponOwner.SetTitanDisembarkEnabled( false )
         primaryWeapon.SetForcedADS()
