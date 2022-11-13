@@ -109,6 +109,7 @@ void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
 {
 	primaryWeapon.EndSignal( "OnDestroy" )
 	weaponOwner.EndSignal( "OnDestroy" )
+	weaponOwner.EndSignal( "TitanEjectionStarted" )
 
     do {
         weaponOwner.SetTitanDisembarkEnabled( false )
