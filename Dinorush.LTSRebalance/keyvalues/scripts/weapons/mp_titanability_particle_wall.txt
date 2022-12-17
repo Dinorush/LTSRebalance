@@ -4,17 +4,17 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"ammo_clip_size"   								"90"
-			"ammo_default_total"							"90"
-			"ammo_min_to_fire"								"90"
-			"ammo_per_shot"									"90"
-			"ammo_stockpile_max"							"90"
+			"ammo_clip_size"   								"96"
+			"ammo_default_total"							"96"
+			"ammo_min_to_fire"								"96"
+			"ammo_per_shot"									"96"
+			"ammo_stockpile_max"							"96"
 		}
 		LTSRebalance_pas_tone_wall
 		{
 			"ammo_min_to_fire"								"*.5"
 			"ammo_per_shot"									"*.5"
-			"regen_ammo_refill_rate"						"*.5625" // Match downtime (4 up/5 down -> 3 up/5 down)
+			"regen_ammo_refill_rate"						"*.558" // Match downtime (4 up/5.6 down -> 3 up/5.6 down)
 		}
 		PerfectKits_pas_tone_wall
 		{
