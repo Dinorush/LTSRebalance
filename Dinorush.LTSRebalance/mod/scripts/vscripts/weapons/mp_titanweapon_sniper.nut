@@ -30,8 +30,8 @@ const SNIPER_PROJECTILE_SPEED			= 10000
 const float PERFECTKITS_VIPER_HEIGHT_MIN = 750
 const float PERFECTKITS_VIPER_HEIGHT_CONV = 0.0005
 
-const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD = 1.3
-const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION = 10.0
+const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD = 1.25
+const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION = 6.0
 
 const float LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION = 1.6
 global const float LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION = 2.4
@@ -86,7 +86,7 @@ void function LTSRebalance_TransferDebuffsDelayed( entity soul, entity titan )
 	if ( !IsValid( soul ) || !IsValid( titan ) )
 		return
 
-	if ( "piercingRoundsFXs" in soul.s )
+	if ( "piercingRoundsFXs" in soul.s && soul.s.piercingRoundsFXs.len() > 0 )
 	{
 		foreach( fx in soul.s.piercingRoundsFXs )
 		{
@@ -97,7 +97,7 @@ void function LTSRebalance_TransferDebuffsDelayed( entity soul, entity titan )
 		soul.s.piercingRoundsFXs = LTSRebalance_StartDebuffFX( titan )
 	}
 
-	if ( "threatOpticsFXs" in soul.s )
+	if ( "threatOpticsFXs" in soul.s && soul.s.threatOpticsFXs.len() > 0)
 	{
 		foreach( fx in soul.s.threatOpticsFXs )
 		{
