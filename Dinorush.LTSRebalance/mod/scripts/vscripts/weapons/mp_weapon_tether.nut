@@ -14,6 +14,7 @@ global function FireTether
 #if SERVER
 global function OnWeaponNpcPrimaryAttack_weapon_tether
 global function ProximityTetherThink
+global function LTSRebalance_DispelTetherSlow
 #endif // #if SERVER
 
 const TETHER_MINE_FX = $"wpn_grenade_TT_mag"
@@ -30,6 +31,7 @@ const float LTSREBALANCE_TRAP_SLOW_FADE = 0.5
 #if SERVER
 struct {
 	table< entity, array< float > > LTSRebalance_tetherTimes
+	table< entity, array > LTSRebalance_tetherSlows
 } file;
 #endif
 
@@ -405,13 +407,41 @@ void function LTSRebalance_ApplyTetherEffects( entity projectile, entity victim 
 	}
 	tetherTimes.insert( 0, Time() )
 
+	// Clear invalid ents
+	deleteKeys.clear()
+	foreach ( entity key, array _ in file.LTSRebalance_tetherSlows )
+	{
+		if ( !IsValid( key ) )
+			deleteKeys.append( key )
+	}
+
+	foreach ( entity key in deleteKeys )
+		delete file.LTSRebalance_tetherSlows[ key ]
+
+	array tetherSlows = []
+	if ( !( victim in file.LTSRebalance_tetherSlows ) )
+		file.LTSRebalance_tetherSlows[ victim ] <- tetherSlows
+	else
+		tetherSlows = file.LTSRebalance_tetherSlows[ victim ]
+
 	// Add slow effects
-	StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE )
-	StatusEffect_AddTimed( victim, eStatusEffect.dodge_speed_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE )
+	tetherSlows.append( StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE ) )
+	tetherSlows.append( StatusEffect_AddTimed( victim, eStatusEffect.dodge_speed_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE ) )
 	
 	// Apply Threat Optics effect
 	if ( projectile.ProjectileGetMods().contains( "LTSRebalance_pas_northstar_optics" ) )
 		LTSRebalance_ApplyThreatOptics( victim, projectile.GetOrigin(), projectile.GetOwner(), LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION )
+}
+
+void function LTSRebalance_DispelTetherSlow( entity victim )
+{
+	if ( !( victim in file.LTSRebalance_tetherSlows ) )
+		return
+
+	array tetherSlows = file.LTSRebalance_tetherSlows[ victim ]
+	for ( int i = tetherSlows.len() - 1; i >= 0; i-- )
+		StatusEffect_Stop( victim, tetherSlows[i] )
+	tetherSlows.clear()
 }
 
 void function LTSRebalance_PreventNormalMeleeDamage( entity tether, var damageInfo )
