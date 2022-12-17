@@ -73,6 +73,9 @@ void function MpTitanWeapon_SniperInit()
 
 void function LTSRebalance_TransferDebuffs( entity soul, entity titan, entity oldTitan )
 {
+	if ( !IsValid( soul ) || !IsValid( titan ) )
+		return
+
 	if ( "piercingRoundsFXs" in soul.s )
 	{
 		foreach( fx in soul.s.piercingRoundsFXs )
