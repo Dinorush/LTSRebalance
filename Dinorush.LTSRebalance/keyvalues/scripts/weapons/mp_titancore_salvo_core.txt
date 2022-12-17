@@ -15,6 +15,7 @@ WeaponData
 			"damage_far_value"								"*.6"
 			"explosion_damage_heavy_armor"					"*.6"
 			"explosion_damage"								"*.6"
+			"vortex_drain"									"*.6"
 			"burst_fire_count"								"*2"
 
 			"core_duration"									"++0.9" // About the amount of extra time added by this kit: (120 / (15.5 * 3) - 60 / (12 * 3))
