@@ -67,6 +67,13 @@ const VORTEX_TIMED_EXPLOSIVE_FUSETIME_WARNINGFRAC	= 0.75	// wait this fraction o
 const VORTEX_EXP_ROUNDS_RETURN_SPREAD_XY = 0.15
 const VORTEX_EXP_ROUNDS_RETURN_SPREAD_Z = 0.075
 
+const float LTSREBALANCE_VORTEX_GRENADE_SPREAD = 10.0
+const float LTSREBALANCE_VORTEX_BULLET_SPREAD = 8.0
+const float LTSREBALANCE_VORTEX_EXP_ROUNDS_SPREAD = 7.0
+
+const float LTSREBALANCE_VORTEX_SPEED_RANDOM = 0.15
+const float LTSREBALANCE_VORTEX_AMP_SPREAD_MOD = 0.5
+
 const VORTEX_ELECTRIC_DAMAGE_CHARGE_DRAIN_MIN = 0.1  // fraction of charge time
 const VORTEX_ELECTRIC_DAMAGE_CHARGE_DRAIN_MAX = 0.3
 
@@ -102,7 +109,8 @@ const array<int> LTSREBALANCE_FIX_VORTEX_REFIRE_IDS = [
 	eDamageSourceId.mp_titanweapon_sticky_40mm,
 	eDamageSourceId.mp_titanweapon_flightcore_rockets,
 	eDamageSourceId.mp_titanweapon_dumbfire_rockets,
-	eDamageSourceId.mp_titanweapon_meteor
+	eDamageSourceId.mp_titanweapon_meteor,
+	eDamageSourceId.mp_weapon_satchel
 ]
 #endif
 
@@ -658,7 +666,11 @@ bool function TryVortexAbsorb( entity vortexSphere, entity attacker, vector orig
 	else
 	{
 		if ( LTSRebalance_Enabled() )
+		{
 			impactData.storedReflectMods <- projectile.ProjectileGetMods()
+			if ( "bulletsToFire" in projectile.s )
+				impactData.bulletsToFire <- 1
+		}
 		vortexSphere.AddProjectileToSphere();
 	}
 
@@ -1164,7 +1176,11 @@ bool function Vortex_FireBackExplosiveRound( vortexWeapon, attackParams, impactD
 	//else
 		attackPos = Vortex_GenerateRandomRefireOrigin( vortexWeapon )
 
-	vector fireVec = Vortex_GenerateRandomRefireVector( vortexWeapon, VORTEX_EXP_ROUNDS_RETURN_SPREAD_XY, VORTEX_EXP_ROUNDS_RETURN_SPREAD_Z )
+	vector fireVec
+	if ( LTSRebalance_Enabled() )
+		fireVec = LTSRebalance_Vortex_GenerateRandomRefireVector( vortexWeapon, expect vector( attackParams.dir ), LTSREBALANCE_VORTEX_EXP_ROUNDS_SPREAD )
+	else
+		fireVec = Vortex_GenerateRandomRefireVector( vortexWeapon, VORTEX_EXP_ROUNDS_RETURN_SPREAD_XY, VORTEX_EXP_ROUNDS_RETURN_SPREAD_Z )
 
 	// fire off the bolt
 	entity bolt = vortexWeapon.FireWeaponBolt( attackPos, fireVec, projSpeed, DF_IMPACT | damageType, damageType, PROJECTILE_NOT_PREDICTED, sequenceID )
@@ -1195,7 +1211,11 @@ bool function Vortex_FireBackProjectileBullet( vortexWeapon, attackParams, impac
 	//else
 		attackPos = Vortex_GenerateRandomRefireOrigin( vortexWeapon )
 
-	vector fireVec = Vortex_GenerateRandomRefireVector( vortexWeapon, 0.15, 0.1 )
+	vector fireVec
+	if ( LTSRebalance_Enabled() )
+		fireVec = LTSRebalance_Vortex_GenerateRandomRefireVector( vortexWeapon, expect vector( attackParams.dir ), LTSREBALANCE_VORTEX_BULLET_SPREAD )
+	else
+		fireVec = Vortex_GenerateRandomRefireVector( vortexWeapon, 0.15, 0.1 )
 	//printt( Time(), fireVec ) // print for bug with random
 
 	// fire off the bolt
@@ -1235,6 +1255,14 @@ vector function Vortex_GenerateRandomRefireVector( entity vortexWeapon, float ve
 	return fireVec
 }
 
+vector function LTSRebalance_Vortex_GenerateRandomRefireVector( entity vortexWeapon, vector dir, float vecSpread )
+{
+	if ( vortexWeapon.HasMod( "LTSRebalance_pas_ion_vortex" ) )
+		vecSpread *= 0.5
+
+	return ApplyVectorSpread( dir, vecSpread ) * RandomFloatRange( 1 - LTSREBALANCE_VORTEX_SPEED_RANDOM, 1 + LTSREBALANCE_VORTEX_SPEED_RANDOM )
+}
+
 bool function Vortex_FireBackRocket( vortexWeapon, attackParams, impactData, sequenceID )
 {
 	expect entity( vortexWeapon )
@@ -1248,7 +1276,8 @@ bool function Vortex_FireBackRocket( vortexWeapon, attackParams, impactData, seq
 	{
 		rocket.kv.lifetime = RandomFloatRange( 2.6, 3.5 )
 		rocket.s.storedFlags <- damageTypes.largeCaliberExp | DF_VORTEX_REFIRE
-		InitMissileForRandomDriftForVortexLow( rocket, expect vector( attackParams.pos ), expect vector( attackParams.dir ) )
+		float intensityMod = vortexWeapon.HasMod( "LTSRebalance_pas_ion_vortex" ) ? 0.5 : 1.0
+		InitMissileForRandomDriftForVortexLow( rocket, expect vector( attackParams.pos ), expect vector( attackParams.dir ), intensityMod )
 
 		Vortex_ProjectileCommonSetup( rocket, impactData )
 	}
@@ -1262,7 +1291,13 @@ bool function Vortex_FireBackGrenade( entity vortexWeapon, attackParams, impactD
 	float y = RandomFloatRange( -0.2, 0.2 )
 	float z = RandomFloatRange( -0.2, 0.2 )
 
-	vector velocity = ( expect vector( attackParams.dir ) + Vector( x, y, z ) ) * 1500
+	vector velocity
+	if ( LTSRebalance_Enabled() )
+		velocity = LTSRebalance_Vortex_GenerateRandomRefireVector( vortexWeapon, expect vector( attackParams.dir ), LTSREBALANCE_VORTEX_GRENADE_SPREAD )
+	else
+		velocity = ( expect vector( attackParams.dir ) + Vector( x, y, z ) )
+	velocity *= 1500
+
 	vector angularVelocity = Vector( RandomFloatRange( -1200, 1200 ), 100, 0 )
 
 	bool hasIgnitionTime = vortexImpactWeaponInfo[ impactData.weaponName ].grenade_ignition_time > 0
@@ -1333,6 +1368,9 @@ function Vortex_ProjectileCommonSetup( entity projectile, impactData )
 	if ( LTSRebalance_Enabled() )
 	{
 		projectile.s.storedReflectMods <- impactData.storedReflectMods
+		if ( "bulletsToFire" in impactData )
+			projectile.s.bulletsToFire <- impactData.bulletsToFire
+
 		LTSRebalance_FixTetherReflect( projectile )
 		AddEntityDestroyedCallback( projectile, LTSRebalance_FixVortexRefireExplosion )
 	}
@@ -2098,6 +2136,8 @@ void function LTSRebalance_FixVortexRefire( entity victim, var damageInfo )
         return
 	
 	entity projectile = DamageInfo_GetInflictor( damageInfo )
+	// Disables explosion damage on the direct hit target since we make a new explosion that also triggers this callback.
+	// The rest of the function will not apply in this case since the projectile is invalid (but not null).
 	if ( projectile && "directHit" in projectile.s && projectile.s.directHit == victim )
 		DamageInfo_SetDamage( damageInfo, 0 )
 
