@@ -1438,9 +1438,9 @@ function InitMissileForRandomDriftForVortexHigh( entity missile, vector startPos
 	missile.InitMissileForRandomDrift( startPos, startDir, 8, 2.5, 0, 0, 100, 100 )
 }
 
-function InitMissileForRandomDriftForVortexLow( entity missile, vector startPos, vector startDir )
+function InitMissileForRandomDriftForVortexLow( entity missile, vector startPos, vector startDir, float intensityMod = 1.0 )
 {
-	missile.InitMissileForRandomDrift( startPos, startDir, 0.3, 0.085, 0, 0, 0.5, 0.5 )
+	missile.InitMissileForRandomDrift( startPos, startDir, 0.3, 0.085 * intensityMod, 0, 0, 0.5, 0.5 )
 }
 
 /*
@@ -3062,8 +3062,9 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			else if ( IsVortexSphere( vortexHit.vortex ) )
 				VortexSphereDrainHealthForDamage( vortexHit.vortex, damageNearValueTitanArmor )
 
-			// If passVortex has nothing, stop on Vortex (normal behavior)
-			if ( !LTSRebalance_Enabled() || passVortex == "" )
+			// If passVortex has nothing or is "block" and traveling toward Vortex, stop on Vortex (normal behavior)
+			bool blockCheck = passVortex == "block" && ( traceEndOver - traceStart ).Dot( vortexHit.vortex.GetOrigin() - traceStart ) > 0
+			if ( !LTSRebalance_Enabled() || passVortex == "" || blockCheck )
 			{
 				if ( i == maxCount - 1 )
 					LTSRebalance_LogDamageBlockedRaw( vortexHit.vortex.GetOwner(), owner, float( damageNearValueTitanArmor ) )
