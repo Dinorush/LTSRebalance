@@ -5,15 +5,18 @@ WeaponData
 		LTSRebalance
 		{
 			"regen_ammo_refill_rate"						"22.22"
-			"shared_energy_cost"							"200"
+			"shared_energy_cost"							"150"
 		}
 		LTSRebalance_pas_ion_tripwire
 		{
-			"shared_energy_cost"							"--200"
+			"ammo_per_shot"									"*.5"
+			"ammo_min_to_fire"								"*.5"
+			"regen_ammo_refill_rate"						"*.5"
+			"shared_energy_cost"							"--75"
 		}
 		PerfectKits_pas_ion_tripwire
 		{
-			"shared_energy_cost"							"++900"
+			"shared_energy_cost"							"++750"
 		}
 	}
 }

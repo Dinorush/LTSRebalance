@@ -4,6 +4,16 @@ WeaponData
     {
 		LTSRebalance
 		{
+			"ammo_stockpile_max"							"125"
+			"ammo_clip_size"   								"125"
+			"ammo_default_total"							"125"
+			"ammo_no_remove_from_stockpile"					"1"
+
+			"ammo_min_to_fire"								"125"
+			"ammo_per_shot"									"125"
+			"regen_ammo_refill_rate"						"100.0"
+			"regen_ammo_refill_start_delay"					"0.5"
+
 			"damage_near_value_titanarmor"					"1250"
 			"damage_far_value_titanarmor" 					"1250"
 			"explosion_damage_heavy_armor"					"1250"
@@ -11,21 +21,25 @@ WeaponData
 			"fire_rate"   									"2"
 			"holster_time"									"0.5"
 			"deploy_time" 									"0.52"
-			"ammo_no_remove_from_clip"						"1"
-		}	
+		}
+		LTSRebalance_pas_ion_weapon_helper
+		{
+		}
 		LTSRebalance_pas_ion_lasercannon
 		{
-			"damage_near_value"								"*0.17" // Pilot damage is slightly higher to 2-shot them
-			"damage_far_value"								"*0.17"
-			"npc_damage_near_value"							"*0.17"
-			"npc_damage_far_value"							"*0.17"
-			"damage_near_value_titanarmor"					"*0.16"
-			"damage_far_value_titanarmor" 					"*0.16"
-			"explosion_damage"								"*0.17"
-			"explosion_damage_heavy_armor"					"*0.16"
+			"ammo_per_shot"									"*0.142"
+
+			"damage_near_value"								"*0.183"
+			"damage_far_value"								"*0.183"
+			"npc_damage_near_value"							"*0.183"
+			"npc_damage_far_value"							"*0.183"
+			"damage_near_value_titanarmor"					"*0.183"
+			"damage_far_value_titanarmor" 					"*0.183"
+			"explosion_damage"								"*0.183"
+			"explosion_damage_heavy_armor"					"*0.183"
 
 			"fire_rate"   									"++12" //14
-			"burst_fire_count"								"8"
+			"burst_fire_count"								"7"
 			"burst_fire_delay"								"0.5"
 
 			"viewkick_pitch_base" 							"-0.2"
@@ -51,6 +65,7 @@ WeaponData
 		}
 		PerfectKits_refrac_balance
 		{
+			"ammo_per_shot"									"*0.33"
 			"damage_near_value_titanarmor"					"*0.5"
 			"damage_far_value_titanarmor" 					"*0.5"
 			"explosion_damage_heavy_armor"					"*0.5"
