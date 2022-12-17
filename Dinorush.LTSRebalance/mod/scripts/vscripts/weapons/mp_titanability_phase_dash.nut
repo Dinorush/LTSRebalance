@@ -55,6 +55,9 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 				PlayerUsedOffhand( player, weapon )
 
 				#if SERVER
+					if ( LTSRebalance_Enabled() )
+						LTSRebalance_DispelTetherSlow( player )
+
 					EmitSoundOnEntityExceptToPlayer( player, player, "Stryder.Dash" )
 					entity soul = player.GetTitanSoul()
 					if ( LTSRebalance_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
