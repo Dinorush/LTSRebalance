@@ -1,6 +1,6 @@
 WeaponData
 {
-    "wave_pass_vortex"                              "pass"
+    "wave_pass_vortex"                              "block"
 
 	Mods
 	{
