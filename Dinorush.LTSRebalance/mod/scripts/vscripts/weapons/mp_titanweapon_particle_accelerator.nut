@@ -298,7 +298,11 @@ void function OnHit_TitanWeaponParticleAccelerator( entity victim, var damageInf
 		if ( mods.contains( "proto_particle_accelerator" ) )
 			StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 1.0, 0.25, 0.1 )
 	}
-	else if ( ( IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) ) && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
+
+	if ( !LTSRebalance_Enabled() )
+		return
+
+	if ( ( IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) ) && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
 	{
 			array<string> mods = inflictor.ProjectileGetMods()
 			var energyGain = 0
