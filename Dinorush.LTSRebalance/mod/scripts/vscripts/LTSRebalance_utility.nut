@@ -277,18 +277,39 @@ void function LTSRebalance_HandleAttachments( entity titan )
 		}
 
 		entity soul = titan.GetTitanSoul()
-		switch ( weapon.GetWeaponClassName() )
+		if ( IsValid( soul ) )
 		{
-			case "mp_titanability_hover":
-				if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
-					weaponMods.append( "LTSRebalance_pas_northstar_hover" )
-			case "mp_titanweapon_laser_lite":
-				if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_ION_LASERCANNON ) )
-					weaponMods.append( "LTSRebalance_pas_ion_lasercannon" )
-			case "mp_titanability_particle_wall":
-				if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
-					weaponMods.append( "LTSRebalance_pas_tone_wall" )
-			default:
+			switch ( weapon.GetWeaponClassName() )
+			{
+				case "mp_titanability_hover":
+					if ( SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
+						weaponMods.append( "LTSRebalance_pas_northstar_hover" )
+					break
+
+				case "mp_titanability_tether_trap":
+					if ( SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_OPTICS ) )
+						weaponMods.append( "LTSRebalance_pas_northstar_optics" )
+					break
+
+				case "mp_titanweapon_laser_lite":
+					if ( SoulHasPassive( soul, ePassives.PAS_ION_LASERCANNON ) )
+						weaponMods.append( "LTSRebalance_pas_ion_lasercannon" )
+					break
+					if ( SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) )
+						weaponMods.append( "LTSRebalance_pas_ion_weapon_helper" )
+					break
+
+				case "mp_titanability_particle_wall":
+					if ( SoulHasPassive( soul, ePassives.PAS_TONE_WALL ) )
+						weaponMods.append( "LTSRebalance_pas_tone_wall" )
+					break
+
+				case "mp_titancore_salvo_core":
+					if ( SoulHasPassive( soul, ePassives.PAS_TONE_ROCKETS ) )
+						weaponMods.append( "LTSRebalance_pas_tone_rockets" )
+					break
+				default:
+			}
 		}
 
 		if ( weaponMods.contains( "PerfectKits_pas_ion_weapon_ads" ) )
