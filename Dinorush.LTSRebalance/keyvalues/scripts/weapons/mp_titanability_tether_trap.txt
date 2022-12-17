@@ -1,0 +1,9 @@
+WeaponData
+{
+	Mods
+	{
+		LTSRebalance_pas_northstar_optics
+		{
+		}
+	}	
+}

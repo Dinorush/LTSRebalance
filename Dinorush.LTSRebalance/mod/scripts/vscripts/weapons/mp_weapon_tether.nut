@@ -22,6 +22,17 @@ const TETHER_ROPE_MODEL = "cable/tether.vmt"
 const TETHER_3P_MODEL = $"models/weapons/caber_shot/caber_shot_thrown_xl.mdl"
 const TETHER_1P_MODEL = $"models/weapons/caber_shot/caber_shot_tether_xl.mdl"
 
+const float LTSREBALANCE_TWIN_TRAPS_ACTIVATION_MOD = .33
+const float LTSREBALANCE_TWIN_TRAPS_RANGE_MOD = 1.5
+const float LTSREBALANCE_TRAP_SLOW_DURATION = 1.5
+const float LTSREBALANCE_TRAP_SLOW_FADE = 0.5
+
+#if SERVER
+struct {
+	table< entity, array< float > > LTSRebalance_tetherTimes
+} file;
+#endif
+
 function MpWeaponTether_Init()
 {
 	PrecacheMaterial( $"cable/tether" )
@@ -244,7 +255,10 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 	EmitSoundOnEntity( projectile, "Wpn_TetherTrap_Land" )
 	thread TrapExplodeOnDamage( projectile, 100, 0.0, 0.0 )
 
-	wait 0.5 // slight delay before activation
+	bool hasRebalTwin = LTSRebalance_Enabled() && projectile.ProjectileGetMods().contains( "pas_northstar_trap" )
+	float activationMod = hasRebalTwin ? LTSREBALANCE_TWIN_TRAPS_ACTIVATION_MOD : 1.0
+
+	wait 0.5 * activationMod // slight delay before activation
 
 	// PROTO_PlayTrapLightEffect( projectile, "BLINKER", projectile.GetTeam() )
 	entity enemyFX = PlayLoopFXOnEntity( TETHER_MINE_FX, projectile, "BLINKER", null, null, ENTITY_VISIBLE_TO_ENEMY )
@@ -257,7 +271,7 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 		local particleFX = StartParticleEffectOnEntity( projectile, fxid, FX_PATTACH_POINT_FOLLOW, attachID )
 	}
 
-	wait 1.0 // slight delay before activation
+	wait 1.0 * activationMod // slight delay before activation
 
 	float startTime = Time()
 	float TETHER_MINE_LIFETIME
@@ -285,7 +299,8 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 			if ( projectilePos.z > playerPos.z )
 				playerPos.z = min( player.EyePosition().z, projectilePos.z )
 
-			if ( DistanceSqr( playerPos, projectile.GetOrigin() ) > 350 * 350 )
+			float range = 350.0 * ( hasRebalTwin ? LTSREBALANCE_TWIN_TRAPS_RANGE_MOD : 1.0 )
+			if ( DistanceSqr( playerPos, projectile.GetOrigin() ) > range * range )
 				continue
 
 			enemyTitans.insert( 0, player )
@@ -331,14 +346,9 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 			projectile.proj.tetherAttached = true
 
 			AddTitanTether( owner, projectile, titan, tetherEnts, projectile, tetherEndEntForPlayer, tetherEndEntForOthers, isExplosiveTether )
-			if ( LTSRebalance_Enabled() )
-			{
-				AddEntityCallback_OnDamaged( projectile, LTSRebalance_PreventNormalMeleeDamage )
-				SetObjectCanBeMeleed( projectile, true )
-				SetVisibleEntitiesInConeQueriableEnabled( projectile, true )
-				StatusEffect_AddTimed( titan, eStatusEffect.move_slow, 0.5, 1.5, 0.5 )
-				StatusEffect_AddTimed( titan, eStatusEffect.dodge_speed_slow, 0.5, 1.5, 0.5 )
-			}
+			// Applies slow and makes tether melee-able by Sword Core
+			LTSRebalance_ApplyTetherEffects( projectile, titan )
+
 			if ( PerfectKits_Enabled() && titan.IsPlayer() && projectile.ProjectileGetMods().contains( "pas_northstar_trap" ) )
 				thread PerfectKits_TetherEMP( projectile, titan )
 
@@ -355,6 +365,53 @@ void function ProximityTetherThink( entity projectile, entity owner, bool isExpl
 
 		WaitFrame()
 	}
+}
+
+// Applies slow and makes tether melee-able by Sword Core
+void function LTSRebalance_ApplyTetherEffects( entity projectile, entity victim )
+{
+	if ( !LTSRebalance_Enabled() )
+		return
+	
+	// Enables Sword Core melee damage, but prevents normal melee damage
+	AddEntityCallback_OnDamaged( projectile, LTSRebalance_PreventNormalMeleeDamage )
+	SetObjectCanBeMeleed( projectile, true )
+	SetVisibleEntitiesInConeQueriableEnabled( projectile, true )
+
+	// Clear invalid ents
+	array<entity> deleteKeys = []
+	foreach ( entity key, array<float> _ in file.LTSRebalance_tetherTimes )
+	{
+		if ( !IsValid( key ) )
+			deleteKeys.append( key )
+	}
+
+	foreach ( entity key in deleteKeys )
+		delete file.LTSRebalance_tetherTimes[ key ]
+
+	if ( !( victim in file.LTSRebalance_tetherTimes ) )
+		file.LTSRebalance_tetherTimes[ victim ] <- []
+
+	// Calculate stacking slow duration
+	float slowDuration = LTSREBALANCE_TRAP_SLOW_DURATION
+	array<float> tetherTimes = file.LTSRebalance_tetherTimes[ victim ]
+	for ( int i = tetherTimes.len() - 1; i >= 0; i-- )
+	{
+		float remainingTime = tetherTimes[i] + LTSREBALANCE_TRAP_SLOW_DURATION - Time()
+		if ( remainingTime < 0 ) // Remove deprecated slow times
+			tetherTimes.pop()
+		else                     // Add to slow duration sum
+			slowDuration += remainingTime
+	}
+	tetherTimes.insert( 0, Time() )
+
+	// Add slow effects
+	StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE )
+	StatusEffect_AddTimed( victim, eStatusEffect.dodge_speed_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE )
+	
+	// Apply Threat Optics effect
+	if ( projectile.ProjectileGetMods().contains( "LTSRebalance_pas_northstar_optics" ) )
+		LTSRebalance_ApplyThreatOptics( victim, projectile.GetOrigin(), projectile.GetOwner(), LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION )
 }
 
 void function LTSRebalance_PreventNormalMeleeDamage( entity tether, var damageInfo )

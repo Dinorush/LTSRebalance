@@ -18,17 +18,26 @@ global function OnWeaponOwnerChanged_titanweapon_sniper
 
 #if SERVER
 global function OnWeaponNpcPrimaryAttack_titanweapon_sniper
+
+global function LTSRebalance_ApplyThreatOptics
 #endif // #if SERVER
 
 const INSTANT_SHOT_DAMAGE 				= 1200
 //const INSTANT_SHOT_MAX_CHARGES		= 2 // can't change this without updating crosshair
 //const INSTANT_SHOT_TIME_PER_CHARGE	= 0
 const SNIPER_PROJECTILE_SPEED			= 10000
-const float THREAT_OPTICS_SONARMIN      = 1.8
-const float THREAT_OPTICS_SONARCHARGE   = 0.0
 
 const float PERFECTKITS_VIPER_HEIGHT_MIN = 750
 const float PERFECTKITS_VIPER_HEIGHT_CONV = 0.0005
+
+const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD = 1.3
+const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION = 10.0
+
+const float LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION = 1.6
+global const float LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION = 2.4
+const asset LTSREBALANCE_THREAT_OPTICS_DEBUFF_P = $"smk_elec_nrg_heal"
+const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_DURATION_MOD = 2.5
+const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_MOD = 0.10
 
 struct {
 	float chargeDownSoundDuration = 1.0 //"charge_cooldown_time"
@@ -46,8 +55,13 @@ var function OnWeaponPrimaryAttack_titanweapon_sniper( entity weapon, WeaponPrim
 
 void function MpTitanWeapon_SniperInit()
 {
+	PrecacheParticleSystem( LTSREBALANCE_THREAT_OPTICS_DEBUFF_P )
+
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_sniper, OnHit_TitanWeaponSniper )
+	if ( LTSRebalance_EnabledOnInit() )
+		RegisterSignal( "PiercingRoundsHit" )
+
 	if ( PerfectKits_EnabledOnInit() )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_flightcore_rockets, PerfectKits_ApplyHeightDamage )
 	#endif
@@ -70,6 +84,7 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 	float damage = DamageInfo_GetDamage( damageInfo )
 
 	float f_extraDamage = float( extraDamage )
+	f_extraDamage *= 1.0 + StatusEffect_Get( victim, eStatusEffect.damage_received_multiplier )
 
 	entity owner = inflictor.GetOwner()
 	if ( IsValid( owner ) && f_extraDamage > 0 )
@@ -128,10 +143,24 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 
 	if ( victim.IsTitan() )
     {
-        if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_optics" ) && "bulletsToFire" in inflictor.s )
-        {
-            thread OnHit_ThreatOpticsSonarThink ( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), expect int( inflictor.s.bulletsToFire ) )
-        }
+		if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_weapon" ) )
+		{
+			if ( "piercingRoundsEndTime" in victim.s && victim.s.piercingRoundsEndTime > Time() )
+			{
+				victim.s.piercingRoundsEndTime = 0.0
+				victim.Signal( "PiercingRoundsHit" )
+				DamageInfo_ScaleDamage( damageInfo, LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD )
+			}
+
+			if ( "bulletsToFire" in inflictor.s && expect int( inflictor.s.bulletsToFire ) == 6 )
+			{
+				victim.s.piercingRoundsEndTime <- Time() + LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION
+				LTSRebalance_ApplyPiercingRoundsFX( victim )
+			}
+		}
+
+        if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_optics" ) )
+            LTSRebalance_ApplyThreatOptics( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION )
 
 		PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
     }
@@ -140,15 +169,51 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 		victim.SetVelocity( Normalize( inflictor.GetVelocity() ) * 10000 )
 }
 
-void function OnHit_ThreatOpticsSonarThink ( entity enemy, vector position, entity owner, int chargeLevel )
+void function LTSRebalance_ApplyPiercingRoundsFX( entity enemy )
 {
-    enemy.EndSignal( "OnDeath" )
+	thread LTSRebalance_ApplyPiercingRoundsFXThink( enemy )
+}
+
+void function LTSRebalance_ApplyPiercingRoundsFXThink( entity enemy )
+{
+	enemy.EndSignal( "OnDeath" )
+	enemy.EndSignal( "OnDestroy" )
+	enemy.EndSignal( "PiercingRoundsHit" )
+
+	array debuffFXs = LTSRebalance_StartDebuffFX( enemy )
+
+	OnThreadEnd(
+	function() : ( debuffFXs )
+		{
+			foreach( fx in debuffFXs )
+			{
+				expect entity( fx )
+				if ( IsValid( fx ) )
+					EffectStop( fx )
+			}
+		}
+	)
+
+	wait LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION
+}
+
+void function LTSRebalance_ApplyThreatOptics( entity enemy, vector position, entity owner, float duration )
+{
+	thread LTSRebalance_ApplyThreatOpticsThink( enemy, position, owner, duration )
+}
+
+void function LTSRebalance_ApplyThreatOpticsThink( entity enemy, vector position, entity owner, float duration )
+{
+	if ( !enemy.IsTitan() )
+		return
+
+	enemy.EndSignal( "OnDeath" )
 	enemy.EndSignal( "OnDestroy" )
 
     int team = owner.GetTeam()
 	SonarStart( enemy, position, team, owner )
 	IncrementSonarPerTeam( team )
-
+	
 	OnThreadEnd(
 	function() : ( enemy, team )
 		{
@@ -158,8 +223,69 @@ void function OnHit_ThreatOpticsSonarThink ( entity enemy, vector position, enti
 		}
 	)
 
-    float duration = THREAT_OPTICS_SONARMIN + THREAT_OPTICS_SONARCHARGE * chargeLevel
+	thread LTSRebalance_ApplyThreatOpticsDebuff( enemy, duration )
+
 	wait duration
+}
+
+void function LTSRebalance_ApplyThreatOpticsDebuff( entity enemy, float baseDuration )
+{
+	enemy.EndSignal( "OnDeath" )
+	enemy.EndSignal( "OnDestroy" )
+
+	if ( !( "threatOpticsEndTime" in enemy.s ) )
+	{
+		enemy.s.threatOpticsEndTime <- 0.0
+		enemy.s.threatOpticsFXs <- []
+	}
+
+	array debuffFXs = expect array( enemy.s.threatOpticsFXs )
+	if ( enemy.s.threatOpticsEndTime < Time() )
+	{
+		debuffFXs = LTSRebalance_StartDebuffFX( enemy )
+		enemy.s.threatOpticsFXs = debuffFXs
+	}
+
+	OnThreadEnd(
+	function() : ( enemy, debuffFXs )
+		{
+			if ( !IsAlive( enemy ) || ( IsValid( enemy ) && enemy.s.threatOpticsEndTime < Time() ) )
+			{
+				foreach ( fx in debuffFXs )
+				{
+					expect entity( fx )
+					if ( IsValid( fx ) )
+						EffectStop( fx )
+				}
+				debuffFXs.clear()
+			}
+		}
+	)
+
+	float duration = baseDuration * LTSREBALANCE_THREAT_OPTICS_DEBUFF_DURATION_MOD
+	StatusEffect_AddTimed( enemy, eStatusEffect.damage_received_multiplier, LTSREBALANCE_THREAT_OPTICS_DEBUFF_MOD, duration, 0.0 )
+	enemy.s.threatOpticsEndTime = max( enemy.s.threatOpticsEndTime, Time() + duration )
+
+	wait duration + .1
+}
+
+array function LTSRebalance_StartDebuffFX( entity enemy )
+{
+	array returnArray = [ null, null ]
+
+	int attachId = enemy.LookupAttachment( "exp_torso_main" )
+	int particleId = GetParticleSystemIndex( LTSREBALANCE_THREAT_OPTICS_DEBUFF_P )
+	entity debuffFX = StartParticleEffectOnEntity_ReturnEntity( enemy, particleId, FX_PATTACH_POINT_FOLLOW_NOROTATE, attachId )
+	debuffFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_OWNER
+	returnArray[0] = debuffFX 
+
+	attachId = enemy.LookupAttachment( "exp_torso_front" )
+	particleId = GetParticleSystemIndex( $"P_emp_body_titan" )
+	debuffFX = StartParticleEffectOnEntity_ReturnEntity( enemy, particleId, FX_PATTACH_POINT_FOLLOW, attachId )
+	debuffFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_FRIENDLY | ENTITY_VISIBLE_TO_ENEMY
+	returnArray[1] = debuffFX
+
+	return returnArray
 }
 
 void function PerfectKits_ApplyHeightDamage( entity victim, var damageInfo )
@@ -267,9 +393,7 @@ function FireSniper( entity weapon, WeaponPrimaryAttackParams attackParams, bool
 		return 1
 
     int damageFlags = ( DF_GIB | DF_BULLET | DF_ELECTRICAL )
-    if ( LTSRebalance_Enabled() && weapon.HasMod( "pas_northstar_weapon" ) )
-        damageFlags = ( damageFlags | DF_SKIP_DAMAGE_PROT )
-
+    
 	entity bolt = weapon.FireWeaponBolt( attackParams.pos, attackParams.dir, SNIPER_PROJECTILE_SPEED, damageFlags, damageFlags, playerFired, 0 )
 	if ( bolt )
 	{
