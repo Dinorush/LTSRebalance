@@ -215,8 +215,11 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 			if ( projectileMods.contains( "pas_northstar_optics" ) )
 				LTSRebalance_ApplyThreatOptics( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION )
 
-			float knockback = GetTitanSniperKnockback( inflictor, victim )
-			LTSRebalance_ApplyStaticKnockback( victim, knockback, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
+			if ( damage > 0 )
+			{
+				float knockback = GetTitanSniperKnockback( inflictor, victim )
+				LTSRebalance_ApplyStaticKnockback( victim, knockback, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
+			}
 		}
 		else
 			PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
