@@ -34,7 +34,7 @@ struct {
 } file;
 #endif
 
-const float LTSREBALANCE_LASER_TRIP_COST_REDUCTION_TIME = 2.0
+const float LTSREBALANCE_LASER_TRIP_COST_REDUCTION_TIME = 4.0
 const int LTSREBALANCE_PAS_ION_WEAPON_BONUS_COST = 150
 
 void function MpTitanWeaponLaserLite_Init()
