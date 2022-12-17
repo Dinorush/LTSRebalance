@@ -76,6 +76,16 @@ void function LTSRebalance_TransferDebuffs( entity soul, entity titan, entity ol
 	if ( !IsValid( soul ) || !IsValid( titan ) )
 		return
 
+	thread LTSRebalance_TransferDebuffsDelayed( soul, titan )
+}
+
+
+void function LTSRebalance_TransferDebuffsDelayed( entity soul, entity enemy )
+{
+	WaitEndFrame()
+	if ( !IsValid( soul ) || !IsValid( titan ) )
+		return
+
 	if ( "piercingRoundsFXs" in soul.s )
 	{
 		foreach( fx in soul.s.piercingRoundsFXs )
