@@ -1,5 +1,6 @@
 /* LTS Rebalance replaces this file for the following reasons:
-   1. Implement Phase Reflex changes (LTS Rebalance + Perfect Kits)
+   1. Implement Perfect Kits Phase Reflex changes
+   2. Force rodeo riders off of phasing Ronins
 */
 #if CLIENT
 #endif
@@ -182,7 +183,6 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 		if ( ent.IsTitan() )
 		{
 			UntrackAllToneMarks( ent )
-			// PhaseReflexReloadMain( ent )
 			entity titanSoul = ent.GetTitanSoul()
 			if ( titanSoul != null )
 			{
@@ -198,10 +198,7 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 	else
 	{
 		if ( ent.IsTitan() )
-		{
 			UntrackAllToneMarks( ent )
-			PhaseReflexReloadMain( ent )
-		}
 		ent.EnableNPCFlag( NPC_IGNORE_ALL )
 		EmitSoundOnEntity( ent, SHIFTER_PRE_SOUND_3P )
 	}
@@ -401,13 +398,6 @@ bool function ShouldEntitySelfKill( entity ent, entity largeTelefragTarget )
 	if ( IsSingleplayer() )
 		return false
 
-	if ( ent.IsTitan() && LTSRebalance_Enabled() )
-	{
-		entity soul = ent.GetTitanSoul()
-		if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-			return false
-	}
-
 	return ( DistanceSqr( largeTelefragTarget.GetOrigin(), ent.GetOrigin() ) < 4096.0 )
 }
 
@@ -525,29 +515,6 @@ void function UntrackAllToneMarks( entity ent )
 			continue
 
 		offhand.SmartAmmo_UntrackEntity( ent )
-	}
-}
-
-void function PhaseReflexReloadMain( entity titan )
-{
-	if ( LTSRebalance_Enabled() && SoulHasPassive( titan.GetTitanSoul(), ePassives.PAS_RONIN_AUTOSHIFT ) )
-	{
-		table titanDotS = expect table( titan.s )
-		if ( "PerfectReflexForced" in titanDotS && expect bool( titanDotS.PerfectReflexForced ) )
-			return
-
-		array<entity> weapons = titan.GetMainWeapons()
-		if ( weapons.len() > 0 && !weapons[0].GetWeaponSettingBool( eWeaponVar.ammo_no_remove_from_clip ) )
-		{
-			int newClip = minint( weapons[0].GetWeaponPrimaryClipCount() + LTSREBALANCE_PHASE_REFLEX_AMMO, weapons[0].GetWeaponPrimaryClipCountMax() )
-			weapons[0].SetWeaponPrimaryClipCount( newClip )
-
-			if( weapons[0].GetWeaponPrimaryClipCountMax() == weapons[0].GetWeaponPrimaryClipCount() && titan.GetActiveWeapon() == weapons[0] && weapons[0].IsReloading() )
-			{
-				titan.HolsterWeapon()
-				titan.DeployWeapon()
-			}
-		}
 	}
 }
 #endif // #if SERVER
