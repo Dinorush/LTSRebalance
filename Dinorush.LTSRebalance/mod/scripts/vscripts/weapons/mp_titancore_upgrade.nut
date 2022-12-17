@@ -20,7 +20,7 @@ const LASER_CHAGE_FX_3P = $"P_handlaser_charge"
 const FX_SHIELD_GAIN_SCREEN		= $"P_xo_shield_up"
 const int SUPERIOR_CHASSIS_HEALTH_AMOUNT = 2500
 const int SUPERIOR_CHASSIS_SHIELD_AMOUNT = 1500
-const int PAS_VANGUARD_COREMETER_SHIELD = 500
+const int PAS_VANGUARD_COREMETER_SHIELD = 450
 const int PAS_VANGUARD_DOOM_HEAL = 1000
 const float PAS_VANGUARD_DOOM_DIMINISH = 0.5
 const float PERFECTKITS_ENERGY_THIEF_DELAY_BASE = 5.0
@@ -234,6 +234,8 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 				}
 				if ( owner.IsPlayer() )
 				{
+					if ( LTSRebalance_Enabled() )
+						ServerToClientStringCommand( owner, "ltsrebalance_refresh_hud" )
 					int conversationID = GetConversationIndex( "upgradeTo1" )
 					Remote_CallFunction_Replay( owner, "ServerCallback_PlayTitanConversation", conversationID )
 					Remote_CallFunction_NonReplay( owner, "ServerCallback_VanguardUpgradeMessage", 2 )
