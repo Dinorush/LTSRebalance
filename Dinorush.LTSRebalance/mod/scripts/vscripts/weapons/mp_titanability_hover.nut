@@ -12,7 +12,7 @@ global function NPC_OnWeaponPrimaryAttack_TitanHover
 global function FlyerHovers
 #endif
 
-const float LTSREBALANCE_PAS_NORTHSTAR_HOVER_MOD = 0.67
+const float LTSREBALANCE_PAS_NORTHSTAR_HOVER_MOD = 0.6
 
 void function MpTitanAbilityHover_Init()
 {

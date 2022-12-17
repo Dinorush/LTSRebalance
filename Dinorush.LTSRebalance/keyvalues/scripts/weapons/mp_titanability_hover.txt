@@ -4,8 +4,8 @@ WeaponData
 	{
 		LTSRebalance_pas_northstar_hover
 		{
-			"fire_duration"   						"*.67"
-			"regen_ammo_refill_rate"				"*1.5"
+			"fire_duration"   						"*.6"
+			"regen_ammo_refill_rate"				"*2"
 		}
 	}
 }
