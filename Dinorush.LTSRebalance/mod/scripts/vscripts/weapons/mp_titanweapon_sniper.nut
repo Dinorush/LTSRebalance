@@ -60,13 +60,41 @@ void function MpTitanWeapon_SniperInit()
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_sniper, OnHit_TitanWeaponSniper )
 	if ( LTSRebalance_EnabledOnInit() )
+	{
 		RegisterSignal( "PiercingRoundsHit" )
+		AddSoulTransferFunc( LTSRebalance_TransferDebuffs )
+	}
 
 	if ( PerfectKits_EnabledOnInit() )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_flightcore_rockets, PerfectKits_ApplyHeightDamage )
 	#endif
 }
 #if SERVER
+
+void function LTSRebalance_TransferDebuffs( entity soul, entity titan, entity oldTitan )
+{
+	if ( "piercingRoundsFXs" in soul.s )
+	{
+		foreach( fx in soul.s.piercingRoundsFXs )
+		{
+			expect entity( fx )
+			if ( IsValid( fx ) )
+				EffectStop( fx )
+		}
+		soul.s.piercingRoundsFXs = LTSRebalance_StartDebuffFX( titan )
+	}
+
+	if ( "threatOpticsFXs" in soul.s )
+	{
+		foreach( fx in soul.s.threatOpticsFXs )
+		{
+			expect entity( fx )
+			if ( IsValid( fx ) )
+				EffectStop( fx )
+		}
+		soul.s.threatOpticsFXs = LTSRebalance_StartDebuffFX( titan )
+	}
+}
 
 void function OnHit_TitanWeaponSniper( entity victim, var damageInfo )
 {
@@ -145,16 +173,17 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
     {
 		if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_weapon" ) )
 		{
-			if ( "piercingRoundsEndTime" in victim.s && victim.s.piercingRoundsEndTime > Time() )
+			entity soul = victim.GetTitanSoul()
+			if ( "piercingRoundsEndTime" in soul.s && soul.s.piercingRoundsEndTime > Time() )
 			{
-				victim.s.piercingRoundsEndTime = 0.0
-				victim.Signal( "PiercingRoundsHit" )
+				soul.s.piercingRoundsEndTime = 0.0
+				soul.Signal( "PiercingRoundsHit" )
 				DamageInfo_ScaleDamage( damageInfo, LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD )
 			}
 
 			if ( "bulletsToFire" in inflictor.s && expect int( inflictor.s.bulletsToFire ) == 6 )
 			{
-				victim.s.piercingRoundsEndTime <- Time() + LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION
+				soul.s.piercingRoundsEndTime <- Time() + LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION
 				LTSRebalance_ApplyPiercingRoundsFX( victim )
 			}
 		}
@@ -176,21 +205,29 @@ void function LTSRebalance_ApplyPiercingRoundsFX( entity enemy )
 
 void function LTSRebalance_ApplyPiercingRoundsFXThink( entity enemy )
 {
-	enemy.EndSignal( "OnDeath" )
-	enemy.EndSignal( "OnDestroy" )
-	enemy.EndSignal( "PiercingRoundsHit" )
+	if ( !enemy.IsTitan() )
+		return
 
-	array debuffFXs = LTSRebalance_StartDebuffFX( enemy )
+	entity soul = enemy.GetTitanSoul()
+
+	soul.EndSignal( "OnDestroy" )
+	soul.EndSignal( "PiercingRoundsHit" )
+
+	soul.s.piercingRoundsFXs <- LTSRebalance_StartDebuffFX( enemy )
 
 	OnThreadEnd(
-	function() : ( debuffFXs )
+		function() : ( soul )
 		{
-			foreach( fx in debuffFXs )
+			if ( !IsValid( soul ) )
+				return
+
+			foreach( fx in soul.s.piercingRoundsFXs )
 			{
 				expect entity( fx )
 				if ( IsValid( fx ) )
 					EffectStop( fx )
 			}
+			soul.s.piercingRoundsFXs.clear()
 		}
 	)
 
@@ -209,13 +246,14 @@ void function LTSRebalance_ApplyThreatOpticsThink( entity enemy, vector position
 
 	enemy.EndSignal( "OnDeath" )
 	enemy.EndSignal( "OnDestroy" )
+	enemy.EndSignal( "DisembarkingTitan" )
 
     int team = owner.GetTeam()
 	SonarStart( enemy, position, team, owner )
 	IncrementSonarPerTeam( team )
 	
 	OnThreadEnd(
-	function() : ( enemy, team )
+		function() : ( enemy, team )
 		{
 			DecrementSonarPerTeam( team )
 			if ( IsValid( enemy ) )
@@ -230,41 +268,37 @@ void function LTSRebalance_ApplyThreatOpticsThink( entity enemy, vector position
 
 void function LTSRebalance_ApplyThreatOpticsDebuff( entity enemy, float baseDuration )
 {
-	enemy.EndSignal( "OnDeath" )
-	enemy.EndSignal( "OnDestroy" )
+	entity soul = enemy.GetTitanSoul()
+	soul.EndSignal( "OnDestroy" )
 
-	if ( !( "threatOpticsEndTime" in enemy.s ) )
+	if ( !( "threatOpticsEndTime" in soul.s ) )
 	{
-		enemy.s.threatOpticsEndTime <- 0.0
-		enemy.s.threatOpticsFXs <- []
+		soul.s.threatOpticsEndTime <- 0.0
+		soul.s.threatOpticsFXs <- []
 	}
 
-	array debuffFXs = expect array( enemy.s.threatOpticsFXs )
-	if ( enemy.s.threatOpticsEndTime < Time() )
-	{
-		debuffFXs = LTSRebalance_StartDebuffFX( enemy )
-		enemy.s.threatOpticsFXs = debuffFXs
-	}
+	if ( soul.s.threatOpticsEndTime < Time() )
+		soul.s.threatOpticsFXs = LTSRebalance_StartDebuffFX( enemy )
 
 	OnThreadEnd(
-	function() : ( enemy, debuffFXs )
+		function() : ( soul )
 		{
-			if ( !IsAlive( enemy ) || ( IsValid( enemy ) && enemy.s.threatOpticsEndTime < Time() ) )
+			if ( !IsValid( soul ) || soul.s.threatOpticsEndTime > Time() )
+				return
+
+			foreach ( fx in soul.s.threatOpticsFXs )
 			{
-				foreach ( fx in debuffFXs )
-				{
-					expect entity( fx )
-					if ( IsValid( fx ) )
-						EffectStop( fx )
-				}
-				debuffFXs.clear()
+				expect entity( fx )
+				if ( IsValid( fx ) )
+					EffectStop( fx )
 			}
+			soul.s.threatOpticsFXs.clear()
 		}
 	)
 
 	float duration = baseDuration * LTSREBALANCE_THREAT_OPTICS_DEBUFF_DURATION_MOD
-	StatusEffect_AddTimed( enemy, eStatusEffect.damage_received_multiplier, LTSREBALANCE_THREAT_OPTICS_DEBUFF_MOD, duration, 0.0 )
-	enemy.s.threatOpticsEndTime = max( enemy.s.threatOpticsEndTime, Time() + duration )
+	soul.s.threatOpticsEffect <- StatusEffect_AddTimed( enemy, eStatusEffect.damage_received_multiplier, LTSREBALANCE_THREAT_OPTICS_DEBUFF_MOD, duration, 0.0 )
+	soul.s.threatOpticsEndTime = max( soul.s.threatOpticsEndTime, Time() + duration )
 
 	wait duration + .1
 }
@@ -277,12 +311,14 @@ array function LTSRebalance_StartDebuffFX( entity enemy )
 	int particleId = GetParticleSystemIndex( LTSREBALANCE_THREAT_OPTICS_DEBUFF_P )
 	entity debuffFX = StartParticleEffectOnEntity_ReturnEntity( enemy, particleId, FX_PATTACH_POINT_FOLLOW_NOROTATE, attachId )
 	debuffFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_OWNER
+	debuffFX.SetOwner( enemy )
 	returnArray[0] = debuffFX 
 
 	attachId = enemy.LookupAttachment( "exp_torso_front" )
 	particleId = GetParticleSystemIndex( $"P_emp_body_titan" )
 	debuffFX = StartParticleEffectOnEntity_ReturnEntity( enemy, particleId, FX_PATTACH_POINT_FOLLOW, attachId )
 	debuffFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_FRIENDLY | ENTITY_VISIBLE_TO_ENEMY
+	debuffFX.SetOwner( enemy )
 	returnArray[1] = debuffFX
 
 	return returnArray
