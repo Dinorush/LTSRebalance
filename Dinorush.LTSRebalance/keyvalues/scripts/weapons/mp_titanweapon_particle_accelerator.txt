@@ -4,6 +4,9 @@ WeaponData
 	{
 		LTSRebalance
 		{
+			"zoom_time_in"									"0.2"
+			"zoom_time_out"   								"0.2"
+
 			"damage_near_distance"							"1200"
 			"damage_far_distance" 							"2000"
 
