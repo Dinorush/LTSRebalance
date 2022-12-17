@@ -34,7 +34,7 @@ const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD = 1.25
 const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION = 6.0
 
 const float LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION = 1.6
-global const float LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION = 2.4
+global const float LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION = 0.0
 const asset LTSREBALANCE_THREAT_OPTICS_DEBUFF_P = $"smk_elec_nrg_heal"
 const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_DURATION_MOD = 2.5
 const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_MOD = 0.10
@@ -109,6 +109,14 @@ void function LTSRebalance_TransferDebuffsDelayed( entity soul, entity titan )
 	}
 }
 
+float function GetTitanSniperKnockback( entity inflictor, entity victim )
+{
+	float knockback = CalculateTitanSniperExtraDamage( inflictor, victim )
+	int settingKey = victim.GetArmorType() == ARMOR_TYPE_HEAVY ? eWeaponVar.damage_near_value_titanarmor : eWeaponVar.damage_near_value
+	knockback += float( inflictor.GetProjectileWeaponSettingInt( settingKey ) )
+	return knockback
+}
+
 void function OnHit_TitanWeaponSniper( entity victim, var damageInfo )
 {
 	OnHit_TitanWeaponSniper_Internal( victim, damageInfo )
@@ -121,6 +129,7 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 		return
 	if ( !inflictor.IsProjectile() )
 		return
+
 	int extraDamage = int( CalculateTitanSniperExtraDamage( inflictor, victim ) )
 	float damage = DamageInfo_GetDamage( damageInfo )
 
@@ -183,32 +192,51 @@ void function OnHit_TitanWeaponSniper_Internal( entity victim, var damageInfo )
 	PerfectKits_ApplyHeightDamage( victim, damageInfo )
 
 	if ( victim.IsTitan() )
-    {
-		if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_weapon" ) )
+	{
+		if ( LTSRebalance_Enabled() )
 		{
-			entity soul = victim.GetTitanSoul()
-			if ( "piercingRoundsEndTime" in soul.s && soul.s.piercingRoundsEndTime > Time() )
+			if ( projectileMods.contains( "pas_northstar_weapon" ) )
 			{
-				soul.s.piercingRoundsEndTime = 0.0
-				soul.Signal( "PiercingRoundsHit" )
-				DamageInfo_ScaleDamage( damageInfo, LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD )
+				entity soul = victim.GetTitanSoul()
+				if ( "piercingRoundsEndTime" in soul.s && soul.s.piercingRoundsEndTime > Time() )
+				{
+					soul.s.piercingRoundsEndTime = 0.0
+					soul.Signal( "PiercingRoundsHit" )
+					DamageInfo_ScaleDamage( damageInfo, LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD )
+				}
+
+				if ( "bulletsToFire" in inflictor.s && expect int( inflictor.s.bulletsToFire ) == 6 )
+				{
+					soul.s.piercingRoundsEndTime <- Time() + LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION
+					LTSRebalance_ApplyPiercingRoundsFX( victim )
+				}
 			}
 
-			if ( "bulletsToFire" in inflictor.s && expect int( inflictor.s.bulletsToFire ) == 6 )
-			{
-				soul.s.piercingRoundsEndTime <- Time() + LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION
-				LTSRebalance_ApplyPiercingRoundsFX( victim )
-			}
+			if ( projectileMods.contains( "pas_northstar_optics" ) )
+				LTSRebalance_ApplyThreatOptics( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION )
+
+			float knockback = GetTitanSniperKnockback( inflictor, victim )
+			LTSRebalance_ApplyStaticKnockback( victim, knockback, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
 		}
+		else
+			PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
+	}
 
-        if ( LTSRebalance_Enabled() && projectileMods.contains( "pas_northstar_optics" ) )
-            LTSRebalance_ApplyThreatOptics( victim, inflictor.GetOrigin(), DamageInfo_GetAttacker( damageInfo ), LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION )
-
-		PushEntWithDamageInfoAndDistanceScale( victim, damageInfo, nearRange, farRange, nearScale, farScale, 0.25 )
-    }
-	
 	if ( perfectPush )
 		victim.SetVelocity( Normalize( inflictor.GetVelocity() ) * 10000 )
+}
+
+void function LTSRebalance_ApplyStaticKnockback( entity victim, float knockback, var damageInfo, float nearRange, float farRange, float nearScale, float farScale, float dotBase )
+{
+	float scale = GraphCapped( DamageInfo_GetDistFromAttackOrigin( damageInfo ), nearRange, farRange, nearScale, farScale )
+
+	if ( scale <= 0.0 )
+		return
+
+	entity projectile = DamageInfo_GetInflictor( damageInfo )
+	vector attackDirection = Normalize( projectile.GetVelocity() )
+
+	PushEntWithDamageFromDirection( victim, knockback, attackDirection, dotBase, scale )
 }
 
 void function LTSRebalance_ApplyPiercingRoundsFX( entity enemy )
@@ -249,14 +277,14 @@ void function LTSRebalance_ApplyPiercingRoundsFXThink( entity enemy )
 
 void function LTSRebalance_ApplyThreatOptics( entity enemy, vector position, entity owner, float duration )
 {
+	if ( duration <= 0 || !enemy.IsTitan() )
+		return
+
 	thread LTSRebalance_ApplyThreatOpticsThink( enemy, position, owner, duration )
 }
 
 void function LTSRebalance_ApplyThreatOpticsThink( entity enemy, vector position, entity owner, float duration )
 {
-	if ( !enemy.IsTitan() )
-		return
-
 	enemy.EndSignal( "OnDeath" )
 	enemy.EndSignal( "OnDestroy" )
 	enemy.EndSignal( "DisembarkingTitan" )
