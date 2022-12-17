@@ -30,6 +30,9 @@ bool function OnWeaponAttemptOffhandSwitch_titanweapon_salvo_rockets( entity wea
 
 var function OnWeaponPrimaryAttack_titanweapon_salvo_rockets( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
+	if ( attackParams.burstIndex == 0 && weapon.GetWeaponSettingFloat( eWeaponVar.charge_time ) > 0 )
+		weapon.SetWeaponBurstFireCount( weapon.GetWeaponPrimaryClipCount() / weapon.GetAmmoPerShot() )
+
 	bool shouldPredict = weapon.ShouldPredictProjectiles()
 
 	#if CLIENT
