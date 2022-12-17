@@ -23,7 +23,7 @@ const TETHER_3P_MODEL = $"models/weapons/caber_shot/caber_shot_thrown_xl.mdl"
 const TETHER_1P_MODEL = $"models/weapons/caber_shot/caber_shot_tether_xl.mdl"
 
 const float LTSREBALANCE_TWIN_TRAPS_ACTIVATION_MOD = .33
-const float LTSREBALANCE_TWIN_TRAPS_RANGE_MOD = 1.5
+const float LTSREBALANCE_TWIN_TRAPS_RANGE_MOD = 1.25
 const float LTSREBALANCE_TRAP_SLOW_DURATION = 1.5
 const float LTSREBALANCE_TRAP_SLOW_FADE = 0.5
 
