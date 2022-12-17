@@ -80,7 +80,7 @@ void function LTSRebalance_TransferDebuffs( entity soul, entity titan, entity ol
 }
 
 
-void function LTSRebalance_TransferDebuffsDelayed( entity soul, entity enemy )
+void function LTSRebalance_TransferDebuffsDelayed( entity soul, entity titan )
 {
 	WaitEndFrame()
 	if ( !IsValid( soul ) || !IsValid( titan ) )
