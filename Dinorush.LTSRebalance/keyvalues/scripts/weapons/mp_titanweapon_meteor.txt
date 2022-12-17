@@ -39,16 +39,16 @@ WeaponData
 		{
 			"damage_near_value_titanarmor"					"1000"
 	   		"damage_far_value_titanarmor" 					"1000"
-			"reload_time" 									"++0.6"
-			"reloadempty_time"								"++0.6"
-			"reloadsegment_time_loop"						"++0.5"
+			"reload_time" 									"++0.5"
+			"reloadempty_time"								"++0.5"
+			"reloadsegment_time_loop"						"++0.45"
 		}
 		LTSRebalance_fd_wpn_upgrade_1
 		{
-			"reload_time" 									"1.6"
-			"reloadempty_time"								"1.6"
-			"reloadsegment_time_loop"						"1.2"
-			"reloadsegment_time_end"						"0.8"
+			"reload_time" 									"*0.8"
+			"reloadempty_time"								"*0.8"
+			"reloadsegment_time_loop"						"*0.67"
+			"reloadsegment_time_end"						"*0.67"
 		}
 		LTSRebalance_fd_wpn_upgrade_2
 		{
