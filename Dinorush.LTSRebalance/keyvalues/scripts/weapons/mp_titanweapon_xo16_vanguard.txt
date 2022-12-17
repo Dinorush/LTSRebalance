@@ -127,13 +127,13 @@ WeaponData
 
 		LTSRebalance_rapid_reload
 		{
-			"reload_time" 									"*0.67"
-			"reload_time_late1"								"*0.67"
-			"reload_time_late2"								"*0.67"
-			"reload_time_late3"								"*0.67"
-			"reloadempty_time"								"*0.67"
-			"reloadempty_time_late1"						"*0.67"
-			"reloadempty_time_late2"						"*0.67"
+			"reload_time" 									"*0.5"
+			"reload_time_late1"								"*0.5"
+			"reload_time_late2"								"*0.5"
+			"reload_time_late3"								"*0.5"
+			"reloadempty_time"								"*0.5"
+			"reloadempty_time_late1"						"*0.5"
+			"reloadempty_time_late2"						"*0.5"
 		}
 	}
 }
