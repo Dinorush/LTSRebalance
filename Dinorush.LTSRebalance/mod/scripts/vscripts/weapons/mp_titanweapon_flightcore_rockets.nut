@@ -55,26 +55,9 @@ var function OnWeaponPrimaryAttack_titanweapon_flightcore_rockets( entity weapon
 	{
 		TraceResults result = TraceLine( owner.EyePosition(), owner.EyePosition() + attackParams.dir*50000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 		vector endPos = result.endPos
-        if ( LTSRebalance_Enabled() )
-		{
-			// In LTS Rebalance, rockets aim ahead of the enemy based on their velocity.
-			// Trace again, with a different collision group - specifically, locating the titan the player is looking at.
-			TraceResults hitResult = TraceLine( owner.EyePosition(), owner.EyePosition() + attackParams.dir*50000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
-			entity hitEnt = hitResult.hitEnt
 
-			// Check that the target is a living titan.
-			if (IsAlive(hitEnt) && hitEnt.GetArmorType() == ARMOR_TYPE_HEAVY)
-			{
-				endPos = hitResult.endPos + attackParams.dir * 20 // Make the missiles go behind the trace ending so the missiles don't turn tail right in front of them
-				float dist = Distance(owner.GetOrigin(), hitEnt.GetOrigin())
-				vector flat_vel = hitEnt.GetVelocity()
-				flat_vel.z = min(flat_vel.z, 0)
-
-				// Auto-targeting only compensates up to 400 dist. For instance, a sprinting Stryder would be compensated up to 70m away. 
-				float compensate = min(dist/Length(missile.GetVelocity()) * Length(flat_vel), 400)
-				endPos += Normalize(flat_vel)*compensate
-			}
-		}
+		endPos = LTSRebalance_FlightCoreTrackTarget( owner, endPos, attackParams.dir, Length( missile.GetVelocity() ) )
+        
         missile.kv.lifetime = 10
 		missile.InitMissileForRandomDriftFromWeaponSettings( attackPos, attackDir )
 		thread DelayedTrackingStart( missile, endPos )
@@ -86,6 +69,37 @@ var function OnWeaponPrimaryAttack_titanweapon_flightcore_rockets( entity weapon
 	#endif // SERVER
 	}
 	return 1
+}
+
+vector function LTSRebalance_FlightCoreTrackTarget( entity owner, vector endPos, vector dir, float missileSpeed )
+{
+	if ( !LTSRebalance_Enabled() )
+		return endPos
+
+	// In LTS Rebalance, rockets aim ahead of the enemy based on their velocity.
+	// Trace again, with a different collision group - specifically, locating the titan the player is looking at.
+	TraceResults hitResult = TraceLine( owner.EyePosition(), owner.EyePosition() + dir*20000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
+	entity hitEnt = hitResult.hitEnt
+
+	// Check that the target is a living titan.
+	if ( !IsAlive( hitEnt ) || hitEnt.GetArmorType() != ARMOR_TYPE_HEAVY )
+		return endPos
+
+	// Check that the target is not on the ground
+	TraceResults airTest = TraceLine( hitEnt.GetOrigin(), hitEnt.GetOrigin() + < 0.0, 0.0, -100.0 >, [ hitEnt ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
+	if ( airTest.fraction < 1 )
+		return endPos
+
+	endPos = hitResult.endPos + dir * 20 // Make the missiles go behind the trace ending so the missiles don't turn tail right in front of them
+	float dist = Distance( owner.GetOrigin(), hitEnt.GetOrigin() )
+	vector flat_vel = hitEnt.GetVelocity()
+	flat_vel.z = min( flat_vel.z, 0 )
+
+	// Auto-targeting only compensates up to 400 dist. For instance, a sprinting Stryder would be compensated up to 70m away. 
+	float compensate = min( dist / missileSpeed * Length( flat_vel ), 400)
+	endPos += Normalize( flat_vel ) * compensate
+
+	return endPos
 }
 
 #if SERVER
