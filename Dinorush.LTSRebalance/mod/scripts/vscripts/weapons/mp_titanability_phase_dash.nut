@@ -21,17 +21,17 @@ void function MpTitanabilityPhaseDashInit()
 		PrecacheParticleSystem( $"arcball_CH_dlight" )
 		PrecacheParticleSystem( $"arcball_CH_elec_rope" )
 	#else
-		AddServerToClientStringCommandCallback( "ltsrebalance_refresh_reflex_hud", LTSRebalance_RefreshReflexHUD )
+		AddServerToClientStringCommandCallback( "ltsrebalance_refresh_hud", LTSRebalance_RefreshHUD )
 	#endif
 }
 
 #if CLIENT
-void function LTSRebalance_RefreshReflexHUD( array<string> args )
+void function LTSRebalance_RefreshHUD( array<string> args )
 {
-	thread LTSRebalance_RefreshReflexHUDThink()
+	thread LTSRebalance_RefreshHUDThink()
 }
 
-void function LTSRebalance_RefreshReflexHUDThink()
+void function LTSRebalance_RefreshHUDThink()
 {
 	wait 0.1
 	if ( !IsSpectating() && !IsWatchingReplay() )
@@ -63,6 +63,9 @@ var function OnWeaponPrimaryAttack_titanability_phase_dash( entity weapon, Weapo
 						if ( weapon.HasMod( "LTSRebalance_reflex_helper" ) )
 						{
 							weapon.RemoveMod( "LTSRebalance_reflex_helper" )
+							// Play FX at current location (normal phase FX follows player to teleport location)
+							StartParticleEffectInWorld( GetParticleSystemIndex( $"P_phase_shift_main_XO" ), player.GetOrigin(), player.GetAngles() )
+							EmitSoundAtPositionExceptToPlayer( TEAM_UNASSIGNED, player.GetOrigin(), player, SHIFTER_START_SOUND_3P_TITAN )
 							player.SetOrigin( expect vector( weaponDotS.savedOrigin ) )
 							player.SetVelocity( <0, 0, 0> )
 							return weapon.GetAmmoPerShot()
@@ -151,7 +154,7 @@ entity function LTSRebalance_CreateReflexGate( entity player, entity weapon )
 				weapon.RemoveMod( "LTSRebalance_reflex_helper" )
 			
 			if ( IsValid( player ) )
-				ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
+				ServerToClientStringCommand( player, "ltsrebalance_refresh_hud" )
 
 			foreach ( entity fx in fxEnts ) 
 				if ( IsValid( fx ) )
@@ -170,7 +173,7 @@ entity function LTSRebalance_CreateReflexGate( entity player, entity weapon )
 
 	// Enable warping and start full gate FX
 	weapon.AddMod( "LTSRebalance_reflex_helper" )
-	ServerToClientStringCommand( player, "ltsrebalance_refresh_reflex_hud" )
+	ServerToClientStringCommand( player, "ltsrebalance_refresh_hud" )
 	fxID = GetParticleSystemIndex( $"P_wpn_arcball_trail" )
 	fxEnts[0] = StartParticleEffectInWorld_ReturnEntity( fxID, origin, <0, 0, 0> )
 
