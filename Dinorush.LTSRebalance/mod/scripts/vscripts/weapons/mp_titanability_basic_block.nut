@@ -74,9 +74,6 @@ void function MpTitanAbilityBasicBlock_Init()
 		RuiSetFloat( charge.imageRuis[0], "basicImageAlpha", 0.0 )
 		LTSRebalance_BasicImageBar_SetFillFrac( charge, 0.0 )
 
-		// vector angles = <0, 0.1, 0>
-		// vector _angles = Vector( angles.y * COCKPIT_RUI_HEIGHT, -angles.x * COCKPIT_RUI_WIDTH, angles.z )
-		// var topo = CreateBar( <0, 0, 0>, _angles, COCKPIT_RUI_WIDTH * 0.1, COCKPIT_RUI_HEIGHT * 0.1 )
 		var text = RuiCreate( $"ui/cockpit_console_text_center.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, -1 )
 		RuiSetInt( text, "maxLines", 1 )
 		RuiSetInt( text, "lineNum", 1 )
@@ -94,22 +91,6 @@ void function MpTitanAbilityBasicBlock_Init()
 	PrecacheParticleSystem( $"P_impact_xo_sword" )
 	file.earn_meter_titan_multiplier = GetCurrentPlaylistVarFloat( "earn_meter_titan_multiplier", 1.0 )
 }
-
-#if CLIENT
-var function CreateBar( vector posOffset, vector angles, float hudWidth, float hudHeight )
-{
-    var topo = RuiTopology_CreateSphere( 
-        COCKPIT_RUI_OFFSET + posOffset, // 
-        AnglesToRight( angles ), // right
-        AnglesToUp( angles ) * -1, // down 
-        COCKPIT_RUI_RADIUS, 
-        hudWidth, 
-        hudHeight, 
-        COCKPIT_RUI_SUBDIV // 3.5
-    ) 
-    return topo
-}
-#endif
 
 const int TITAN_BLOCK = 1
 const int PILOT_BLOCK = 2
