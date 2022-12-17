@@ -954,7 +954,7 @@ void function LTSRebalance_PrintLogTracker( LTSRebalance_LogStruct ls )
 	block1 += ",\"matchID\":\"" + file.matchID + "\""
 	block1 += ",\"ranked\":" + ( GetCurrentPlaylistVarInt( "ltsrebalance_log_ranked", 0 ) == 1 ).tostring()
 	block1 += ",\"matchTimestamp\":" + file.matchTimestamp.tostring()
-	block1 += ",\"version\":\"" + GetConVarString( "ltsrebalance_version_num" ) + "\""
+	block1 += ",\"version\":\"" + NSGetModVersionByModName( "Dinorush's LTS Rebalance" ) + "\""
 
 	block1 += ",\"name\":\"" + ls.name + "\""
 	block1 += ",\"rebalance\":" + LTSRebalance_Enabled().tostring()
