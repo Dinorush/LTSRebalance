@@ -109,6 +109,7 @@ const array<int> LTSREBALANCE_FIX_VORTEX_REFIRE_IDS = [
 	eDamageSourceId.mp_titanweapon_sticky_40mm,
 	eDamageSourceId.mp_titanweapon_flightcore_rockets,
 	eDamageSourceId.mp_titanweapon_dumbfire_rockets,
+	eDamageSourceId.mp_titancore_salvo_core,
 	eDamageSourceId.mp_titanweapon_meteor,
 	eDamageSourceId.mp_weapon_satchel
 ]
