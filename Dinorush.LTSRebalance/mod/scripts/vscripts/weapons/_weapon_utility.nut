@@ -3058,7 +3058,7 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 				VortexDrainedByImpact( vortexWeapon, weapon, projectile, null ) // drain the vortex shield
 			else if ( LTSRebalance_Enabled() && name == "mp_titanweapon_arc_wave" && vortexWeapon &&
 					 ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" || vortexWeapon.GetWeaponClassName() == "mp_titanweapon_heat_shield" ) )
-				count = minint( count, maxCount - 5 )
+				count = maxint( count, maxCount - 5 )
 			else if ( IsVortexSphere( vortexHit.vortex ) )
 				VortexSphereDrainHealthForDamage( vortexHit.vortex, damageNearValueTitanArmor )
 
