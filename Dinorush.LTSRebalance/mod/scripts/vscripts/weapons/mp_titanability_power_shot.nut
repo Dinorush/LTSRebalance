@@ -111,10 +111,11 @@ void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
 	weaponOwner.EndSignal( "OnDestroy" )
 	weaponOwner.EndSignal( "TitanEjectionStarted" )
 
+	weaponOwner.SetTitanDisembarkEnabled( false )
+	weaponOwner.SetMeleeDisabled()
+
     do {
-        weaponOwner.SetTitanDisembarkEnabled( false )
         primaryWeapon.SetForcedADS()
-        weaponOwner.SetMeleeDisabled()
         WaitFrame()
     } while( !primaryWeapon.GetForcedADS() )
 }
