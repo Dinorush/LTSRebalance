@@ -3058,12 +3058,9 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 				VortexDrainedByImpact( vortexWeapon, weapon, projectile, null ) // drain the vortex shield
 			else if ( LTSRebalance_Enabled() && name == "mp_titanweapon_arc_wave" && vortexWeapon &&
 					 ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" || vortexWeapon.GetWeaponClassName() == "mp_titanweapon_heat_shield" ) )
-				count = maxint( count, maxCount - 5 )
+				i = maxint( i, maxCount - 5 )
 			else if ( IsVortexSphere( vortexHit.vortex ) )
 				VortexSphereDrainHealthForDamage( vortexHit.vortex, damageNearValueTitanArmor )
-
-			if ( name == "mp_titanweapon_arc_wave" )
-				printt("[LTSRebalanceDebug] Attack Wave block", name, count)
 
 			// If passVortex has nothing or is "block" and traveling toward Vortex, stop on Vortex (normal behavior)
 			bool blockCheck = passVortex == "block" && ( traceEndOver - traceStart ).Dot( vortexHit.vortex.GetOrigin() - traceStart ) > 0
