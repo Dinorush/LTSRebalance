@@ -29,14 +29,14 @@ WeaponData
 		{
 			"ammo_per_shot"									"*0.142"
 
-			"damage_near_value"								"*0.183"
-			"damage_far_value"								"*0.183"
-			"npc_damage_near_value"							"*0.183"
-			"npc_damage_far_value"							"*0.183"
-			"damage_near_value_titanarmor"					"*0.183"
-			"damage_far_value_titanarmor" 					"*0.183"
-			"explosion_damage"								"*0.183"
-			"explosion_damage_heavy_armor"					"*0.183"
+			"damage_near_value"								"*0.18"
+			"damage_far_value"								"*0.18"
+			"npc_damage_near_value"							"*0.18"
+			"npc_damage_far_value"							"*0.18"
+			"damage_near_value_titanarmor"					"*0.18"
+			"damage_far_value_titanarmor" 					"*0.18"
+			"explosion_damage"								"*0.18"
+			"explosion_damage_heavy_armor"					"*0.18"
 
 			"fire_rate"   									"++12" //14
 			"burst_fire_count"								"7"
