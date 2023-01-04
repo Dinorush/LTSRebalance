@@ -3,6 +3,14 @@
 	"global"
 	{
 		sharedEnergyRegenDelay 0.5
+
+		ClassMods
+		{
+			LTSRebalance_energy_mod
+			{
+				sharedEnergyTotal 150++
+			}
+		}
 	}
 }
 

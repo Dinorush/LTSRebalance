@@ -7,8 +7,8 @@ WeaponData
 			"melee_anim_1p_number"								"3"			// ACT_VM_MELEE_ATTACK1, 2, or 3
 			"melee_anim_3p"										"ACT_GESTURE_MELEE_ATTACK2"
 			"melee_attack_animtime"								"0.8"
-			"melee_damage"										"*2.5"
-			"melee_damage_heavyarmor"							"*2.5"
+			"melee_damage"										"*1.5"
+			"melee_damage_heavyarmor"							"*1.5"
 		}
 	}
 }

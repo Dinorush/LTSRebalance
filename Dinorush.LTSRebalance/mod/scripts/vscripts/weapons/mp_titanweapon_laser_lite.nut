@@ -35,7 +35,7 @@ struct {
 #endif
 
 const float LTSREBALANCE_LASER_TRIP_COST_REDUCTION_TIME = 4.0
-const int LTSREBALANCE_PAS_ION_WEAPON_BONUS_COST = 150
+const int LTSREBALANCE_PAS_ION_WEAPON_BONUS_COST = 0
 
 void function MpTitanWeaponLaserLite_Init()
 {
@@ -171,7 +171,8 @@ void function LTSRebalance_ReduceLaserCost( entity weapon, entity owner )
 	entity laser = owner.GetOffhandWeapon( OFFHAND_RIGHT )
 	if ( !IsValid( laser ) )
 		return
-	
+
+	//owner.EndSignal( "OnDeath" )
 	laser.EndSignal( "OnDestroy" )
 	laser.EndSignal( "LaserResetCost" )
 	

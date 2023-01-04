@@ -35,8 +35,8 @@ WeaponData
 
 		LTSRebalance_big_punch
 		{
-			"melee_damage"										"++300"
-			"melee_damage_heavyarmor"							"++300"
+			"melee_damage"										"++150"
+			"melee_damage_heavyarmor"							"++150"
 		}
 
 		LTSRebalance_fd_sword_upgrade_beam

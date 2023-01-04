@@ -3056,9 +3056,6 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 
 			if ( vortexWeapon && vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield" )
 				VortexDrainedByImpact( vortexWeapon, weapon, projectile, null ) // drain the vortex shield
-			else if ( LTSRebalance_Enabled() && name == "mp_titanweapon_arc_wave" && vortexWeapon &&
-					 ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" || vortexWeapon.GetWeaponClassName() == "mp_titanweapon_heat_shield" ) )
-				i = maxint( i, maxCount - 5 )
 			else if ( IsVortexSphere( vortexHit.vortex ) )
 				VortexSphereDrainHealthForDamage( vortexHit.vortex, damageNearValueTitanArmor )
 
@@ -3066,6 +3063,10 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 			bool blockCheck = passVortex == "block" && ( traceEndOver - traceStart ).Dot( vortexHit.vortex.GetOrigin() - traceStart ) > 0
 			if ( !LTSRebalance_Enabled() || passVortex == "" || blockCheck )
 			{
+				if ( LTSRebalance_Enabled() && vortexWeapon &&
+					 ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" || vortexWeapon.GetWeaponClassName() == "mp_titanweapon_heat_shield" ) )
+					i = maxint( i, maxCount - 4 )
+
 				if ( i == maxCount - 1 )
 					LTSRebalance_LogDamageBlockedRaw( vortexHit.vortex.GetOwner(), owner, float( damageNearValueTitanArmor ) )
 				WaitFrame()

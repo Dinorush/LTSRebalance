@@ -15,7 +15,7 @@ WeaponData
 		}
 		LTSRebalance_pas_ion_weapon_ads
 		{
-
+			"shared_energy_cost"						"*1.1"
 		}
 		PerfectKits_pas_ion_weapon_ads
 		{
