@@ -114,7 +114,10 @@ void function SetPowershotLimits( entity weaponOwner, entity primaryWeapon )
 	weaponOwner.SetTitanDisembarkEnabled( false )
 	weaponOwner.SetMeleeDisabled()
 
+	float startTime = Time()
     do {
+		if ( Time() > startTime + 0.5 )
+			printt("[LTSRebalanceDebug] Power Shot still not enforced ADS, Time:", Time(), "Owner is titan:", weaponOwner.IsTitan() )
         primaryWeapon.SetForcedADS()
         WaitFrame()
     } while( !primaryWeapon.GetForcedADS() )
