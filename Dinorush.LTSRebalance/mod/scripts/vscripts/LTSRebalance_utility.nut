@@ -29,7 +29,8 @@ void function LTSRebalance_RegisterRemote()
 
 void function LTSRebalance_Init()
 {
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
+	// Rebalance enum is inverted so it is on by default
+	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_enable", [ "#SETTING_ENABLED", "#SETTING_DISABLED" ], "0" )
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "perfectkits_enable", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_PROMODE", "ltsrebalance_log_ranked", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "0" )
 
@@ -57,13 +58,14 @@ void function LTSRebalance_Init()
 		AddCallback_OnPlayerRespawned( LTSRebalance_GiveWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
 		AddCallback_OnTitanBecomesPilot( LTSRebalance_GiveBatteryOnEject )
+		AddCallback_OnUpdateDerivedPlayerTitanLoadout( LTSRebalance_ApplyEntangledEnergy )
 	#endif
 }
 
 // For use in inits, when the file variable may not have been set yet
 bool function LTSRebalance_EnabledOnInit()
 {
-	return GetCurrentPlaylistVarInt( "ltsrebalance_enable", 0 ) == 1
+	return GetCurrentPlaylistVarInt( "ltsrebalance_enable", 0 ) == 0
 }
 
 // For general use, since I dunno if getting the playlist var as many times as I need to is performant
@@ -362,6 +364,14 @@ void function TransferSharedEnergy_Think( entity destEnt, entity srcEnt )
 		destEnt.TakeSharedEnergy( destEnt.GetSharedEnergyCount() )
     	destEnt.AddSharedEnergy( energy )
 	}
+}
+
+void function LTSRebalance_ApplyEntangledEnergy( entity player, TitanLoadoutDef loadout )
+{
+	if ( loadout.titanClass != "ion" || loadout.passive2 != "pas_ion_weapon" )
+		return
+
+	loadout.setFileMods.append( "LTSRebalance_energy_mod" )
 }
 
 void function LTSRebalance_GiveBatteryOnEject( entity player, entity titan )
