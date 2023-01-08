@@ -58,7 +58,6 @@ void function LTSRebalance_Init()
 		AddCallback_OnPlayerRespawned( LTSRebalance_GiveWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
 		AddCallback_OnTitanBecomesPilot( LTSRebalance_GiveBatteryOnEject )
-		AddCallback_OnUpdateDerivedPlayerTitanLoadout( LTSRebalance_ApplyEntangledEnergy )
 	#endif
 }
 
