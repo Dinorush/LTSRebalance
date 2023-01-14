@@ -29,6 +29,7 @@ global function SetSoulBatteryCount
 global function GetPlayerBatteryCount
 global function PlayerHasMaxBatteryCount
 global function Rodeo_PilotPicksUpBattery_Silent
+global function Rodeo_TakeBatteryAwayFromPilot
 
 global function AddOnRodeoStartedCallback
 global function AddOnRodeoEndedCallback
