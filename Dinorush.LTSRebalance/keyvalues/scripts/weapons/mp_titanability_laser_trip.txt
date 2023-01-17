@@ -4,7 +4,7 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"regen_ammo_refill_rate"						"22.22"
+			"regen_ammo_refill_rate"						"20"
 			"shared_energy_cost"							"150"
 		}
 		LTSRebalance_pas_ion_tripwire
