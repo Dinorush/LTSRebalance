@@ -37,8 +37,9 @@ const TPA_ADS_EFFECT_3P = $"P_TPA_electricity"
 const CRITICAL_ENERGY_RESTORE_AMOUNT = 30
 const SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 8
 
-const LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT = 30
-const LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 8
+const LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT = 15
+const LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 7
+const LTSREBALANCE_PAS_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT = 4
 
 struct {
 	float[PERFECTKITS_ADS_SHOT_COUNT_UPGRADE] boltOffsets = [
@@ -299,14 +300,15 @@ void function OnHit_TitanWeaponParticleAccelerator( entity victim, var damageInf
 			StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 1.0, 0.25, 0.1 )
 	}
 
-	if ( LTSRebalance_Enabled() )
-		return
-
-	if ( ( IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) ) && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
+	bool hasEntangled = ( LTSRebalance_Enabled() || IsSingleplayer() || SoulHasPassive( soul, ePassives.PAS_ION_WEAPON ) )
+	if ( hasEntangled && IsCriticalHit( attacker, victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ) )
 	{
 			array<string> mods = inflictor.ProjectileGetMods()
 			var energyGain = 0
-			if ( mods.contains( "proto_particle_accelerator" ) )
+
+			if ( LTSRebalance_Enabled() && ( mods.contains( "proto_particle_accelerator_pas" ) || mods.contains( "fd_upgraded_proto_particle_accelerator_pas" ) ) )
+				energyGain = LTSREBALANCE_PAS_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT
+			else if ( mods.contains( "proto_particle_accelerator" ) || ( LTSRebalance_Enabled() && mods.contains( "fd_upgraded_proto_particle_accelerator" ) ) )
 				energyGain = LTSRebalance_Enabled() ? LTSREBALANCE_SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT : SPLIT_SHOT_CRITICAL_ENERGY_RESTORE_AMOUNT
 			else
 				energyGain = LTSRebalance_Enabled() ? LTSREBALANCE_CRITICAL_ENERGY_RESTORE_AMOUNT : CRITICAL_ENERGY_RESTORE_AMOUNT
