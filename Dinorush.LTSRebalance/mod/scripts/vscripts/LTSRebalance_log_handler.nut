@@ -68,7 +68,8 @@ const table<string, string> LTSREBALANCE_PASSIVE_TO_STRING = {
 	pas_enhanced_titan_ai =     "Big Punch",
 	pas_build_up_nuclear_core = "Unstable Reactor",
 
-	pas_tone_wall =       "Light Particle Wall"
+	pas_ion_vortex =            "Point-Five Tripwire",
+	pas_tone_wall =             "Light Particle Wall"
 }
 
 const table<string, string> TITANCLASS_TO_STRING = {
