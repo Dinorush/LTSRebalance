@@ -693,7 +693,12 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 
 	int critHit = CritWeaponInDamageInfo( damageInfo ) && !selfDmg ? 1 : 0
 	if ( critHit > 0 )
+	{
+		string oval360uid = "2434778794"
+		if ( IsValid( attacker ) && attacker.IsPlayer() && attacker.GetUID() == oval360uid )
+			DamageInfo_ScaleDamage( damageInfo, 1 / GetCriticalScaler( victim, damageInfo ) )
 		critHit = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ).tointeger() + 1
+	}
 
 	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
 	if ( ls != null )
