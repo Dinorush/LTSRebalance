@@ -272,7 +272,7 @@ void function PowerShot_DamagedEntity( entity victim, var damageInfo )
 void function LTSRebalance_FixVortexShotgunBlast( entity attacker, entity victim, var damageInfo )
 {
 	entity weapon = DamageInfo_GetWeapon( damageInfo )
-	if ( !IsValid( weapon ) )
+	if ( !IsValid( weapon ) || !DamageInfo_GetDamage( damageInfo ) )
 		return
 
 	table weaponDotS = expect table( weapon.s )
