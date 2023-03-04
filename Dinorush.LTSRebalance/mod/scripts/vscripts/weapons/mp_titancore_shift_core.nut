@@ -164,7 +164,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( owner.IsPlayer() )
 	{
 		owner.Server_SetDodgePower( 100.0 )
-		owner.SetPowerRegenRateScale( LTSRebalance_Enabled() ? 4.5 : 6.5 )
+		owner.SetPowerRegenRateScale( 6.5 )
 
 		GivePassive( owner, ePassives.PAS_FUSION_CORE )
 		GivePassive( owner, ePassives.PAS_SHIFT_CORE )
@@ -225,6 +225,13 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 			{
 				block.AddMod( "LTSRebalance_core_regen" )
 				block.SetWeaponPrimaryClipCount( block.GetWeaponPrimaryClipCountMax() )
+			}
+
+			entity ordnance = titan.GetOffhandWeapon( OFFHAND_RIGHT )
+			if ( IsValid( ordnance ) && ordnance.GetWeaponClassName() == "mp_titanweapon_arc_wave" )
+			{
+				ordnance.AddMod( "LTSRebalance_core_regen" )
+				ordnance.SetWeaponPrimaryClipCount( ordnance.GetWeaponPrimaryClipCountMax() )
 			}
 		}
 		else
@@ -386,7 +393,11 @@ void function RestorePlayerWeapons( entity player, StoredWeapon storedWeapon )
 		{
 			entity block = titan.GetOffhandWeapon( OFFHAND_LEFT )
 			if ( IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
-				block.RemoveMod( "LTSRebalance_core_regen" )			
+				block.RemoveMod( "LTSRebalance_core_regen" )	
+
+			entity ordnance = titan.GetOffhandWeapon( OFFHAND_RIGHT )
+			if ( IsValid( ordnance ) && ordnance.GetWeaponClassName() == "mp_titanweapon_arc_wave" )
+				ordnance.RemoveMod( "LTSRebalance_core_regen" )			
 
 			if ( storedWeapon.name != "" )
 				GiveStoredMainWeapon( titan, storedWeapon )

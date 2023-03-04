@@ -6,6 +6,10 @@ WeaponData
 		{
 			"deploy_time" 									"0.3"
 		}
+		LTSRebalance_core_regen
+        {
+            "regen_ammo_refill_rate"                "*2.5"
+        }
 		fast_deploy
 		{
 			"deploy_time"									"*0.01"
