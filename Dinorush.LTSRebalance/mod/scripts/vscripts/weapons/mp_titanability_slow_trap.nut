@@ -33,8 +33,8 @@ const asset FIRE_LINES_S2S_FX = $"P_meteor_trap_burn_s2s"
 const float FIRE_TRAP_MINI_EXPLOSION_RADIUS = 75
 const float FIRE_TRAP_LIFETIME = 3.9
 const int GAS_FX_HEIGHT = 45
-const SLOWTRAP_DAMAGE_TICK = 75.0
-const SLOWTRAP_DAMAGE_TICK_PILOT = 13.0
+const LTSREBALANCE_SLOWTRAP_DAMAGE_TICK = 30.0
+const LTSREBALANCE_SLOWTRAP_DAMAGE_TICK_PILOT = 13.0
 
 void function MpTitanAbilitySlowTrap_Init()
 {
@@ -303,11 +303,11 @@ function IgniteTrap( entity damageArea, var damageInfo, bool isExplosiveBarrel =
 	if ( movingGeo )
 	{
 		inflictor.SetParent( movingGeo, "", true, 0 )
-		AI_CreateDangerousArea( inflictor, weapon, dangerousAreaRadius, TEAM_INVALID, true, true )
+		AI_CreateDangerousArea( inflictor, weapon, dangerousAreaRadius, owner.GetTeam(), true, true )
 	}
 	else
 	{
-		AI_CreateDangerousArea_Static( inflictor, weapon, dangerousAreaRadius, TEAM_INVALID, true, true, originNoHeightAdjust )
+		AI_CreateDangerousArea_Static( inflictor, weapon, dangerousAreaRadius, owner.GetTeam(), true, true, originNoHeightAdjust )
 	}
 
 	for ( int i = 0; i < 12; i++ )
@@ -561,8 +561,8 @@ void function FireTrap_DamageAreaOverTimeOnMovingGeo( entity owner, entity infli
 
 void function FireTrap_RadiusDamage( vector pos, entity owner, entity inflictor )
 {
-	var pilotDamage = LTSRebalance_Enabled() ? SLOWTRAP_DAMAGE_TICK_PILOT : PLAYER_METEOR_DAMAGE_TICK_PILOT
-	var titanDamage = LTSRebalance_Enabled() ? SLOWTRAP_DAMAGE_TICK : PLAYER_METEOR_DAMAGE_TICK
+	var pilotDamage = LTSRebalance_Enabled() ? LTSREBALANCE_SLOWTRAP_DAMAGE_TICK_PILOT : PLAYER_METEOR_DAMAGE_TICK_PILOT
+	var titanDamage = LTSRebalance_Enabled() ? LTSREBALANCE_SLOWTRAP_DAMAGE_TICK : PLAYER_METEOR_DAMAGE_TICK
 	RadiusDamage(
 		pos,												// origin
 		owner,												// owner
@@ -613,6 +613,7 @@ void function FireTrap_DamagedPlayerOrNPC( entity ent, var damageInfo )
 	}
 
 	PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) )
+	LTSRebalance_TriggerThermiteBurn( ent, attacker, inflictor )
 }
 #endif
 
