@@ -27,15 +27,16 @@ global function OnWeaponNpcPreAttack_titanweapon_predator_cannon
 const SPIN_EFFECT_1P = $"P_predator_barrel_blur_FP"
 const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 
-const float PAS_LEGION_SMARTCORE_DAMAGE_MOD = 0.251 // 0.25 causes rounding errors for PS
+const float PAS_LEGION_SMARTCORE_DAMAGE_MOD = 0.005
 const float PAS_LEGION_SMARTCORE_EFFECT_DURATION = 2.0
+const int ARRAY_CAP = 64 // Used for Sensor Array, should be >= fire rate * 2 * duration
 
 void function MpTitanWeaponpredatorcannon_Init()
 {
 	PrecacheParticleSystem( SPIN_EFFECT_1P )
 	PrecacheParticleSystem( SPIN_EFFECT_3P )
 	#if SERVER
-	//if ( GetCurrentPlaylistVarInt( "aegis_upgrades", 0 ) == 1 )
+	if ( LTSRebalance_EnabledOnInit() || GetCurrentPlaylistVarInt( "aegis_upgrades", 0 ) == 1 )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_predator_cannon, PredatorCannon_DamagedTarget )
 	#endif
 }
@@ -311,6 +312,11 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
         if( !LTSRebalance_Enabled() || owner.IsNPC() )
             return SmartAmmo_FireWeapon( weapon, attackParams, damageType, damageTypes.largeCaliber | DF_STOPS_TITAN_REGEN )
 
+		#if SERVER
+		if ( owner.IsTitan() && SoulHasPassive( owner.GetTitanSoul(), ePassives.PAS_LEGION_SMARTCORE ) )
+			SensorArray_AddAmmoSpent( weapon, weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1 )
+		#endif
+
         TraceResults result = TraceLine( owner.EyePosition(), owner.EyePosition() + attackParams.dir*10000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
         if( IsValid( result.hitEnt ) && !result.hitEnt.IsWorld() )
         {
@@ -326,10 +332,18 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
 			weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() )
 
 		weapon.FireWeaponBullet( attackParams.pos, attackParams.dir, 1, damageType )
-		if ( weapon.HasMod( "LongRangeAmmo" ) )
-			return 2
-		else
-			return 1
+		int ammo = weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1
+		
+		#if SERVER
+		if ( LTSRebalance_Enabled() )
+		{
+			entity owner = weapon.GetWeaponOwner()
+			if ( IsValid( owner ) && owner.IsTitan() && SoulHasPassive( owner.GetTitanSoul(), ePassives.PAS_LEGION_SMARTCORE ) )
+				SensorArray_AddAmmoSpent( weapon, ammo )
+		}
+		#endif
+
+		return ammo
 	}
 	unreachable
 }
@@ -365,32 +379,20 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 	if ( target.IsTitan() && ( flags & DF_SKIPS_DOOMED_STATE ) && GetDoomedState( target ) )
 		DamageInfo_SetDamage( damageInfo, target.GetHealth() + 1 )
 
+	// Only sensor array bonuses from here on
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
-	if ( !IsValid( attacker ) || attacker.GetMainWeapons().len() == 0 )
+	if ( !LTSRebalance_Enabled() || !IsValid( attacker ) || !attacker.IsTitan() || attacker.GetMainWeapons().len() == 0 )
+		return
+
+	entity inflictor = DamageInfo_GetInflictor( damageInfo )
+	// Exclude Power Shots
+	if ( DamageInfo_GetCustomDamageType( damageInfo ) & DF_KNOCK_BACK || !IsValid( inflictor ) || inflictor.IsProjectile() )
 		return
 
 	entity weapon = attacker.GetMainWeapons()[0]
-	if ( LTSRebalance_Enabled() )
-	{
-		if ( !target.IsTitan() )
-			return
-
-		if ( weapon.HasMod( "Smart_Core" ) )
-		{
-			entity soul = attacker.GetTitanSoul()
-			if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_SMARTCORE ) )
-			{
-				if ( !( target in weapon.s.sensorArrayTargets ) )
-					weapon.s.sensorArrayTargets[target] <- 0
-
-				// Handle bonus damage status effect & sonar
-				if ( weapon.s.sensorArrayTargets[target] == 0 )
-					thread SensorArray_StartStatusEffects( attacker, target, weapon.s.sensorArrayTargets )
-
-				weapon.s.sensorArrayTargets[target] = Time()
-			}
-		}
-	}
+	entity soul = attacker.GetTitanSoul()
+	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_LEGION_SMARTCORE ) )
+		DamageInfo_ScaleDamage( damageInfo, SensorArray_GetDamageBonus( weapon ) )
 }
 
 // Tracks sonar & bonus damage effects for Sensor Array.
@@ -423,6 +425,39 @@ void function SensorArray_StartStatusEffects( entity owner, entity target, var s
 		remainingTime = expect float( sensorArrayTable[target] ) + PAS_LEGION_SMARTCORE_EFFECT_DURATION - Time()
 	}
 	sensorArrayTable[target] = 0
+}
+
+void function SensorArray_AddAmmoSpent( entity weapon, int ammo = 1 )
+{
+	if ( !( "sensorArrayTimes" in weapon.s ) )
+	{
+		array temp = []
+		temp.resize( ARRAY_CAP, 0 )
+		weapon.s.sensorArrayTimes <- temp
+		weapon.s.sensorArrayIndex <- 0
+		weapon.s.sensorArrayIndexEnd <- 0
+	}
+
+	// Using circular array structure. Shift end instead of appending values.
+	for ( var end = weapon.s.sensorArrayIndexEnd + ammo; weapon.s.sensorArrayIndexEnd < end; weapon.s.sensorArrayIndexEnd++)
+		weapon.s.sensorArrayTimes[ weapon.s.sensorArrayIndexEnd % ARRAY_CAP ] = Time() + PAS_LEGION_SMARTCORE_EFFECT_DURATION
+
+	// If we start overwriting past the current start (start hasn't updated recently), move start past the end
+	if ( weapon.s.sensorArrayIndexEnd - weapon.s.sensorArrayIndex >= ARRAY_CAP )
+		weapon.s.sensorArrayIndex = weapon.s.sensorArrayIndexEnd - ARRAY_CAP + 1
+}
+
+float function SensorArray_GetDamageBonus( entity weapon )
+{
+	if ( !( "sensorArrayTimes" in weapon.s ) )
+		return 1.0
+
+	// Advance start index until it reaches the end or we find non-expired ammo bonus
+	for ( var end = weapon.s.sensorArrayIndexEnd; 
+			weapon.s.sensorArrayIndex < end && weapon.s.sensorArrayTimes[ weapon.s.sensorArrayIndex % ARRAY_CAP ] < Time();
+			weapon.s.sensorArrayIndex++ );
+
+	return 1.0 + expect float( ( weapon.s.sensorArrayIndexEnd - weapon.s.sensorArrayIndex ) * PAS_LEGION_SMARTCORE_DAMAGE_MOD )
 }
 #endif
 
