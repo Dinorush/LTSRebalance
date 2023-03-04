@@ -717,7 +717,7 @@ function VortexDrainedByImpact( entity vortexWeapon, entity weapon, entity proje
 	if ( amount <= 0.0 )
 		return
 
-	bool arcRounds = projectile.ProjectileGetWeaponClassName() == "mp_titanweapon_xo16_vanguard"
+	bool arcRounds = IsValid( projectile ) ? projectile.ProjectileGetWeaponClassName() == "mp_titanweapon_xo16_vanguard" : false
 
 	if ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
 	{
