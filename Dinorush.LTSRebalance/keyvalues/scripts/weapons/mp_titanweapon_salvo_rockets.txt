@@ -26,7 +26,7 @@ WeaponData
 			"ammo_per_shot"									"--6" // 12
 			"burst_fire_count"								"9"
 			"regen_ammo_refill_rate"						"--4.5" // 13.5
-			"ammo_min_to_fire"								"--96" // 12
+			"ammo_min_to_fire"								"--96" // should match ammo per shot
 			"hud_icon"										"rui/titan_loadout/passive/monarch_core_missile_racks"
 		}
 	}
