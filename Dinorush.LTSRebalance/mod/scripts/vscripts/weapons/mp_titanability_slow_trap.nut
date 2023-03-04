@@ -33,7 +33,7 @@ const asset FIRE_LINES_S2S_FX = $"P_meteor_trap_burn_s2s"
 const float FIRE_TRAP_MINI_EXPLOSION_RADIUS = 75
 const float FIRE_TRAP_LIFETIME = 3.9
 const int GAS_FX_HEIGHT = 45
-const LTSREBALANCE_SLOWTRAP_DAMAGE_TICK = 30.0
+const LTSREBALANCE_SLOWTRAP_DAMAGE_TICK = 25.0
 const LTSREBALANCE_SLOWTRAP_DAMAGE_TICK_PILOT = 13.0
 
 void function MpTitanAbilitySlowTrap_Init()

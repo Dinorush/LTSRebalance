@@ -29,7 +29,7 @@ const string FLAME_WALL_GROUND_END_SFX = "flamewall_flame_burn_end"
 global const float FLAME_WALL_THERMITE_DURATION = 5.2
 global const float SP_FLAME_WALL_DURATION_SCALE = 1.75
 
-global const float LTSREBALANCE_FLAME_WALL_DAMAGE_TICK = 50.0
+global const float LTSREBALANCE_FLAME_WALL_DAMAGE_TICK = 45.0
 const float LTSREBALANCE_THERMITE_BURN_TIME = 2.0
 const float LTSREBALANCE_THERMITE_BURN_DPS = 250.0
 
