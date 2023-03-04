@@ -47,8 +47,8 @@ var function OnWeaponPrimaryAttack_TitanHover( entity weapon, WeaponPrimaryAttac
 		if ( LTSRebalance_Enabled() )
 		{
 			horizontalVelocity = 350.0
-			if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
-				flightTime *= LTSREBALANCE_PAS_NORTHSTAR_HOVER_MOD
+			// if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
+			// 	flightTime *= LTSREBALANCE_PAS_NORTHSTAR_HOVER_MOD
 		}
 		else if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
 			horizontalVelocity = 350.0
@@ -89,6 +89,8 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 		player.Server_TurnDodgeDisabledOn()
 	    player.kv.airSpeed = horizVel
 	    player.kv.airAcceleration = LTSRebalance_Enabled() ? 600 : 540
+		if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
+			player.kv.airAcceleration = 2400
 	    player.kv.gravity = 0.0
 	}
 
@@ -107,8 +109,16 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 
 	player.SetGroundFrictionScale( 0 )
 
+	entity main = player.GetMainWeapons().len() > 0 ? player.GetMainWeapons()[0] : null
+	if ( LTSRebalance_Enabled() && IsValid( main ) && main.GetWeaponClassName() == "mp_titanweapon_sniper" )
+	{
+		array<string> mods = main.GetMods()
+		mods.append( "LTSRebalance_hover_speed" )
+		main.SetMods( mods )
+	}
+
 	OnThreadEnd(
-		function() : ( activeFX, player, soundInfo, soul )
+		function() : ( activeFX, player, soundInfo, soul, main )
 		{
 			if ( IsValid( player ) )
 			{
@@ -138,6 +148,12 @@ void function FlyerHovers( entity player, HoverSounds soundInfo, float flightTim
 			{
 				if ( IsValid( fx ) )
 					fx.Destroy()
+			}
+
+			if ( IsValid( main ) ) {
+				array<string> mods = main.GetMods()
+				mods.fastremovebyvalue( "LTSRebalance_hover_speed" )
+				main.SetMods( mods )
 			}
 		}
 	)
