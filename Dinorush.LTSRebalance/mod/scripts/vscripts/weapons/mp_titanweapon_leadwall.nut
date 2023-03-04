@@ -15,7 +15,7 @@ const float LEADWALL_LIFETIME_MIN = 0.3
 const float LEADWALL_LIFETIME_MAX = 0.35
 const LEADWALL_MAX_BOLTS = 8 // this is the code limit for bolts per frame... do not increase.
 const float LTSREBALANCE_SPREAD_FRAC = 0.043
-const float LTSREBALANCE_LEADWALL_VELOCITY = 5280
+const float LTSREBALANCE_LEADWALL_VELOCITY = 4400
 const float LTSREBALANCE_RICOCHET_SEEK_DOT_MIN = 0.87
 const float LTSREBALANCE_RICOCHET_SEEK_DOT_MAX = 1
 const float LTSREBALANCE_RICOCHET_SEEK_RANGE_MAX = LEADWALL_LIFETIME_MAX * LTSREBALANCE_LEADWALL_VELOCITY // max lifetime * velocity * scalar
@@ -197,7 +197,10 @@ void function OnProjectileCollision_titanweapon_leadwall( entity projectile, vec
 			}
 		}
 		else if ( LTSRebalance_Enabled() )
+		{
+			projectile.SetProjectileLifetime( LEADWALL_LIFETIME_MAX )
 			LTSRebalance_RicochetSeek( projectile, normal )
+		}
 	#endif
 }
 
@@ -258,13 +261,10 @@ void function LTSRebalance_SetRicochetVelocity( entity projectile, entity ent )
 	projectile.proj.projectileBounceCount = 3
 	if ( !IsValid( ent ) )
 	{
-		projectile.SetProjectileLifetime( LEADWALL_LIFETIME_MAX - ( Time() - projectile.GetProjectileCreationTime() ) )
 		return
 	}
 
-	float timeRemaining = LEADWALL_LIFETIME_MAX - ( bounceTime - projectile.GetProjectileCreationTime() )
 	float dist = Distance( projectile.GetOrigin(), ent.GetWorldSpaceCenter() )
-	projectile.SetProjectileLifetime( timeRemaining + ( dist - oldDist ) / LTSREBALANCE_LEADWALL_VELOCITY )
 	vector dir = Normalize( ent.GetWorldSpaceCenter() - projectile.GetOrigin() )
 
 	vector angle = VectorToAngles( dir )
