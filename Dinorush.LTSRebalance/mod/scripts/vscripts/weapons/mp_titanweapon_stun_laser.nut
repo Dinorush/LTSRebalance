@@ -28,6 +28,8 @@ const float TEMP_SHIELD_TICK_RATE = 0.1
 const int STUN_LASER_TRANSFER_PERM_SHIELD = 750
 const int PERFECTKITS_ENERGY_THIEF_BONUS_SELF_SHIELD = 250
 const float STUN_LASER_TRANSFER_CORE = 0.025
+const int LTSREBALANCE_ENERGY_FIELD_SHIELD_REGEN = 30
+const float LTSREBALANCE_ENERGY_FIELD_SHIELD_DURATION = 5.0
 
 struct
 {
@@ -86,7 +88,7 @@ var function OnWeaponPrimaryAttack_titanweapon_stun_laser( entity weapon, Weapon
 	if ( weaponOwner.IsPlayer() )
 		PlayerUsedOffhand( weaponOwner, weapon )
 
-	bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" ) || weapon.HasMod( "LTSRebalance_energy_field_energy_transfer" )
+	bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" )
 	if ( LTSRebalance_Enabled() && hasEnergyTransfer )
 		EnergyTransfer_ShotgunBlast( weapon, attackParams.pos, attackParams.dir, 1, DF_GIB | DF_EXPLOSION )
 	else
@@ -131,7 +133,8 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 	}
 
 	float mod = ( IsValid( weapon ) && "burstFireCount" in weapon.s ) ? ( 1.0 + float( weapon.s.burstFireCount - 1 ) * 0.25 ) / float( weapon.s.burstFireCount ) : 1.0
-	bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" ) || weapon.HasMod( "LTSRebalance_energy_field_energy_transfer" )
+	bool hasEnergyTransfer = weapon.HasMod( "energy_transfer" ) || weapon.HasMod( "energy_field_energy_transfer" )
+	bool hasEnergyField = weapon.HasMod( "energy_field" ) || weapon.HasMod( "energy_field_energy_transfer" )
 
 	if ( attacker.GetTeam() == target.GetTeam() )
 	{
@@ -176,6 +179,8 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 
 				if ( attacker.IsPlayer() )
 					MessageToPlayer( attacker, eEventNotifications.VANGUARD_ShieldGain, attacker )
+
+				thread LTSRebalance_EnergyFieldRegenThink( attackerSoul )
 			}
 
 			if ( target.IsPlayer() )
@@ -228,6 +233,8 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 					float decayTime = SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) ? PAS_VANGUARD_SHIELD_DECAY_TIME : TEMP_SHIELD_DECAY_TIME
 					LTSRebalance_AddTempShields( soul, tempShieldAmount, 0, decayTime )
 				}
+
+				thread LTSRebalance_EnergyFieldRegenThink( soul )
 			}
 		}
 		if ( attacker.IsPlayer() )
@@ -238,6 +245,27 @@ void function StunLaser_DamagedTarget( entity target, var damageInfo )
 void function AddStunLaserHealCallback( void functionref(entity,entity,int) func )
 {
 	file.stunHealCallback = func
+}
+
+void function LTSRebalance_EnergyFieldRegenThink( entity soul )
+{
+	soul.EndSignal( "OnDestroy" )
+
+	float regenRate = LTSREBALANCE_ENERGY_FIELD_SHIELD_REGEN * 0.1
+	if ( SoulHasPassive( soul, ePassives.PAS_VANGUARD_SHIELD ) )
+		regenRate *= 1.25
+
+	float buffer = 0.0
+	float endTime = Time() + LTSREBALANCE_ENERGY_FIELD_SHIELD_DURATION
+	while( Time() < endTime )
+	{
+		buffer += regenRate
+		LTSRebalance_HandleTempShieldChange( soul, int( buffer ) )
+
+		soul.SetShieldHealth( minint( soul.GetShieldHealthMax(), soul.GetShieldHealth() + int( buffer ) ) )
+		buffer -= float( int( buffer ) )
+		WaitFrame()
+	}
 }
 #endif
 
