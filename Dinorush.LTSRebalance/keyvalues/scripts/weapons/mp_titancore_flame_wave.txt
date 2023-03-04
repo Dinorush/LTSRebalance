@@ -8,8 +8,8 @@ WeaponData
 		{
 			"damage_near_value"   							"500"
 			"damage_far_value"								"500"
-			"damage_near_value_titanarmor"					"5000"
-			"damage_far_value_titanarmor"					"5000"
+			"damage_near_value_titanarmor"					"6500"
+			"damage_far_value_titanarmor"					"6500"
 
 			"charge_time" 									"0.75"
 
