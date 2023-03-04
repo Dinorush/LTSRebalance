@@ -63,6 +63,8 @@ void function LTSRebalance_Init()
 		AddCallback_OnPlayerRespawned( LTSRebalance_GiveWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
 		AddCallback_OnTitanBecomesPilot( LTSRebalance_GiveBatteryOnEject )
+		AddCallback_OnPlayerKilled( LTSRebalance_ClearOvercore )
+		AddCallback_OnNPCKilled( LTSRebalance_ClearOvercore )
 		AddPostDamageCallback( "player", LTSRebalance_OvercoreDamage )
 		AddPostDamageCallback( "npc_titan", LTSRebalance_OvercoreDamage )
 	#endif
@@ -168,6 +170,7 @@ void function LTSRebalance_ApplyChanges( entity titan )
 	if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 	{
 		uiPassive = ePassives.PAS_HYPER_CORE
+		SoulTitanCore_SetNextAvailableTime( soul, 0.0 )
 		entity smoke = titan.GetOffhandWeapon( OFFHAND_INVENTORY )
 		if ( IsValid( smoke ) )
 		{
@@ -345,7 +348,7 @@ void function LTSRebalance_HandleSetfiles( entity player, entity titan )
 {
 	entity soul = player.GetTitanSoul()
 	if ( SoulHasPassive( soul, ePassives.PAS_BATTERY_EJECT ) )
-		player.Die()
+		thread LTSRebalance_SpectateKitDelayed( player )
 
 	switch( GetTitanCharacterName( player ) )
 	{
@@ -358,6 +361,17 @@ void function LTSRebalance_HandleSetfiles( entity player, entity titan )
 			settingsMods.append( "LTSRebalance" )
 			player.SetPlayerSettingsWithMods( player.GetPlayerSettings(), settingsMods )
 	}
+}
+
+void function LTSRebalance_SpectateKitDelayed( entity player )
+{
+	player.NotSolid()
+	wait 1.0
+	
+	if ( IsValid( player ) && !player.IsTitan() && IsValid( player.GetPetTitan() ) )
+		player.GetPetTitan().Die()
+
+	player.Die()
 }
 
 // We need to thread the shared energy transfer since the energy is set after transfer callbacks
@@ -404,20 +418,19 @@ void function LTSRebalance_SyncCounterReadyCharge( entity soul )
 		}
 		
 		charge = min( 1.0, charge + ( Time() - lastTime ) / LTSREBALANCE_COUNTER_READY_REGEN_TIME )
-		entity player = titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+		entity player = soul.GetBossPlayer()
 		if ( IsValid( player ) )
 			player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 
 		if ( charge == 1.0 )
 		{
-			if ( IsValid( player ) )
+			if ( titan == player )
 				Remote_CallFunction_NonReplay( player, "ServerCallback_RewardReadyMessage", (Time() - GetPlayerLastRespawnTime( player )) )
 			GiveOffhandElectricSmoke( titan )
 			entity smoke = titan.GetOffhandWeapon( OFFHAND_INVENTORY )
 			smoke.WaitSignal( "CounterReadyUse" )
 			charge = 0
-			titan = soul.GetTitan()
-			player = !IsValid( titan ) || titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+			player = soul.GetBossPlayer()
 			if ( IsValid( player ) )
 				player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 		}
@@ -462,7 +475,7 @@ void function LTSRebalance_OvercoreShieldDamage( entity victim, var damageInfo, 
 
 void function LTSRebalance_UpdateSoulOvercore( entity soul, float change )
 {
-	if ( !SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
+	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 		return
 
 	entity player = soul.GetBossPlayer()
@@ -472,6 +485,22 @@ void function LTSRebalance_UpdateSoulOvercore( entity soul, float change )
 	float curFrac = player.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" )
 	float newFrac = max( 0.0, min( 1.0, curFrac + change / LTSREBALANCE_PAS_OVERCORE_MAX_DAMAGE ) )
 	player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", newFrac )
+}
+
+void function LTSRebalance_ClearOvercore( entity titan, entity attacker, var damageInfo )
+{
+	if ( !titan.IsTitan() )
+		return
+	
+	entity soul = titan.GetTitanSoul()
+	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
+		return
+
+	entity player = soul.GetBossPlayer()
+	if ( !IsValid( player ) )
+		return
+
+	player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", 0.0 )
 }
 #endif
 
