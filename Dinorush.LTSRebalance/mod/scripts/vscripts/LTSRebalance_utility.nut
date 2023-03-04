@@ -11,6 +11,10 @@ global function LTSRebalance_DamageInfo_GetWeapon
 global function OnWeaponAttemptOffhandSwitch_WeaponHasAmmoToUse
 global function WeaponHasAmmoToUse
 
+#if SERVER
+global function LTSRebalance_OvercoreShieldDamage
+#endif
+
 struct {
 	bool ltsrebalance_enabled = false
 	bool perfectkits_enabled = false
@@ -24,7 +28,8 @@ void function LTSRebalance_PreInit()
 void function LTSRebalance_RegisterRemote()
 {
 	Remote_RegisterFunction( "ServerCallback_TemperedPlating_UpdateBurnTime" )
-	RegisterNetworkedVariable( "LTSRebalance_CounterReadyCharge", SNDC_PLAYER_EXCLUSIVE, SNVT_FLOAT_RANGE, 0.0, 0.0, 1.0 )
+	Remote_RegisterFunction( "ServerCallback_UnstableReactor_Ready" )
+	RegisterNetworkedVariable( "LTSRebalance_Kit1Charge", SNDC_PLAYER_EXCLUSIVE, SNVT_FLOAT_RANGE, 0.0, 0.0, 1.0 )
 }
 
 void function LTSRebalance_Init()
@@ -58,6 +63,8 @@ void function LTSRebalance_Init()
 		AddCallback_OnPlayerRespawned( LTSRebalance_GiveWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
 		AddCallback_OnTitanBecomesPilot( LTSRebalance_GiveBatteryOnEject )
+		AddPostDamageCallback( "player", LTSRebalance_OvercoreDamage )
+		AddPostDamageCallback( "npc_titan", LTSRebalance_OvercoreDamage )
 	#endif
 }
 
@@ -92,10 +99,10 @@ void function LTSRebalance_Precache()
 	LTSRebalance_AddPassive( "PAS_BATTERY_EJECT" )
 
 	#if SERVER
-	PrecacheWeapon( "mp_titanability_unstable_reactor")
 	PrecacheWeapon( "mp_titanweapon_shift_core_sword" )
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_ltsrebalance" )
 	PrecacheWeapon( "mp_titanweapon_predator_cannon_perfectkits" )
+	RegisterWeaponDamageSource( "mp_titanability_thermite_burn", "#DEATH_THERMITE_BURN" )
 	#endif
 }
 
@@ -104,7 +111,9 @@ void function LTSRebalance_WeaponInit()
 {
 	MpTitanweaponShiftCoreSword_Init()
 	MpTitanabilityPhaseDashInit()
-	RegisterWeaponDamageSourceName( "mp_weapon_arc_blast", "Unstable Reactor" ) // monopolizing Arc Blast for our purposes (it doesn't have a name anyway)
+	#if SERVER
+	MpTitanabilityUnstableReactorInit()
+	#endif
 }
 
 void function LTSRebalance_AddPassive( string name )
@@ -149,11 +158,16 @@ void function LTSRebalance_ApplyChanges( entity titan )
 		soul.passives.append( false )
 	soul.passives.extend( [ false, false ] )
 
+	int uiPassive = -1
 	if ( SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO ) )
+	{
+		uiPassive = ePassives.PAS_ANTI_RODEO
 		thread LTSRebalance_SyncCounterReadyCharge( soul )
+	}
 
 	if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 	{
+		uiPassive = ePassives.PAS_HYPER_CORE
 		entity smoke = titan.GetOffhandWeapon( OFFHAND_INVENTORY )
 		if ( IsValid( smoke ) )
 		{
@@ -176,16 +190,21 @@ void function LTSRebalance_ApplyChanges( entity titan )
 
 	if ( SoulHasPassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE ) )
 	{
+		uiPassive = ePassives.PAS_UNSTABLE_REACTOR
 		TakePassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE )
 		GivePassive( soul, ePassives.PAS_UNSTABLE_REACTOR )
-		titan.GiveOffhandWeapon( "mp_titanability_unstable_reactor", OFFHAND_INVENTORY )
+		UnstableReactor_InitForPlayer( soul.GetBossPlayer(), soul )
 	}
 
 	if ( SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
 	{
+		uiPassive = ePassives.PAS_BATTERY_EJECT
 		TakePassive( soul, ePassives.PAS_AUTO_EJECT )
 		GivePassive( soul, ePassives.PAS_BATTERY_EJECT )
 	}
+
+	if ( IsValid( soul.GetBossPlayer() ) )
+		ServerToClientStringCommand( soul.GetBossPlayer(), "ltsrebalance_set_ui_passive " + uiPassive.tostring() )
 }
 
 void function PerfectKits_HandleAttachments( entity titan )
@@ -282,16 +301,6 @@ void function LTSRebalance_HandleAttachments( entity titan )
 		{
 			switch ( weapon.GetWeaponClassName() )
 			{
-				case "mp_titanability_hover":
-					if ( SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_FLIGHTCORE ) )
-						weaponMods.append( "LTSRebalance_pas_northstar_hover" )
-					break
-
-				case "mp_titanability_tether_trap":
-					if ( SoulHasPassive( soul, ePassives.PAS_NORTHSTAR_OPTICS ) )
-						weaponMods.append( "LTSRebalance_pas_northstar_optics" )
-					break
-
 				case "mp_titanweapon_laser_lite":
 					if ( SoulHasPassive( soul, ePassives.PAS_ION_LASERCANNON ) )
 						weaponMods.append( "LTSRebalance_pas_ion_lasercannon" )
@@ -334,6 +343,10 @@ void function LTSRebalance_HandleAttachments( entity titan )
 
 void function LTSRebalance_HandleSetfiles( entity player, entity titan )
 {
+	entity soul = player.GetTitanSoul()
+	if ( SoulHasPassive( soul, ePassives.PAS_BATTERY_EJECT ) )
+		player.Die()
+
 	switch( GetTitanCharacterName( player ) )
 	{
 		case "scorch":
@@ -393,7 +406,7 @@ void function LTSRebalance_SyncCounterReadyCharge( entity soul )
 		charge = min( 1.0, charge + ( Time() - lastTime ) / LTSREBALANCE_COUNTER_READY_REGEN_TIME )
 		entity player = titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
 		if ( IsValid( player ) )
-			player.SetPlayerNetFloat( "LTSRebalance_CounterReadyCharge", charge )
+			player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 
 		if ( charge == 1.0 )
 		{
@@ -406,11 +419,59 @@ void function LTSRebalance_SyncCounterReadyCharge( entity soul )
 			titan = soul.GetTitan()
 			player = !IsValid( titan ) || titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
 			if ( IsValid( player ) )
-				player.SetPlayerNetFloat( "LTSRebalance_CounterReadyCharge", charge )
+				player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 		}
 
 		lastTime = Time()
 	}
+}
+
+void function LTSRebalance_OvercoreDamage( entity victim, var damageInfo )
+{
+	float damage = DamageInfo_GetDamage( damageInfo )
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	if ( IsValid( attacker ) && attacker.IsTitan() && attacker != victim )
+	{
+		entity soul = attacker.GetTitanSoul()
+		LTSRebalance_UpdateSoulOvercore( soul, damage )
+	}
+	
+	if ( IsValid( victim ) && victim.IsTitan() )
+	{
+		entity soul = victim.GetTitanSoul()
+		LTSRebalance_UpdateSoulOvercore( soul, -damage )
+	}
+}
+
+void function LTSRebalance_OvercoreShieldDamage( entity victim, var damageInfo, TitanDamage titanDamage )
+{
+	float shieldDamage = float( titanDamage.shieldDamage )
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	if ( IsValid( attacker ) && attacker.IsTitan() && attacker != victim )
+	{
+		entity soul = attacker.GetTitanSoul()
+		LTSRebalance_UpdateSoulOvercore( soul, shieldDamage )
+	}
+	
+	if ( IsValid( victim ) && victim.IsTitan() )
+	{
+		entity soul = victim.GetTitanSoul()
+		LTSRebalance_UpdateSoulOvercore( soul, -shieldDamage )
+	}
+}
+
+void function LTSRebalance_UpdateSoulOvercore( entity soul, float change )
+{
+	if ( !SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
+		return
+
+	entity player = soul.GetBossPlayer()
+	if ( !IsValid( player ) )
+		return
+	
+	float curFrac = player.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" )
+	float newFrac = max( 0.0, min( 1.0, curFrac + change / LTSREBALANCE_PAS_OVERCORE_MAX_DAMAGE ) )
+	player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", newFrac )
 }
 #endif
 
