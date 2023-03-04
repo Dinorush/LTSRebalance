@@ -39,9 +39,6 @@ WeaponData
 		{
 			"damage_near_value_titanarmor"					"1000"
 	   		"damage_far_value_titanarmor" 					"1000"
-			"reload_time" 									"++0.5"
-			"reloadempty_time"								"++0.5"
-			"reloadsegment_time_loop"						"++0.45"
 		}
 		LTSRebalance_fd_wpn_upgrade_1
 		{

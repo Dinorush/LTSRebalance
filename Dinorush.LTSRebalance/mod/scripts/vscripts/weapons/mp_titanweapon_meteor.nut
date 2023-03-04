@@ -51,9 +51,16 @@ global struct MeteorRadiusDamage
 
 #endif // #if SERVER
 
-const float LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS = 1.0
 const float PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION = 0.3
 const float PAS_SCORCH_SELFDMG_GRACE_PERIOD = 1.5
+
+const float LTSREBALANCE_METEOR_DAMAGE_TICK = 80.0
+const float LTSREBALANCE_METEOR_TERRAIN_DURATION_BONUS = 1.0
+
+const float LTSREBALANCE_METEOR_RANGE_BONUS_TIME = 1.0
+const float LTSREBALANCE_PAS_METEOR_RANGE_BONUS_MOD = 2.0
+const float LTSREBALANCE_METEOR_RANGE_BONUS_DAMAGE = 1.5
+const float LTSREBALANCE_METEOR_RANGE_BONUS_THERMITE_FRAC = 1.0 // Additive
 
 #if CLIENT
 const INDICATOR_IMAGE = $"ui/menu/common/locked_icon"
@@ -454,17 +461,19 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	bool wildfire = mods.contains( "pas_scorch_weapon" ) || mods.contains( "LTSRebalance_pas_scorch_weapon" )
 	bool PerfectKits_wildfire = PerfectKits_Enabled() && wildfire
 	entity inflictor = CreateOncePerTickDamageInflictorHelper( thermiteLifetimeMax * float( PerfectKits_wildfire ? PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT + 1 : 1 ))
-	entity base = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, velocity, thermiteLifetimeMax, METEOR_FX_BASE, eDamageSourceId.mp_titanweapon_meteor_thermite, PerfectKits_wildfire ? 0 : -1 )
-
-	base.SetAngles( AnglesCompose( angles, <90,0,0> ) )
-
-	if ( hitEnt != null && hitEnt.IsWorld() )
-		base.StopPhysics()
 
 	int fireCount
 	float fireSpeed
 
-	if ( wildfire )
+	if ( LTSRebalance_Enabled() )
+	{
+		inflictor.s.rangeBonus <- min( LTSREBALANCE_METEOR_RANGE_BONUS_TIME, Time() - projectile.GetProjectileCreationTime() )
+		if ( wildfire )
+			inflictor.s.rangeBonus = min( 1.0, inflictor.s.rangeBonus * LTSREBALANCE_PAS_METEOR_RANGE_BONUS_MOD )
+		fireCount = PerfectKits_wildfire ? 2 : 4 + int( 4 * LTSREBALANCE_METEOR_RANGE_BONUS_THERMITE_FRAC * inflictor.s.rangeBonus )
+		fireSpeed = 200.0
+	}
+	else if ( wildfire )
 	{
 		fireCount = PerfectKits_wildfire ? 2 : 8
 		fireSpeed = 200
@@ -472,8 +481,16 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 	else
 	{
 		fireCount = 4
-		fireSpeed = LTSRebalance_Enabled() ? 100.0 : 50.0
+		fireSpeed = 50.0
 	}
+
+	entity base = CreatePhysicsThermiteTrail( origin, owner, inflictor, projectile, velocity, thermiteLifetimeMax, METEOR_FX_BASE, eDamageSourceId.mp_titanweapon_meteor_thermite, PerfectKits_wildfire ? 0 : -1 )
+
+	base.SetAngles( AnglesCompose( angles, <90,0,0> ) )
+
+	if ( hitEnt != null && hitEnt.IsWorld() )
+		base.StopPhysics()
+
 	for ( int i = 0; i < fireCount; i++ )
 	{
 		vector trailAngles = <RandomFloatRange( -range, range ), RandomFloatRange( -range, range ), RandomFloatRange( -range, range )>
@@ -494,8 +511,8 @@ void function PerfectKits_Proto_SplitThermite( vector origin, entity inflictor, 
 
 	if ( LTSRebalance_Enabled() )
 	{
-		thermiteLifetimeMin = 1.9 * GetThermiteDurationBonus( owner )
-		thermiteLifetimeMax = 2.3 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMin = 1.0 * GetThermiteDurationBonus( owner )
+		thermiteLifetimeMax = 1.25 * GetThermiteDurationBonus( owner )
 	}
 	
 	const float range = 360
@@ -551,6 +568,9 @@ void function PROTO_PhysicsThermiteCausesDamage( entity trail, entity inflictor,
 	MeteorRadiusDamage meteorRadiusDamage = GetMeteorRadiusDamage( owner )
 	float METEOR_DAMAGE_TICK_PILOT = meteorRadiusDamage.pilotDamage
 	float METEOR_DAMAGE_TICK = meteorRadiusDamage.heavyArmorDamage
+
+	if ( LTSRebalance_Enabled() )
+		METEOR_DAMAGE_TICK = LTSREBALANCE_METEOR_DAMAGE_TICK * GraphCapped( inflictor.s.rangeBonus, 0.0, 1.0, 1.0, LTSREBALANCE_METEOR_RANGE_BONUS_DAMAGE )
 
 	array<entity> fxArray = trail.e.fxArray
 
@@ -622,8 +642,12 @@ void function PROTO_ThermiteCausesDamage( entity trail, entity owner, entity inf
 	)
 
 	float radius = METEOR_THERMITE_DAMAGE_RADIUS_DEF
-	if ( damageSourceId == eDamageSourceId.mp_titanweapon_flame_wall )
+	if ( damageSourceId == eDamageSourceId.mp_titanweapon_flame_wall || damageSourceId == eDamageSourceId.mp_titancore_flame_wave_secondary )
+	{
 		radius = FLAME_WALL_DAMAGE_RADIUS_DEF
+		METEOR_DAMAGE_TICK = LTSREBALANCE_FLAME_WALL_DAMAGE_TICK
+	}
+
 	if ( PerfectKits_Enabled() && damageSourceId == eDamageSourceId.mp_titancore_flame_wave_secondary )
 	{
 		METEOR_DAMAGE_TICK_PILOT *= 0.7
@@ -684,7 +708,7 @@ entity function CreatePhysicsThermiteTrail( vector origin, entity owner, entity 
 		EntFireByHandle( prop_physics, "Kill", "", killDelay, null, null )
 
 	prop_physics.SetOwner( owner )
-	AI_CreateDangerousArea( prop_physics, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, TEAM_INVALID, true, false )
+	AI_CreateDangerousArea( prop_physics, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, owner.GetTeam(), true, false )
 
 	thread PROTO_PhysicsThermiteCausesDamage( prop_physics, inflictor, damageSourceId, splitCount )
 
@@ -747,8 +771,7 @@ void function OnProjectileCollision_Meteor( entity projectile, vector pos, vecto
 	if ( !IsValid( owner ) )
 		return
 
-	if ( IsValid( owner ) )
-		thread Proto_MeteorCreatesThermite( projectile, hitEnt )
+	thread Proto_MeteorCreatesThermite( projectile, hitEnt )
 	#endif
 }
 
