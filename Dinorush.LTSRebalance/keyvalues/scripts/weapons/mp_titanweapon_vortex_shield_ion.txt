@@ -6,14 +6,14 @@ WeaponData
 		{
 			"fire_rate"   									"2.25"
 
-			"deploy_time" 									".17"
+			"deploy_time" 									".1"
 
 			"ammo_stockpile_max"							"100"
 			"ammo_clip_size"   								"100"
 			"ammo_default_total"							"100"
 			"ammo_min_to_fire"								"50"
 			"ammo_per_shot"									"50"
-			"regen_ammo_refill_rate"						"100"
+			"regen_ammo_refill_rate"						"80"
 			"regen_ammo_refill_start_delay"					"0.23"
 			"reload_enabled"  								"0"
 
@@ -21,9 +21,7 @@ WeaponData
 		}
 		LTSRebalance_pas_ion_vortex
 		{
-			"ammo_stockpile_max"							"++50" // Should match ammo per shot
-			"ammo_clip_size"   								"++50"
-			"ammo_default_total"							"++50"
+			"regen_ammo_refill_rate"   						"++20"
 			"damage_near_value"   							"*1.35"
 			"damage_far_value"								"*1.35"
 			"damage_near_value_titanarmor"					"*1.35"
