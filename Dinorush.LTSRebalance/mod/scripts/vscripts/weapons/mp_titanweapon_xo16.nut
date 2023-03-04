@@ -16,6 +16,8 @@ global function OnWeaponNpcPrimaryAttack_titanweapon_xo16
 const XO16_TRACER_FX = $"weapon_tracers_xo16_speed"
 const XO16_TRACER_BURN_FX = $"weapon_tracers_xo16_speed"
 
+global const float LTSREBALANCE_ARC_ROUNDS_DRAIN_MOD_MIN = 0.5
+
 void function MpTitanweaponXo16_Init()
 {
 	#if CLIENT

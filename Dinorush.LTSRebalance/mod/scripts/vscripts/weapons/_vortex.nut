@@ -717,14 +717,20 @@ function VortexDrainedByImpact( entity vortexWeapon, entity weapon, entity proje
 	if ( amount <= 0.0 )
 		return
 
+	bool arcRounds = projectile.ProjectileGetWeaponClassName() == "mp_titanweapon_xo16_vanguard"
+
 	if ( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
 	{
 		entity owner = vortexWeapon.GetWeaponOwner()
 		int totalEnergy = owner.GetSharedEnergyTotal()
+		if ( arcRounds )
+			amount *= GraphCapped( owner.GetSharedEnergyCount(), 0, totalEnergy, LTSREBALANCE_ARC_ROUNDS_DRAIN_MOD_MIN, 1.0 )
 		owner.TakeSharedEnergy( int( float( totalEnergy ) * amount ) )
 	}
 	else
 	{
+		if ( arcRounds )
+			amount *= ( 1.0 - LTSREBALANCE_ARC_ROUNDS_DRAIN_MOD_MIN * vortexWeapon.GetWeaponChargeFraction() )
 		float frac = min ( vortexWeapon.GetWeaponChargeFraction() + amount, 1.0 )
 		vortexWeapon.SetWeaponChargeFraction( frac )
 	}
