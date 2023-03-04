@@ -70,15 +70,11 @@ WeaponData
 
 		LTSRebalance_base_battle_rifle
 		{
-			"fire_rate"										"9"
+			"ammo_clip_size"   								"50"
+
 			"fire_rate_max"									"18"
 			"fire_rate_max_time_speedup"					"2.0"
 			"fire_rate_max_time_cooldown"					"1.4"
-
-			"damage_near_value"   							"*1.1"
-			"damage_far_value"								"*1.1"
-			"damage_near_value_titanarmor"					"*1.1"
-			"damage_far_value_titanarmor" 					"*1.1"
 
 			"viewkick_scale_min_hipfire"  					"1.5"//0.6
 			"viewkick_scale_max_hipfire"  					"2.0"//1.0
@@ -123,17 +119,6 @@ WeaponData
 			"fire_sound_1_player_3p"						"weapon_xo16_singleaccel_amped_3p"
 
 			"hud_icon"										"r2_ui/menus/loadout_icons/titan_weapon/titan_weapon_xo16_combo"
-		}
-
-		LTSRebalance_rapid_reload
-		{
-			"reload_time" 									"*0.5"
-			"reload_time_late1"								"*0.5"
-			"reload_time_late2"								"*0.5"
-			"reload_time_late3"								"*0.5"
-			"reloadempty_time"								"*0.5"
-			"reloadempty_time_late1"						"*0.5"
-			"reloadempty_time_late2"						"*0.5"
 		}
 	}
 }

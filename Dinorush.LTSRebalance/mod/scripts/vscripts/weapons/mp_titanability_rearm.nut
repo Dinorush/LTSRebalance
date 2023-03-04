@@ -1,6 +1,5 @@
 /* LTS Rebalance replaces this file for the following reasons:
    1. Fix instant Rearm bug
-   2. Implement Rearm and Reload changes
 */
 
 //TODO: FIX REARM WHILE FIRING SALVO ROCKETS
@@ -11,8 +10,6 @@ global function OnWeaponAttemptOffhandSwitch_titanability_rearm
 #if SERVER
 global function OnWeaponNPCPrimaryAttack_titanability_rearm
 #endif
-
-const float REARM_AND_RELOAD_BUFF_TIME = 3.0
 
 var function OnWeaponPrimaryAttack_titanability_rearm( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
@@ -35,11 +32,6 @@ var function OnWeaponPrimaryAttack_titanability_rearm( entity weapon, WeaponPrim
 	entity defensive = weaponOwner.GetOffhandWeapon( OFFHAND_LEFT )
 	if ( IsValid( defensive ) )
 		defensive.SetWeaponPrimaryClipCount( defensive.GetWeaponPrimaryClipCountMax() )
-
-    if( LTSRebalance_Enabled() && weapon.HasMod( "rapid_rearm" ) && weaponOwner.GetMainWeapons().len() > 0)
-    { 
-		thread GiveReloadBuffThink( weaponOwner.GetMainWeapons()[0], weaponOwner )
-    }
         
 	#if SERVER
 	if ( weaponOwner.IsPlayer() )//weapon.HasMod( "rapid_rearm" ) &&  )
@@ -47,26 +39,6 @@ var function OnWeaponPrimaryAttack_titanability_rearm( entity weapon, WeaponPrim
 	#endif
 	weapon.SetWeaponPrimaryClipCount( 0 )//used to skip the fire animation
 	return 0
-}
-
-void function GiveReloadBuffThink( entity weapon, entity weaponOwner )
-{
-    #if CLIENT
-    entity cockpit = weaponOwner.GetCockpit()
-    int cockpitHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
-    #else
-    weapon.AddMod( "LTSRebalance_rapid_reload" )
-	#endif
-
-    wait REARM_AND_RELOAD_BUFF_TIME
-
-	#if CLIENT
-	if ( EffectDoesExist( cockpitHandle ) )
-        EffectStop( cockpitHandle, false, true )
-	#else
-	if ( IsValid( weapon ) && weapon.HasMod( "LTSRebalance_rapid_reload" ) )
-		weapon.RemoveMod( "LTSRebalance_rapid_reload" )
-    #endif
 }
 
 #if SERVER
