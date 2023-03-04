@@ -579,7 +579,7 @@ WeaponData
 			"spread_air_ads"  								"16.0"
 			"damage_far_value"								"50"
 			"damage_near_distance"							"800"
-			"damage_far_distance" 							"1300"
+			"damage_far_distance" 							"1400"
 
 			"fx_muzzle_flash_view"							"P_muzzleflash_predator_PS_FP"
 			"fx_muzzle_flash_world"							"P_muzzleflash_predator_PS"
@@ -661,14 +661,14 @@ WeaponData
 		}
 		pas_legion_weapon
 		{
-			"regen_ammo_refill_rate"						"15"
+			"regen_ammo_refill_rate"						"17"
 			"regen_ammo_refill_start_delay"					"0.075"
-			"ammo_clip_size"								"*0.5"
+			"ammo_clip_size"								"*0.55"
 			"reload_enabled"								"0"
 		}
 		pas_legion_spinup
 		{
-			"ads_move_speed_scale"							"1.0"
+			"ads_move_speed_scale"							"0.9"
 		}
 		fd_piercing_shots
 		{
