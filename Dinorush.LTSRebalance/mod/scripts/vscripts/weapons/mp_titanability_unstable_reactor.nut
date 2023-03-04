@@ -41,17 +41,17 @@ void function LTSRebalance_SyncUnstableReactor( entity soul )
 		}
 		
 		charge = min( 1.0, charge + ( Time() - lastTime ) / UNSTABLE_REACTOR_COOLDOWN )
-		entity player = titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+		entity player = soul.GetBossPlayer()
 		if ( IsValid( player ) )
 			player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 
 		if ( charge == 1.0 )
 		{
-			Remote_CallFunction_NonReplay( player, "ServerCallback_UnstableReactor_Ready" )
+			if ( titan == player )
+				Remote_CallFunction_NonReplay( player, "ServerCallback_UnstableReactor_Ready" )
 			player.WaitSignal( "UnstableReactorUse" )
 			charge = 0
-			titan = soul.GetTitan()
-			player = !IsValid( titan ) || titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+			player = soul.GetBossPlayer()
 			if ( IsValid( player ) )
 				player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 		}
