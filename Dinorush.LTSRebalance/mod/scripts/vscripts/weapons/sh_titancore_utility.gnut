@@ -244,19 +244,10 @@ void function CoreDeactivate( entity player, entity weapon )
 	{
 		if ( TitanDamageRewardsTitanCoreTime() )
 		{
-			if ( SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
+			if ( !LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
 			{
 				SoulTitanCore_SetNextAvailableTime( soul, 0.20 )
-
-				LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( player )
-				if ( ls != null )
-				{
-					expect LTSRebalance_LogStruct( ls )
-					ls.coreFracEarned += 0.20
-				}
-
-				if ( !LTSRebalance_Enabled() )
-					GiveOffhandElectricSmoke( player )
+				GiveOffhandElectricSmoke( player )
 			}
 		}
 		else if ( IsValid( player ) )

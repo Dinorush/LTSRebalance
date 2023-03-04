@@ -1,9 +1,10 @@
 /* LTS Rebalance replaces this file for the following reasons:
    1. Superior chassis rebalancing
    2. Doom skip fix
-   3. Monarch 2x innate core gain
-   4. Bulwark core gain removal on shields
-   5. Implement data logging (for damage to shields)
+   3. Overcore rebalancing
+   4. Monarch 2x innate core gain
+   5. Bulwark core gain removal on shields
+   6. Implement data logging (for damage to shields)
 */
 global function TitanHealth_Init
 
@@ -49,6 +50,9 @@ global const TITAN_REGEN_MIN_DAMAGE_DELAY = 0.5
 const TITAN_HEALTH_HISTORY_FALLOFF_START = 0 	// how many seconds until shield begins to regen
 
 const float TITAN_HEALTH_HISTORY_FALLOFF_END = 4.0
+
+const float LTSREBALANCE_PAS_OVERCORE_MAX_BONUS = 0.25
+global const float LTSREBALANCE_PAS_OVERCORE_MAX_DAMAGE = 2500.0
 
 struct
 {
@@ -252,6 +256,8 @@ void function PlayerOrNPCTitanTookDamage( entity titan, var damageInfo, bool cri
 
 		// Have to log here because no post callbacks work if no health damage was dealt (except post shield, which does not give an attacker)
 		LTSRebalance_LogShieldDamage( titan, damageInfo, titanDamage )
+
+		LTSRebalance_OvercoreShieldDamage( titan, damageInfo, titanDamage )
 
 		// Needed to reduce core gain from Bulwark shields
 		// Could use a damage callback and do some damage handling manually, but we already replace this file and this is a smoother implementation
@@ -511,7 +517,7 @@ bool function HandleKillshot( entity ent, var damageInfo, TitanDamage titanDamag
 		// slight protection to prevent multiple rapid damage events from eating through doomed state health
 		if ( Time() - titanSoul.soul.doomedStartTime < TITAN_DOOMED_INVUL_TIME && !DamageInfo_GetForceKill( damageInfo ) )
 		{
-			printt("Doom invuln hit. Doomed start time:", titanSoul.soul.doomedStartTime, " | Current time:", Time())
+			printt("[LTSRebalanceDebug] Doom invuln hit. Doomed start time:", titanSoul.soul.doomedStartTime, " | Current time:", Time())
 			DamageInfo_SetDamage( damageInfo, 0 )
 		}
 	}
@@ -1029,6 +1035,11 @@ void function AddCreditToTitanCoreBuilder( entity titan, float credit )
 
 	if ( !IsAlive( titan ) )
 		return
+
+	// Overcore increases core gain based on a built up damage amount
+	// Updates by post damage callback, so bonuses don't apply until next instance of damage
+	if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) && IsValid( bossPlayer ) )
+		credit *= 1 + LTSREBALANCE_PAS_OVERCORE_MAX_BONUS * bossPlayer.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" )
 
 	// Innate Monarch 2x core gain for rebalance.
     entity core = titan.GetOffhandWeapon( OFFHAND_EQUIPMENT )

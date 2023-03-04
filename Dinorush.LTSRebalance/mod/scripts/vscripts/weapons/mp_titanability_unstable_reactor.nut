@@ -1,76 +1,120 @@
-global function OnWeaponPrimaryAttack_titanability_unstablereactor
-#if SERVER
-	global function OnWeaponNpcPrimaryAttack_titanability_unstablereactor
-#endif
+untyped
+global function MpTitanabilityUnstableReactorInit
+global function UnstableReactor_InitForPlayer
 
-const float HEALTH_COST_FRAC = 0.085
-const int MIN_HEALTH_COST = 640
+const float HEALTH_COST_FRAC = 0.05
+const int MIN_HEALTH_COST = 400
+global const float UNSTABLE_REACTOR_COOLDOWN = 8.0
 
-var function OnWeaponPrimaryAttack_titanability_unstablereactor( entity weapon, WeaponPrimaryAttackParams attackPParams )
+struct {
+	table<entity, float> dashTimes
+} file
+
+void function MpTitanabilityUnstableReactorInit()
 {
-	entity owner = weapon.GetWeaponOwner()
-	if ( IsAlive( owner ) )
+	RegisterSignal( "UnstableReactorUse" )
+	RegisterWeaponDamageSource( "mp_titanability_unstable_reactor", "#DEATH_UNSTABLE_REACTOR" )
+}
+
+void function UnstableReactor_InitForPlayer( entity player, entity soul )
+{
+	AddPlayerMovementEventCallback( player, ePlayerMovementEvents.DODGE, UnstableReactor_UpdateDashTime )
+	AddButtonPressedPlayerInputCallback( player, IN_DODGE, UnstableReactor_AttemptBlast )
+	AddEntityDestroyedCallback( soul, RemoveUnstableReactorCallback )
+	thread LTSRebalance_SyncUnstableReactor( soul )
+}
+
+void function LTSRebalance_SyncUnstableReactor( entity soul )
+{
+	soul.EndSignal( "OnDestroy" )
+
+	float charge = 1.0
+	float lastTime = Time()
+	while( true )
 	{
-#if SERVER
-		UnstableReactor_Blast( owner, weapon )
-		if ( owner.IsPlayer() )
+		WaitFrame()
+		entity titan = soul.GetTitan()
+		if ( !IsValid( titan ) )
 		{
-			MessageToPlayer( owner, eEventNotifications.Rodeo_PilotAppliedBatteryToYou, owner, true )
-			float amount = expect float( GetSettingsForPlayer_DodgeTable( owner )["dodgePowerDrain"] )
-			owner.Server_SetDodgePower( min( 100.0, owner.GetDodgePower() + amount ) )
+			lastTime = Time()
+			continue
 		}
-#else
-		Rumble_Play( "rumble_titan_electric_smoke", {} )
-#endif
-		if ( owner.IsPlayer() )
-			PlayerUsedOffhand( owner, weapon )
+		
+		charge = min( 1.0, charge + ( Time() - lastTime ) / UNSTABLE_REACTOR_COOLDOWN )
+		entity player = titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+		if ( IsValid( player ) )
+			player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
 
-		return 1
+		if ( charge == 1.0 )
+		{
+			Remote_CallFunction_NonReplay( player, "ServerCallback_UnstableReactor_Ready" )
+			player.WaitSignal( "UnstableReactorUse" )
+			charge = 0
+			titan = soul.GetTitan()
+			player = !IsValid( titan ) || titan.IsPlayer() ? titan : GetPetTitanOwner( titan )
+			if ( IsValid( player ) )
+				player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", charge )
+		}
+
+		lastTime = Time()
 	}
-	return 0
 }
 
-#if SERVER
-var function OnWeaponNpcPrimaryAttack_titanability_unstablereactor( entity weapon, WeaponPrimaryAttackParams attackParams )
+void function UnstableReactor_UpdateDashTime( entity player )
 {
-	weapon.EmitWeaponNpcSound( LOUD_WEAPON_AI_SOUND_RADIUS_MP, 0.2 )
-	entity npc = weapon.GetWeaponOwner()
-	if ( IsAlive( npc ) )
-		UnstableReactor_Blast( npc, weapon )
+	file.dashTimes[player] <- Time()
 }
 
-void function UnstableReactor_Blast( entity titan, entity weapon )
+void function UnstableReactor_AttemptBlast( entity player )
 {
-	weapon.EmitWeaponNpcSound( LOUD_WEAPON_AI_SOUND_RADIUS_MP, 0.2 )
+	if ( !player.IsTitan() )
+		return
 
+	if ( player.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" ) < 1.0 )
+		return
+	
+	// Need a bit of grace period from dash since this callback runs after dash goes and can trigger on the last dash
+	if ( !(player in file.dashTimes) || Time() - file.dashTimes[player] < 0.1 )
+		return
+
+	// Player needs to have no dashes left to cause an unstable reactor blast
+	float dashCost = expect float( GetSettingsForPlayer_DodgeTable( player )["dodgePowerDrain"] )
+	if ( player.GetDodgePower() >= dashCost )
+		return
+
+	player.Signal( "UnstableReactorUse" )
+	MessageToPlayer( player, eEventNotifications.Rodeo_PilotAppliedBatteryToYou, player, true )
+	player.Server_SetDodgePower( min( 100.0, player.GetDodgePower() + dashCost ) )
+	UnstableReactor_Blast( player )
+}
+
+void function UnstableReactor_Blast( entity titan )
+{
 	int damageFlags = DF_EXPLOSION | DF_ELECTRICAL
 	int selfDamage = maxint( MIN_HEALTH_COST, int( titan.GetMaxHealth() * HEALTH_COST_FRAC ) )
-	titan.TakeDamage( selfDamage, titan, titan, { scriptType = damageFlags | DF_DOOMED_HEALTH_LOSS, damageSourceId = eDamageSourceId.mp_weapon_arc_blast, origin = titan.GetWorldSpaceCenter() } )
-
-	int titanDamage = weapon.GetWeaponSettingInt( eWeaponVar.explosion_damage_heavy_armor )
-	int pilotDamage = weapon.GetWeaponSettingInt( eWeaponVar.explosion_damage )
-	float innerRadius = weapon.GetWeaponSettingFloat( eWeaponVar.explosion_inner_radius )
-	float outerRadius = weapon.GetWeaponSettingFloat( eWeaponVar.explosionradius )
+	titan.TakeDamage( selfDamage, titan, titan, { scriptType = damageFlags | DF_DOOMED_HEALTH_LOSS, damageSourceId = eDamageSourceId.mp_titanability_unstable_reactor, origin = titan.GetWorldSpaceCenter() } )
 
 	thread UnstableReactor_MakeFX( titan )
 	RadiusDamage(
 		titan.GetWorldSpaceCenter(),			// center
 		titan,									// attacker
-		weapon,									// inflictor
-		pilotDamage,							// damage
-		titanDamage,							// damageHeavyArmor
-		innerRadius,							// innerRadius
-		outerRadius,							// outerRadius
+		titan,									// inflictor
+		60,										// damage
+		300,									// damageHeavyArmor
+		150,									// innerRadius
+		500,									// outerRadius
 		SF_ENVEXPLOSION_NO_DAMAGEOWNER,			// flags
 		0,										// distanceFromAttacker
 		0,										// explosionForce
 		damageFlags,							// scriptDamageFlags
-		eDamageSourceId.mp_weapon_arc_blast		// scriptDamageSourceIdentifier
+		eDamageSourceId.mp_titanability_unstable_reactor	// scriptDamageSourceIdentifier
 	)
 }
 
 void function UnstableReactor_MakeFX( entity titan )
 {
+	EmitSoundOnEntity( titan, "Explo_ProximityEMP_Impact_3P" )
+
 	entity particleSystem = CreateEntity( "info_particle_system" )
 	particleSystem.kv.start_active = 1
 	particleSystem.SetValueForEffectNameKey( $"P_xo_emp_field" )
@@ -80,4 +124,13 @@ void function UnstableReactor_MakeFX( entity titan )
 	wait 0.6
 	particleSystem.Destroy()
 }
-#endif
+
+function RemoveUnstableReactorCallback( soul )
+{
+	expect entity( soul )
+	entity player = soul.GetBossPlayer()
+	if ( !IsValid( player ) )
+		return
+
+	RemoveButtonPressedPlayerInputCallback( player, IN_DODGE, UnstableReactor_AttemptBlast )
+}
