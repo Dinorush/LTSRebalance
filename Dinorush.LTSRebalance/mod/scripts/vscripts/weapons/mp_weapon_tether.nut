@@ -427,10 +427,6 @@ void function LTSRebalance_ApplyTetherEffects( entity projectile, entity victim 
 	// Add slow effects
 	tetherSlows.append( StatusEffect_AddTimed( victim, eStatusEffect.move_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE ) )
 	tetherSlows.append( StatusEffect_AddTimed( victim, eStatusEffect.dodge_speed_slow, 0.5, slowDuration, LTSREBALANCE_TRAP_SLOW_FADE ) )
-	
-	// Apply Threat Optics effect
-	if ( projectile.ProjectileGetMods().contains( "LTSRebalance_pas_northstar_optics" ) )
-		LTSRebalance_ApplyThreatOptics( victim, projectile.GetOrigin(), projectile.GetOwner(), LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION )
 }
 
 void function LTSRebalance_DispelTetherSlow( entity victim )
