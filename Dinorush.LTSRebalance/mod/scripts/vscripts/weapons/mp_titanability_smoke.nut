@@ -11,7 +11,9 @@ global function MpTitanAbilitySmoke_Init
 
 const SHIELD_BODY_FX			= $"P_xo_armor_body_CP"
 
-global const float LTSREBALANCE_COUNTER_READY_REGEN_TIME = 24.0
+global const float LTSREBALANCE_COUNTER_READY_REGEN_TIME = 20.0
+const int LTSREBALANCE_MAELSTROM_DAMAGE = 900
+const float LTSREBALANCE_MAELSTROM_DURATION_MOD = 1.5
 
 void function MpTitanAbilitySmoke_Init()
 {
@@ -97,9 +99,10 @@ void function TitanSmokescreen( entity ent, entity weapon )
 	if ( weapon.HasMod( "maelstrom" ) )
 	{
 		smokescreen.dpsPilot = 90
-		smokescreen.dpsTitan = LTSRebalance_Enabled() ? 900 : 1350
+		smokescreen.dpsTitan = LTSRebalance_Enabled() ? LTSREBALANCE_MAELSTROM_DAMAGE : 1350
 		smokescreen.deploySound1p = SFX_SMOKE_DEPLOY_BURN_1P
 		smokescreen.deploySound3p = SFX_SMOKE_DEPLOY_BURN_3P
+		smokescreen.lifetime *= LTSRebalance_Enabled() ? LTSREBALANCE_MAELSTROM_DURATION_MOD : 1.0
 	}
 	else
 	{
