@@ -24,6 +24,9 @@ const string FLAME_WAVE_LEFT_SFX = "flamewave_blast_left"
 const string FLAME_WAVE_MIDDLE_SFX = "flamewave_blast_middle"
 const string FLAME_WAVE_RIGHT_SFX = "flamewave_blast_right"
 
+const float LTSREBALANCE_HEALTH_FRAC_FLOOR = 0.25
+const float LTSREBALANCE_FLOOR_DAMAGE_FRAC = 0.5
+
 void function MpTitanWeaponFlameWave_Init()
 {
 	PrecacheParticleSystem( FLAME_WAVE_IMPACT_TITAN )
@@ -33,7 +36,6 @@ void function MpTitanWeaponFlameWave_Init()
 
 	#if SERVER
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_flame_wave, FlameWave_DamagedPlayerOrNPC )
-		AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_flame_wave_secondary, FlameWave_DamagedPlayerOrNPC )
 	#endif
 }
 
@@ -272,6 +274,15 @@ void function FlameWave_DamagedPlayerOrNPC( entity ent, var damageInfo )
             DamageInfo_SetDamage( damageInfo, 0 )
             return
         }
+
+		// Balancing inside bug fix for convenience: scale damage based on remaining health
+		float damageScale = GraphCapped( ent.GetHealth() + soul.GetShieldHealth(), 
+										ent.GetMaxHealth() * LTSREBALANCE_HEALTH_FRAC_FLOOR, ent.GetMaxHealth(), 
+										LTSREBALANCE_FLOOR_DAMAGE_FRAC, 1.0 )
+		if ( soul.IsDoomed() )
+			damageScale = LTSREBALANCE_FLOOR_DAMAGE_FRAC
+
+		DamageInfo_ScaleDamage( damageInfo, damageScale )
     }
 
 	vector damagePosition = DamageInfo_GetDamagePosition( damageInfo )
