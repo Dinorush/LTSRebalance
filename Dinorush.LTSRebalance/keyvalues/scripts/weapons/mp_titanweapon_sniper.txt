@@ -29,6 +29,10 @@ WeaponData
 			"lower_time"  									".01"
 			"raise_time"  									".2"
 		}
+		LTSRebalance_hover_speed
+		{
+			"ads_move_speed_scale"							"1.0"
+		}
 		PerfectKits_pas_northstar_optics
 		{
 			"zoom_fov"										"4"
