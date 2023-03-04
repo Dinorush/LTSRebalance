@@ -33,11 +33,13 @@ const float PERFECTKITS_VIPER_HEIGHT_CONV = 0.0005
 const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_MOD = 1.25
 const float LTSREBALANCE_PAS_NORTHSTAR_WEAPON_DURATION = 6.0
 
-const float LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION = 1.6
+const float LTSREBALANCE_THREAT_OPTICS_SONAR_DURATION = 2.0
 global const float LTSREBALANCE_THREAT_OPTICS_TRAP_SONAR_DURATION = 0.0
-const asset LTSREBALANCE_THREAT_OPTICS_DEBUFF_P = $"smk_elec_nrg_heal"
-const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_DURATION_MOD = 2.5
+const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_DURATION_MOD = 1.0
 const float LTSREBALANCE_THREAT_OPTICS_DEBUFF_MOD = 0.10
+
+const asset LTSREBALANCE_RAILGUN_DEBUFF_1P = $"smk_elec_nrg_heal"
+const asset LTSREBALANCE_RAILGUN_DEBUFF_3P = $"P_emp_body_titan"
 
 struct {
 	float chargeDownSoundDuration = 1.0 //"charge_cooldown_time"
@@ -55,7 +57,8 @@ var function OnWeaponPrimaryAttack_titanweapon_sniper( entity weapon, WeaponPrim
 
 void function MpTitanWeapon_SniperInit()
 {
-	PrecacheParticleSystem( LTSREBALANCE_THREAT_OPTICS_DEBUFF_P )
+	PrecacheParticleSystem( LTSREBALANCE_RAILGUN_DEBUFF_1P )
+	PrecacheParticleSystem( LTSREBALANCE_RAILGUN_DEBUFF_3P )
 
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_sniper, OnHit_TitanWeaponSniper )
@@ -258,10 +261,22 @@ void function LTSRebalance_ApplyPiercingRoundsFXThink( entity enemy )
 	soul.EndSignal( "PiercingRoundsHit" )
 
 	soul.s.piercingRoundsFXs <- LTSRebalance_StartDebuffFX( enemy )
+	array onDeathHolder = expect array( soul.s.piercingRoundsFXs )
 
 	OnThreadEnd(
-		function() : ( soul )
+		function() : ( soul, enemy, onDeathHolder )
 		{
+			// if the enemy is dead, soul is invalid, so we clear using local array
+			if ( !IsAlive( enemy ) )
+			{
+				foreach ( fx in onDeathHolder )
+				{
+					expect entity( fx )
+					if ( IsValid( fx ) )
+						EffectStop( fx )
+				}
+			}
+
 			if ( !IsValid( soul ) )
 				return
 
@@ -314,6 +329,7 @@ void function LTSRebalance_ApplyThreatOpticsDebuff( entity enemy, float baseDura
 {
 	entity soul = enemy.GetTitanSoul()
 	soul.EndSignal( "OnDestroy" )
+	enemy.EndSignal( "OnDeath" )
 
 	if ( !( "threatOpticsEndTime" in soul.s ) )
 	{
@@ -323,10 +339,22 @@ void function LTSRebalance_ApplyThreatOpticsDebuff( entity enemy, float baseDura
 
 	if ( soul.s.threatOpticsEndTime < Time() )
 		soul.s.threatOpticsFXs = LTSRebalance_StartDebuffFX( enemy )
+	array onDeathHolder = expect array( soul.s.threatOpticsFXs )
 
 	OnThreadEnd(
-		function() : ( soul )
+		function() : ( soul, enemy, onDeathHolder )
 		{
+			// if the enemy is dead, soul is invalid, so we clear using local array
+			if ( !IsAlive( enemy ) )
+			{
+				foreach ( fx in onDeathHolder )
+				{
+					expect entity( fx )
+					if ( IsValid( fx ) )
+						EffectStop( fx )
+				}
+			}
+
 			if ( !IsValid( soul ) || soul.s.threatOpticsEndTime > Time() )
 				return
 
@@ -352,14 +380,14 @@ array function LTSRebalance_StartDebuffFX( entity enemy )
 	array returnArray = [ null, null ]
 
 	int attachId = enemy.LookupAttachment( "exp_torso_main" )
-	int particleId = GetParticleSystemIndex( LTSREBALANCE_THREAT_OPTICS_DEBUFF_P )
+	int particleId = GetParticleSystemIndex( LTSREBALANCE_RAILGUN_DEBUFF_1P )
 	entity debuffFX = StartParticleEffectOnEntity_ReturnEntity( enemy, particleId, FX_PATTACH_POINT_FOLLOW_NOROTATE, attachId )
 	debuffFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_OWNER
 	debuffFX.SetOwner( enemy )
 	returnArray[0] = debuffFX 
 
 	attachId = enemy.LookupAttachment( "exp_torso_front" )
-	particleId = GetParticleSystemIndex( $"P_emp_body_titan" )
+	particleId = GetParticleSystemIndex( LTSREBALANCE_RAILGUN_DEBUFF_3P )
 	debuffFX = StartParticleEffectOnEntity_ReturnEntity( enemy, particleId, FX_PATTACH_POINT_FOLLOW, attachId )
 	debuffFX.kv.VisibilityFlags = ENTITY_VISIBLE_TO_FRIENDLY | ENTITY_VISIBLE_TO_ENEMY
 	debuffFX.SetOwner( enemy )
