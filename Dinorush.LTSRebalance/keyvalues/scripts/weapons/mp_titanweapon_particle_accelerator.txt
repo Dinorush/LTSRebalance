@@ -11,7 +11,7 @@ WeaponData
 			"damage_far_distance" 							"2000"
 
 			"lower_time"  									"0.01"
-			"impact_effect_table" 							"exp_smr"
+			"impact_effect_table" 							""
 		}
 		LTSRebalance_pas_ion_weapon_ads
 		{
