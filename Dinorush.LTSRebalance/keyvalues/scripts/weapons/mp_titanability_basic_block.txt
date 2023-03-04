@@ -16,7 +16,7 @@ WeaponData
 	{
 		LTSRebalance
 		{
-			"deploy_time" 							".25"
+			"deploy_time" 							".15"
 		}
         LTSRebalance_core_regen
         {
