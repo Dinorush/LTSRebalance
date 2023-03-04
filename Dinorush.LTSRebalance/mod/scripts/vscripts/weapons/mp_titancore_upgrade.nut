@@ -270,7 +270,7 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					offhandWeapon.SetMods( mods )
 				}
 				array<entity> weapons = GetPrimaryWeapons( owner )
-				if ( !LTSRebalance_Enabled() && weapons.len() > 0 )
+				if ( weapons.len() > 0 )
 				{
 					entity primaryWeapon = weapons[0]
 					if ( IsValid( primaryWeapon ) )
@@ -313,19 +313,13 @@ var function OnWeaponPrimaryAttack_UpgradeCore( entity weapon, WeaponPrimaryAtta
 					{
 						array<string> mods = offhandWeapon.GetMods()
 						mods.fastremovebyvalue( "energy_transfer" )
-						if ( LTSRebalance_Enabled() )
-							mods.append( "LTSRebalance_energy_field_energy_transfer" )
-						else
-							mods.append( "energy_field_energy_transfer" )
+						mods.append( "energy_field_energy_transfer" )
 						offhandWeapon.SetMods( mods )
 					}
 					else
 					{
 						array<string> mods = offhandWeapon.GetMods()
-						if ( LTSRebalance_Enabled() )
-							mods.append( "LTSRebalance_energy_field" )
-						else
-							mods.append( "energy_field" )
+						mods.append( "energy_field" )
 						offhandWeapon.SetMods( mods )
 					}
 				}

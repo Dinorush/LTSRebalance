@@ -9,36 +9,6 @@ WeaponData
 			"deploy_time" 									"0.4"
 		}
 
-		LTSRebalance_energy_field
-		{
-			"impact_effect_table" 							"exp_monarch_beam_LG_v1"
-			"explosionradius" 								"400"
-			"explosion_inner_radius"  						"400"
-
-			"hud_icon"										"rui/titan_loadout/passive/monarch_core_energy_transfer" //Deliberately swapped with energy transfer
-		}
-
-		LTSRebalance_energy_field_energy_transfer
-		{
-			"fire_sound_1_player_1p"						"Weapon_EnergySyphon_Lvl2_Fire_1P"
-			"fire_sound_1_player_3p"						"Weapon_EnergySyphon_Lvl2_Fire_3P"
-
-			"impact_effect_table" 							"exp_monarch_beam_LG_v2"
-			"explosionradius" 								"400"
-			"explosion_inner_radius"  						"400"
-
-			"charge_effect_1p"								"P_wpn_monarch_charge_v2"
-			"charge_effect_3p"								"P_wpn_monarch_charge_v2"
-
-			"fx_muzzle_flash_view"							"P_wpn_monarch_mflash_v2"
-			"fx_muzzle_flash_world"							"P_wpn_monarch_mflash_v2"
-
-			"tracer_effect"   								"P_wpn_monarch_beam_v2"
-			"tracer_effect_first_person"  					"P_wpn_monarch_beam_v2"
-
-			"hud_icon"										"rui/titan_loadout/passive/monarch_core_energy_transfer"
-		}
-
 		PerfectKits_pas_vanguard_shield
 		{
 			"charge_levels"									"4"
