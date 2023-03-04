@@ -376,9 +376,9 @@ void function LTSRebalance_ApplyTetherEffects( entity projectile, entity victim 
 		return
 	
 	// Enables Sword Core melee damage, but prevents normal melee damage
-	AddEntityCallback_OnDamaged( projectile, LTSRebalance_PreventNormalMeleeDamage )
-	SetObjectCanBeMeleed( projectile, true )
-	SetVisibleEntitiesInConeQueriableEnabled( projectile, true )
+	// AddEntityCallback_OnDamaged( projectile, LTSRebalance_PreventNormalMeleeDamage )
+	// SetObjectCanBeMeleed( projectile, true )
+	// SetVisibleEntitiesInConeQueriableEnabled( projectile, true )
 
 	// Clear invalid ents
 	array<entity> deleteKeys = []
