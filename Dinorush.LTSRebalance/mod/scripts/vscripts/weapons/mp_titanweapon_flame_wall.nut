@@ -13,6 +13,7 @@ global function OnWeaponAttemptOffhandSwitch_titanweapon_flame_wall
 #if SERVER
 global function OnWeaponNpcPrimaryAttack_FlameWall
 global function CreateThermiteWallSegment
+global function LTSRebalance_TriggerThermiteBurn
 #endif
 
 const asset FLAME_WALL_FX = $"P_wpn_meteor_wall"
@@ -28,6 +29,10 @@ const string FLAME_WALL_GROUND_END_SFX = "flamewall_flame_burn_end"
 global const float FLAME_WALL_THERMITE_DURATION = 5.2
 global const float SP_FLAME_WALL_DURATION_SCALE = 1.75
 
+global const float LTSREBALANCE_FLAME_WALL_DAMAGE_TICK = 50.0
+const float LTSREBALANCE_THERMITE_BURN_TIME = 2.0
+const float LTSREBALANCE_THERMITE_BURN_DPS = 250.0
+
 void function MpTitanweaponFlameWall_Init()
 {
 	PrecacheParticleSystem( FLAME_WALL_FX )
@@ -40,6 +45,7 @@ void function MpTitanweaponFlameWall_Init()
 
 	#if SERVER
 	AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_flame_wall, FlameWall_DamagedTarget )
+	AddDamageCallbackSourceID( eDamageSourceId.mp_titancore_flame_wave_secondary, FlameWall_DamagedTarget )
 	#endif
 }
 
@@ -169,7 +175,7 @@ bool function CreateThermiteWallSegment( entity projectile, int projectileCount,
 		{
 			thermiteParticle = CreateThermiteTrail( pos, angles, owner, inflictor, duration, FLAME_WALL_FX, damageSource )
 			EffectSetControlPointVector( thermiteParticle, 1, projectile.proj.savedOrigin )
-			AI_CreateDangerousArea_Static( thermiteParticle, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, TEAM_INVALID, true, true, pos )
+			AI_CreateDangerousArea_Static( thermiteParticle, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, owner.GetTeam(), true, true, pos )
 		}
 		else
 		{
@@ -191,7 +197,7 @@ bool function CreateThermiteWallSegment( entity projectile, int projectileCount,
 			{
 				thread EffectUpdateControlPointVectorOnMovingGeo( thermiteParticle, 1, GetRelativeDelta( pos, movingGeo ), movingGeo )
 			}
-			AI_CreateDangerousArea( thermiteParticle, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, TEAM_INVALID, true, true )
+			AI_CreateDangerousArea( thermiteParticle, projectile, METEOR_THERMITE_DAMAGE_RADIUS_DEF, owner.GetTeam(), true, true )
 		}
 
 		//EmitSoundOnEntity( thermiteParticle, FLAME_WALL_GROUND_SFX )
@@ -250,6 +256,59 @@ void function FlameWall_DamagedTarget( entity ent, var damageInfo )
 	}
 
     PasScorchFirewall_ReduceCooldowns( attacker, DamageInfo_GetDamage( damageInfo ) )
+	LTSRebalance_TriggerThermiteBurn( ent, attacker, DamageInfo_GetInflictor( damageInfo ) )
 }
 
+void function LTSRebalance_TriggerThermiteBurn( entity victim, entity attacker, entity inflictor )
+{
+	if ( !IsValid( inflictor ) || !IsValid( victim ) || !victim.IsTitan() )
+		return
+
+	table inflictorDotS = expect table( inflictor.s )
+	if ( !("burnEndTimes" in inflictorDotS ) )
+		inflictorDotS.burnEndTimes <- {}
+
+	entity soul = victim.GetTitanSoul()
+	table burnEndTimes = expect table( inflictorDotS.burnEndTimes )
+	if ( soul in burnEndTimes )
+		burnEndTimes[soul] = Time() + LTSREBALANCE_THERMITE_BURN_TIME
+	else
+	{
+		burnEndTimes[soul] <- Time() + LTSREBALANCE_THERMITE_BURN_TIME
+		thread LTSRebalance_ThermiteBurnThink( soul, attacker, inflictor )
+	}
+}
+
+void function LTSRebalance_ThermiteBurnThink( entity soul, entity attacker, entity inflictor )
+{
+	soul.EndSignal( "OnDestroy" )
+
+	table inflictorDotS = expect table( inflictor.s )
+	table burnEndTimes = expect table( inflictorDotS.burnEndTimes )
+	OnThreadEnd(
+		function() : ( soul, inflictor, burnEndTimes )
+		{
+			if ( IsValid( inflictor ) )
+			{
+				delete burnEndTimes[soul]
+			}
+		}
+	)
+
+	float endTime = expect float( burnEndTimes[soul] )
+	while ( Time() < endTime )
+	{
+		entity titan = soul.GetTitan()
+		if ( IsValid( titan ) )
+		{
+			titan.TakeDamage( LTSREBALANCE_THERMITE_BURN_DPS * 0.1, attacker, attacker, { damageSourceId = eDamageSourceId.mp_titanability_thermite_burn } )
+			PasScorchFirewall_ReduceCooldowns( attacker, LTSREBALANCE_THERMITE_BURN_DPS * 0.1 )
+		}
+
+		WaitFrame()
+
+		if ( IsValid( inflictor ) && IsValid( soul ) )
+			endTime = expect float( burnEndTimes[soul] )
+	}
+}
 #endif
