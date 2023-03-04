@@ -67,6 +67,7 @@ const table<string, string> PASSIVE_TO_STRING = {
 const table<string, string> LTSREBALANCE_PASSIVE_TO_STRING = {
 	pas_enhanced_titan_ai =     "Big Punch",
 	pas_build_up_nuclear_core = "Unstable Reactor",
+	pas_auto_eject =			"Spectate"
 
 	pas_ion_vortex =            "Point-Five Tripwire",
 	pas_tone_wall =             "Light Particle Wall"
@@ -244,6 +245,9 @@ void function LTSRebalance_InitTracker( entity titan )
 	ls.kit2 = PASSIVE_TO_STRING[ loadout.passive2 ]
 	if ( LTSRebalance_Enabled() && loadout.passive2 in LTSREBALANCE_PASSIVE_TO_STRING )
 		ls.kit2 = LTSREBALANCE_PASSIVE_TO_STRING[ loadout.passive2 ]
+
+	if ( ls.kit2 == "Spectate" )
+		return
 
 	if ( loadout.titanClass == "vanguard" )
 	{
@@ -459,7 +463,7 @@ void function LTSRebalance_LogDistanceToOthers( entity player, LTSRebalance_LogS
 	titans.extend( GetNPCArrayByClass( "npc_titan" ) )
 	foreach ( titan in titans )
 	{	
-		if ( !titan.IsTitan() )
+		if ( !titan.IsTitan() || !IsAlive( titan ) )
 			continue
 
 		if ( titan == player )
@@ -693,12 +697,7 @@ void function LTSRebalance_LogDamage( entity victim, var damageInfo )
 
 	int critHit = CritWeaponInDamageInfo( damageInfo ) && !selfDmg ? 1 : 0
 	if ( critHit > 0 )
-	{
-		string oval360uid = "2434778794"
-		if ( IsValid( attacker ) && attacker.IsPlayer() && attacker.GetUID() == oval360uid )
-			DamageInfo_ScaleDamage( damageInfo, 1 / GetCriticalScaler( victim, damageInfo ) )
 		critHit = IsCriticalHit( DamageInfo_GetAttacker( damageInfo ), victim, DamageInfo_GetHitBox( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageType( damageInfo ) ).tointeger() + 1
-	}
 
 	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( victim )
 	if ( ls != null )
