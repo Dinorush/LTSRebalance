@@ -2,8 +2,9 @@ WeaponData
 {
 	Mods
 	{
-		LTSRebalance_pas_northstar_optics
+		LTSRebalance
 		{
+			"projectile_max_deployed"					"*0.5"
 		}
 	}	
 }
