@@ -102,7 +102,7 @@ void function ClLTSRebalance_OvercoreTextThink( entity player )
 
 	float percent = player.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" )
 	float oldPercent = percent
-	RuiSetString( text, "msgText", format( "%.2fx", ( 1.0 + percent * LTSREBALANCE_PAS_OVERCORE_MAX_BONUS ) ) )
+	RuiSetString( text, "msgText", format( "X%.2f", ( 1.0 + percent * LTSREBALANCE_PAS_OVERCORE_MAX_BONUS ) ) )
 	RuiSetFloat3( text, "msgColor", <0.7 + percent * 0.3, 0.7 + percent * 0.3, 0.7 - percent * 0.2> )
 	while( true )
 	{
@@ -111,7 +111,7 @@ void function ClLTSRebalance_OvercoreTextThink( entity player )
 
 		if ( percent != oldPercent )
 		{
-			RuiSetString( text, "msgText", format( "%.2fx", ( 1.0 + percent * LTSREBALANCE_PAS_OVERCORE_MAX_BONUS ) ) )
+			RuiSetString( text, "msgText", format( "X%.2f", ( 1.0 + percent * LTSREBALANCE_PAS_OVERCORE_MAX_BONUS ) ) )
 			RuiSetFloat3( text, "msgColor", <0.7 + percent * 0.3, 0.7, 0.7 - percent * 0.5> )
 			oldPercent = percent
 		}
