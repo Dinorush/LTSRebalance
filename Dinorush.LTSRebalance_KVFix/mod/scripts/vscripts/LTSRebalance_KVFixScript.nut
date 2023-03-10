@@ -6,8 +6,7 @@ global function LTSRebalance_KVFix_KeyValuesOn
 
 void function LTSRebalance_KVFix_ClInit()
 {
-	if ( GetMapName() == "mp_lobby" )
-		AddServerToClientStringCommandCallback( "ltsrebalance_can_reparse", LTSRebalance_KVFix_SendClientCommand )
+	AddServerToClientStringCommandCallback( "ltsrebalance_can_reparse", LTSRebalance_KVFix_SendClientCommand )
 }
 
 void function LTSRebalance_KVFix_SendClientCommand( array<string> args )
