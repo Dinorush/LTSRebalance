@@ -50,6 +50,8 @@ function MpTitanweaponVortexShield_Init()
 
 	#if CLIENT
 	if ( LTSRebalance_EnabledOnInit() )
+		AddCallback_PlayerClassChanged( ClLTSRebalance_VortexUICreateOrClean )
+	if ( LTSRebalance_EnabledOnInit() )
 	{
 		LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
 		RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
@@ -125,25 +127,46 @@ void function OnWeaponActivate_titanweapon_vortex_shield( entity weapon )
 		if ( weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 			thread AmpedVortexRefireThink( weapon )
 	#elseif CLIENT
-		if ( LTSRebalance_Enabled() && weapon.GetAmmoPerShot() > 1 && !IsWatchingReplay() && IsLocalViewPlayer( weaponOwner ) )
-		{
-			RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
-			int trgtSegments = weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / weapon.GetAmmoPerShot()
-			if ( file.LTSRebalance_vortex_ui["charges"].segments != trgtSegments )
-			{
-				LTSRebalance_BasicImageBar_UpdateSegmentCount( file.LTSRebalance_vortex_ui["charges"], trgtSegments, 0.12 )
-				foreach ( var rui in file.LTSRebalance_vortex_ui["charges"].imageRuis )
-					RuiSetFloat( rui, "basicImageAlpha", 0.7 )
-			}
+		if ( ClLTSRebalance_CanDoUI( weaponOwner ) && weapon.GetAmmoPerShot() > 1 )
 			thread ClLTSRebalance_VortexUIThink( weaponOwner, weapon )
-		}
 	#endif
 }
 
 #if CLIENT
+void function ClLTSRebalance_VortexUICreateOrClean( entity player )
+{
+	if ( !ClLTSRebalance_CanDoUI( player ) )
+		return
+	
+	entity vortex = player.GetOffhandWeapon( OFFHAND_LEFT )
+	if ( player.IsTitan() && IsValid( vortex ) && vortex.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" )
+	{
+		LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
+		RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+
+		LTSRebalance_BarTopoData charges = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
+		int segments = vortex.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) / vortex.GetAmmoPerShot()
+		LTSRebalance_BasicImageBar_UpdateSegmentCount( charges, segments, 0.12 )
+		foreach ( var rui in charges.imageRuis )
+			RuiSetFloat( rui, "basicImageAlpha", 0.7 )
+		LTSRebalance_BasicImageBar_SetFillFrac( charges, 0.0 )
+
+		file.LTSRebalance_vortex_ui["bg"] <- bg
+		file.LTSRebalance_vortex_ui["charges"] <- charges
+	}
+	else if ( file.LTSRebalance_vortex_ui.len() > 0 )
+	{
+		LTSRebalance_BasicImageBar_Destroy( file.LTSRebalance_vortex_ui["charges"] )
+		LTSRebalance_BasicImageBar_Destroy( file.LTSRebalance_vortex_ui["bg"] )
+	}
+}
+
 void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 {
+	player.EndSignal( "SettingsChanged" )
 	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDeath" )
 	weapon.EndSignal( "OnDestroy" )
 	weapon.EndSignal( "WeaponDeactivateEvent" )
 
@@ -155,13 +178,17 @@ void function ClLTSRebalance_VortexUIThink( entity player, entity weapon )
 		}
 	)
 
+	RuiSetFloat( file.LTSRebalance_vortex_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
+	float ammoFrac = 0.0
+	float oldAmmoFrac = 0.0
 	while ( true )
 	{
-		if ( !IsLocalViewPlayer( weapon.GetWeaponOwner() ) )
-			return
-
-		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
-		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], ammoFrac )
+		ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
+		if ( ammoFrac != oldAmmoFrac )
+		{
+			LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_vortex_ui["charges"], ammoFrac )
+			oldAmmoFrac = ammoFrac
+		}
 		WaitFrame()
 	}
 }
