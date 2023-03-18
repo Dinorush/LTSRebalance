@@ -28,8 +28,17 @@ const SPIN_EFFECT_1P = $"P_predator_barrel_blur_FP"
 const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 
 const float PAS_LEGION_SMARTCORE_DAMAGE_MOD = 0.005
-const float PAS_LEGION_SMARTCORE_EFFECT_DURATION = 2.0
+const float PAS_LEGION_SMARTCORE_EFFECT_DURATION = 2.0467 // Extra decimal since it tends to cap 1 bullet below what it should
 const int ARRAY_CAP = 64 // Used for Sensor Array, should be >= fire rate * 2 * duration
+
+#if CLIENT
+struct {
+	array<float> clSensorArrayTimes
+	int clSensorArrayIndex
+	int clSensorArrayIndexEnd
+	var clSensorArrayText = null
+} file;
+#endif
 
 void function MpTitanWeaponpredatorcannon_Init()
 {
@@ -38,6 +47,12 @@ void function MpTitanWeaponpredatorcannon_Init()
 	#if SERVER
 	if ( LTSRebalance_EnabledOnInit() || GetCurrentPlaylistVarInt( "aegis_upgrades", 0 ) == 1 )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_predator_cannon, PredatorCannon_DamagedTarget )
+	#else
+	if ( LTSRebalance_EnabledOnInit() )
+	{
+		AddCallback_PlayerClassChanged( ClLTSRebalance_SensorUICreateOrClean )
+		file.clSensorArrayTimes.resize( ARRAY_CAP, 0.0 )
+	}
 	#endif
 }
 
@@ -121,14 +136,110 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 		#endif
 	}
 
+	#if CLIENT
+	entity weaponOwner = weapon.GetWeaponOwner()
+	if ( ClLTSRebalance_CanDoUI( weaponOwner ) )
+		thread ClLTSRebalance_SensorArrayUIThink( weaponOwner, weapon )
+	#endif
+
 	#if SERVER
 	weapon.s.locking = true
 	weapon.s.lockStartTime = Time()
 	#endif
 }
 
+#if CLIENT
+void function ClLTSRebalance_SensorUICreateOrClean( entity player )
+{
+	if ( !ClLTSRebalance_CanDoUI( player ) )
+		return
+	
+	if ( player.IsTitan() && PlayerHasPassive( player, ePassives.PAS_LEGION_SMARTCORE ) )
+	{
+		var text = RuiCreate( $"ui/cockpit_console_text_center.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, -1 )
+		RuiSetInt( text, "maxLines", 1 )
+		RuiSetInt( text, "lineNum", 1 )
+		RuiSetFloat2( text, "msgPos", <0, 0.095, 0> )
+		RuiSetFloat( text, "msgFontSize", 40.0 )
+		RuiSetString( text, "msgText", format( "+%.0f%%", 0.0 ) )
+		RuiSetFloat( text, "msgAlpha", 0.0 )
+		RuiSetFloat( text, "thicken", 0.0 )
+		file.clSensorArrayText = text
+		// Apparently, OnWeaponActivate does not trigger when embarking. Need to call first thread here.
+		if ( ClLTSRebalance_CanDoUI( player ) && player.GetMainWeapons().len() > 0 )
+			thread ClLTSRebalance_SensorArrayUIThink( player, player.GetMainWeapons()[0] )
+	}
+	else if ( file.clSensorArrayText != null ) {
+		RuiDestroy( file.clSensorArrayText )
+		file.clSensorArrayText = null
+	}
+}
+
+void function ClLTSRebalance_SensorArrayUIThink( entity player, entity weapon )
+{
+	player.EndSignal( "SettingsChanged" )
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDeath" )
+	weapon.EndSignal( "WeaponDeactivateEvent" )
+	weapon.EndSignal( "OnDestroy" )
+
+	OnThreadEnd(
+		function() : ()
+		{
+			RuiSetFloat( file.clSensorArrayText, "msgAlpha", 0.0 )
+		}
+	)
+
+	RuiSetFloat( file.clSensorArrayText, "msgAlpha", 0.2 )
+	float percent = 0
+	float oldPercent = 0
+	while ( true )
+	{
+		ClLTSRebalance_UpdateSensorArray()
+		percent = min( 1.0, float( file.clSensorArrayIndexEnd - file.clSensorArrayIndex ) / float( ARRAY_CAP ) )
+		if ( percent == oldPercent )
+		{
+			WaitFrame()
+			continue
+		}
+
+		float bonus = float( file.clSensorArrayIndexEnd - file.clSensorArrayIndex ) * PAS_LEGION_SMARTCORE_DAMAGE_MOD
+		if ( percent == 0.0 )
+			RuiSetFloat( file.clSensorArrayText, "msgAlpha", 0.2 )
+		else if ( oldPercent == 0.0 )
+			RuiSetFloat( file.clSensorArrayText, "msgAlpha", 0.7 )
+		RuiSetString( file.clSensorArrayText, "msgText", format( "+%.0f%%", bonus * 100.0 ) )
+		RuiSetFloat3( file.clSensorArrayText, "msgColor", <0.7 + percent * 0.3, 0.7 - percent * 0.4, 0.7 - percent * 0.7> )
+		oldPercent = percent
+		WaitFrame()
+	}
+}
+
+void function ClLTSRebalance_AddAmmoSpent( int ammo = 1 )
+{
+	// Using circular array structure. Shift end instead of appending values.
+	for ( var end = file.clSensorArrayIndexEnd + ammo; file.clSensorArrayIndexEnd < end; file.clSensorArrayIndexEnd++)
+		file.clSensorArrayTimes[ file.clSensorArrayIndexEnd % ARRAY_CAP ] = Time() + PAS_LEGION_SMARTCORE_EFFECT_DURATION
+
+	// If we start overwriting past the current start (start hasn't updated recently), move start past the end
+	if ( file.clSensorArrayIndexEnd - file.clSensorArrayIndex >= ARRAY_CAP )
+		file.clSensorArrayIndex = file.clSensorArrayIndexEnd - ARRAY_CAP + 1
+}
+
+void function ClLTSRebalance_UpdateSensorArray()
+{
+	// Advance start index until it reaches the end or we find non-expired ammo bonus
+	while ( file.clSensorArrayIndex < file.clSensorArrayIndexEnd && 
+			file.clSensorArrayTimes[ file.clSensorArrayIndex % ARRAY_CAP ] < Time() )
+			file.clSensorArrayIndex++;
+}
+#endif
+
 void function OnWeaponDeactivate_titanweapon_predator_cannon( entity weapon )
 {
+	#if CLIENT
+	weapon.Signal( "WeaponDeactivateEvent" )
+	#endif
 	StopSpinSounds( weapon )
 }
 
@@ -315,6 +426,9 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
 		#if SERVER
 		if ( owner.IsTitan() && SoulHasPassive( owner.GetTitanSoul(), ePassives.PAS_LEGION_SMARTCORE ) )
 			SensorArray_AddAmmoSpent( weapon, weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1 )
+		#else
+		if ( ClLTSRebalance_CanDoUI( owner ) && PlayerHasPassive( owner, ePassives.PAS_LEGION_SMARTCORE ) )
+			ClLTSRebalance_AddAmmoSpent( weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1 )
 		#endif
 
         TraceResults result = TraceLine( owner.EyePosition(), owner.EyePosition() + attackParams.dir*10000, [ owner ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
@@ -334,14 +448,17 @@ int function FireWeaponPlayerAndNPC( entity weapon, WeaponPrimaryAttackParams at
 		weapon.FireWeaponBullet( attackParams.pos, attackParams.dir, 1, damageType )
 		int ammo = weapon.HasMod( "LongRangeAmmo" ) ? 2 : 1
 		
-		#if SERVER
 		if ( LTSRebalance_Enabled() )
 		{
 			entity owner = weapon.GetWeaponOwner()
+			#if SERVER
 			if ( IsValid( owner ) && owner.IsTitan() && SoulHasPassive( owner.GetTitanSoul(), ePassives.PAS_LEGION_SMARTCORE ) )
 				SensorArray_AddAmmoSpent( weapon, ammo )
+			#else
+			if ( weapon.ShouldPredictProjectiles() && ClLTSRebalance_CanDoUI( owner ) && PlayerHasPassive( owner, ePassives.PAS_LEGION_SMARTCORE ) )
+				ClLTSRebalance_AddAmmoSpent( ammo )
+			#endif
 		}
-		#endif
 
 		return ammo
 	}
@@ -395,38 +512,6 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 		DamageInfo_ScaleDamage( damageInfo, SensorArray_GetDamageBonus( weapon ) )
 }
 
-// Tracks sonar & bonus damage effects for Sensor Array.
-// Handling each target with one thread, one status effect, and one sonar, in case stacking them on one target would otherwise cause performance issues
-void function SensorArray_StartStatusEffects( entity owner, entity target, var sensorArrayTable )
-{
-	owner.EndSignal( "OnDestroy" )
-	owner.EndSignal( "CoreEnd" )
-	target.EndSignal( "OnDestroy" )
-
-	int team = owner.GetTeam()
-	IncrementSonarPerTeam( team )
-	SonarStart( target, target.GetOrigin(), team, owner )
-
-	int damageEffectID = StatusEffect_AddEndless( target, eStatusEffect.damage_received_multiplier, PAS_LEGION_SMARTCORE_DAMAGE_MOD )
-
-	OnThreadEnd(
-		function() : ( target, team, damageEffectID )
-		{
-			StatusEffect_Stop( target, damageEffectID )
-			SonarEnd( target, team )
-			DecrementSonarPerTeam( team )
-		}
-	)
-	
-	float remainingTime = PAS_LEGION_SMARTCORE_EFFECT_DURATION
-	while ( remainingTime > 0 )
-	{
-		wait remainingTime
-		remainingTime = expect float( sensorArrayTable[target] ) + PAS_LEGION_SMARTCORE_EFFECT_DURATION - Time()
-	}
-	sensorArrayTable[target] = 0
-}
-
 void function SensorArray_AddAmmoSpent( entity weapon, int ammo = 1 )
 {
 	if ( !( "sensorArrayTimes" in weapon.s ) )
@@ -453,9 +538,9 @@ float function SensorArray_GetDamageBonus( entity weapon )
 		return 1.0
 
 	// Advance start index until it reaches the end or we find non-expired ammo bonus
-	for ( var end = weapon.s.sensorArrayIndexEnd; 
-			weapon.s.sensorArrayIndex < end && weapon.s.sensorArrayTimes[ weapon.s.sensorArrayIndex % ARRAY_CAP ] < Time();
-			weapon.s.sensorArrayIndex++ );
+	while ( weapon.s.sensorArrayIndex < weapon.s.sensorArrayIndexEnd && 
+			weapon.s.sensorArrayTimes[ weapon.s.sensorArrayIndex % ARRAY_CAP ] < Time() )
+			weapon.s.sensorArrayIndex++;
 
 	return 1.0 + expect float( ( weapon.s.sensorArrayIndexEnd - weapon.s.sensorArrayIndex ) * PAS_LEGION_SMARTCORE_DAMAGE_MOD )
 }
