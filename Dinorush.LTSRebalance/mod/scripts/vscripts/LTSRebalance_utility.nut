@@ -63,8 +63,6 @@ void function LTSRebalance_Init()
 		AddCallback_OnPlayerRespawned( LTSRebalance_GiveWeaponMod )
 		AddCallback_OnPilotBecomesTitan( LTSRebalance_HandleSetfiles )
 		AddCallback_OnTitanBecomesPilot( LTSRebalance_GiveBatteryOnEject )
-		AddCallback_OnPlayerKilled( LTSRebalance_ClearOvercore )
-		AddCallback_OnNPCKilled( LTSRebalance_ClearOvercore )
 		AddPostDamageCallback( "player", LTSRebalance_OvercoreDamage )
 		AddPostDamageCallback( "npc_titan", LTSRebalance_OvercoreDamage )
 	#endif
@@ -154,6 +152,10 @@ void function LTSRebalance_ApplyChanges( entity titan )
 	if( !IsValid( soul ) )
 		return
 
+	entity player = soul.GetBossPlayer()
+	if ( IsValid( player ) )
+		player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", 0.0 )
+
 	// HACK - Extend passives array since we can't edit the method that returns the number of existing passives.
 	//        Need to add one for each new passive and one to account for PAS_NUMBER (as we need the array to align above it)
 	if ( soul.passives.len() == GetNumPassives() )
@@ -196,7 +198,8 @@ void function LTSRebalance_ApplyChanges( entity titan )
 		uiPassive = ePassives.PAS_UNSTABLE_REACTOR
 		TakePassive( soul, ePassives.PAS_BUILD_UP_NUCLEAR_CORE )
 		GivePassive( soul, ePassives.PAS_UNSTABLE_REACTOR )
-		UnstableReactor_InitForPlayer( soul.GetBossPlayer(), soul )
+		if ( IsValid( player ) )
+			UnstableReactor_InitForPlayer( player, soul )
 	}
 
 	if ( SoulHasPassive( soul, ePassives.PAS_AUTO_EJECT ) )
@@ -206,8 +209,8 @@ void function LTSRebalance_ApplyChanges( entity titan )
 		GivePassive( soul, ePassives.PAS_BATTERY_EJECT )
 	}
 
-	if ( IsValid( soul.GetBossPlayer() ) )
-		ServerToClientStringCommand( soul.GetBossPlayer(), "ltsrebalance_set_ui_passive " + uiPassive.tostring() )
+	if ( IsValid( player ) )
+		ServerToClientStringCommand( player, "ltsrebalance_set_ui_passive " + uiPassive.tostring() )
 }
 
 void function PerfectKits_HandleAttachments( entity titan )
@@ -485,22 +488,6 @@ void function LTSRebalance_UpdateSoulOvercore( entity soul, float change )
 	float curFrac = player.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" )
 	float newFrac = max( 0.0, min( 1.0, curFrac + change / LTSREBALANCE_PAS_OVERCORE_MAX_DAMAGE ) )
 	player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", newFrac )
-}
-
-void function LTSRebalance_ClearOvercore( entity titan, entity attacker, var damageInfo )
-{
-	if ( !titan.IsTitan() )
-		return
-	
-	entity soul = titan.GetTitanSoul()
-	if ( !IsValid( soul ) || !SoulHasPassive( soul, ePassives.PAS_HYPER_CORE ) )
-		return
-
-	entity player = soul.GetBossPlayer()
-	if ( !IsValid( player ) )
-		return
-
-	player.SetPlayerNetFloat( "LTSRebalance_Kit1Charge", 0.0 )
 }
 #endif
 
