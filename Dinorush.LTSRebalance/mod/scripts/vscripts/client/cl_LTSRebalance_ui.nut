@@ -1,5 +1,6 @@
 untyped
 global function ClLTSRebalance_Init
+global function ClLTSRebalance_CanDoUI
 global function ServerCallback_UnstableReactor_Ready
 
 struct {
@@ -19,9 +20,14 @@ void function SetUIPassive( array<string> args )
 	file.uiPassive = args[0].tointeger()
 }
 
+bool function ClLTSRebalance_CanDoUI( entity player )
+{
+	return LTSRebalance_Enabled() && !IsWatchingReplay() && IsLocalViewPlayer( player )
+}
+
 void function ClLTSRebalance_ToggleUI( entity player )
 {
-	if ( !LTSRebalance_Enabled() || IsSpectating() || IsWatchingReplay() || player != GetLocalClientPlayer() )
+	if ( !ClLTSRebalance_CanDoUI( player ) )
 		return
 
 	if ( player.IsTitan() )
@@ -103,7 +109,7 @@ void function ClLTSRebalance_OvercoreTextThink( entity player )
 	float percent = player.GetPlayerNetFloat( "LTSRebalance_Kit1Charge" )
 	float oldPercent = percent
 	RuiSetString( text, "msgText", format( "X%.2f", ( 1.0 + percent * LTSREBALANCE_PAS_OVERCORE_MAX_BONUS ) ) )
-	RuiSetFloat3( text, "msgColor", <0.7 + percent * 0.3, 0.7 + percent * 0.3, 0.7 - percent * 0.2> )
+	RuiSetFloat3( text, "msgColor", <0.7 + percent * 0.3, 0.7, 0.7 - percent * 0.5> )
 	while( true )
 	{
 		WaitFrame()
