@@ -50,7 +50,7 @@ struct
 {
 	float earn_meter_titan_multiplier = 1.0
 	table< string, LTSRebalance_BarTopoData > LTSRebalance_block_ui
-	var LTSRebalance_block_text
+	var LTSRebalance_block_text = null
 } file
 #else
 struct
@@ -66,27 +66,7 @@ void function MpTitanAbilityBasicBlock_Init()
 	AddDamageFinalCallback( "npc_titan", BasicBlock_OnDamage )
 #else
 	if ( LTSRebalance_EnabledOnInit() )
-	{
-		LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
-		RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
-		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
-		LTSRebalance_BarTopoData charge = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
-		RuiSetFloat( charge.imageRuis[0], "basicImageAlpha", 0.0 )
-		LTSRebalance_BasicImageBar_SetFillFrac( charge, 0.0 )
-
-		var text = RuiCreate( $"ui/cockpit_console_text_center.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, -1 )
-		RuiSetInt( text, "maxLines", 1 )
-		RuiSetInt( text, "lineNum", 1 )
-		RuiSetFloat2( text, "msgPos", <0, 0.095, 0> )
-		RuiSetFloat3( text, "msgColor", <0.4, 1.0, 0.4> )
-		RuiSetString( text, "msgText", "0" )
-		RuiSetFloat( text, "msgFontSize", 40.0 )
-		RuiSetFloat( text, "msgAlpha", 0.0 )
-		RuiSetFloat( text, "thicken", 0.0 )
-		file.LTSRebalance_block_text = text
-		file.LTSRebalance_block_ui["bg"] <- bg
-		file.LTSRebalance_block_ui["charge"] <- charge
-	}
+		AddCallback_PlayerClassChanged( ClLTSRebalance_BlockUICreateOrClean )
 #endif
 	PrecacheParticleSystem( $"P_impact_xo_sword" )
 	file.earn_meter_titan_multiplier = GetCurrentPlaylistVarFloat( "earn_meter_titan_multiplier", 1.0 )
@@ -167,13 +147,8 @@ void function OnActivate( entity weapon, int blockType )
 	}
 
 	#if CLIENT
-		if ( LTSRebalance_Enabled() && !IsWatchingReplay() && IsLocalViewPlayer( weaponOwner ) )
-		{
-			RuiSetFloat( file.LTSRebalance_block_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
-			RuiSetFloat( file.LTSRebalance_block_ui["charge"].imageRuis[0], "basicImageAlpha", 0.7 )
-			RuiSetFloat( file.LTSRebalance_block_text, "msgAlpha", 0.7 )
+		if ( ClLTSRebalance_CanDoUI( weaponOwner ) )
 			thread ClLTSRebalance_BlockUIThink( weaponOwner, weapon )
-		}
 	#endif
 
     entity offhandWeapon = weaponOwner.GetOffhandWeapon( OFFHAND_MELEE )
@@ -183,9 +158,50 @@ void function OnActivate( entity weapon, int blockType )
 
 
 #if CLIENT
+void function ClLTSRebalance_BlockUICreateOrClean( entity player )
+{
+	if ( !ClLTSRebalance_CanDoUI( player ) )
+		return
+	
+	entity block = player.GetOffhandWeapon( OFFHAND_LEFT )
+	if ( player.IsTitan() && IsValid( block ) && block.GetWeaponClassName() == "mp_titanability_basic_block" )
+	{
+		LTSRebalance_BarTopoData bg = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.105, 0.015, LTSRebalance_eDirection.right )
+		RuiSetFloat3( bg.imageRuis[0], "basicImageColor", < 0, 0, 0 > )
+		RuiSetFloat( bg.imageRuis[0], "basicImageAlpha", 0.0 )
+
+		LTSRebalance_BarTopoData charge = LTSRebalance_BasicImageBar_CreateRuiTopo( < 0, 0, 0 >, < 0.0, 0.085, 0.0 >, 0.1, 0.0075, LTSRebalance_eDirection.right )
+		RuiSetFloat( charge.imageRuis[0], "basicImageAlpha", 0.0 )
+		LTSRebalance_BasicImageBar_SetFillFrac( charge, 0.0 )
+
+		var text = RuiCreate( $"ui/cockpit_console_text_center.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, -1 )
+		RuiSetInt( text, "maxLines", 1 )
+		RuiSetInt( text, "lineNum", 1 )
+		RuiSetFloat2( text, "msgPos", <0, 0.095, 0> )
+		RuiSetFloat3( text, "msgColor", <0.4, 1.0, 0.4> )
+		RuiSetFloat( text, "msgAlpha", 0.0 )
+		RuiSetString( text, "msgText", "0" )
+		RuiSetFloat( text, "msgFontSize", 40.0 )
+		RuiSetFloat( text, "thicken", 0.0 )
+
+		file.LTSRebalance_block_text = text
+		file.LTSRebalance_block_ui["bg"] <- bg
+		file.LTSRebalance_block_ui["charge"] <- charge
+	}
+	else if ( file.LTSRebalance_block_text != null )
+	{
+		LTSRebalance_BasicImageBar_Destroy( file.LTSRebalance_block_ui["charge"] )
+		LTSRebalance_BasicImageBar_Destroy( file.LTSRebalance_block_ui["bg"] )
+		RuiDestroy( file.LTSRebalance_block_text )
+		file.LTSRebalance_block_text = null
+	}
+}
+
 void function ClLTSRebalance_BlockUIThink( entity player, entity weapon )
 {
+	player.EndSignal( "SettingsChanged" )
 	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnDeath" )
 	weapon.EndSignal( "OnDestroy" )
 	weapon.EndSignal( "WeaponDeactivateEvent" )
 
@@ -198,15 +214,22 @@ void function ClLTSRebalance_BlockUIThink( entity player, entity weapon )
 		}
 	)
 
+	RuiSetFloat( file.LTSRebalance_block_ui["charge"].imageRuis[0], "basicImageAlpha", 0.7 )
+	RuiSetFloat( file.LTSRebalance_block_ui["bg"].imageRuis[0], "basicImageAlpha", 0.35 )
+	RuiSetFloat( file.LTSRebalance_block_text, "msgAlpha", 0.7 )
+
+	float ammoFrac = 0.0
+	float oldAmmoFrac = -1.0
 	while ( true )
 	{
-		if ( !IsLocalViewPlayer( weapon.GetWeaponOwner() ) )
-			return
-
-		float ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
-		RuiSetFloat3( file.LTSRebalance_block_text, "msgColor", GetBlockTextColor( ammoFrac ) )
-		RuiSetString( file.LTSRebalance_block_text, "msgText", format( "%.0f%%", ( 1.0 - LTSRebalance_GetCurrentBlock( weapon ) ) * 100.0 ) )
-		LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_block_ui["charge"], ammoFrac )
+		ammoFrac = float( weapon.GetWeaponPrimaryClipCount() ) / float( weapon.GetWeaponPrimaryClipCountMax() )
+		if ( ammoFrac != oldAmmoFrac )
+		{
+			RuiSetFloat3( file.LTSRebalance_block_text, "msgColor", GetBlockTextColor( ammoFrac ) )
+			RuiSetString( file.LTSRebalance_block_text, "msgText", format( "%.0f%%", ( 1.0 - LTSRebalance_GetCurrentBlock( weapon ) ) * 100.0 ) )
+			LTSRebalance_BasicImageBar_SetFillFrac( file.LTSRebalance_block_ui["charge"], ammoFrac )
+			oldAmmoFrac = ammoFrac
+		}
 		WaitFrame()
 	}
 }
