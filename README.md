@@ -2,7 +2,7 @@
 
 **Required by Server and Client**
 
-Does a comprehensive rebalancing of titans and titan kits focused on LTS balance. The changes are numerous and significantly alter the power of several titans and kits, but the gameplay of each titan should remain fairly close to Vanilla. The mod is usable outside of LTS; the balance merely does not consider other modes.
+A comprehensive rebalancing of titans and titan kits focused on improving balance and meta diversity in LTS. The changes are numerous and significantly alter the power of several titans and kits, but the gameplay of each titan should remain fairly close to Vanilla. The mod is usable outside of LTS; the balance merely does not consider other modes.
 
 ## Balance Changelog
 
@@ -14,7 +14,7 @@ Download the zip from the [latest release](https://github.com/Dinorush/LTSRebala
 
 ### Activation
 
-This mod enables a new setting, "LTS Rebalance", under the "Promode" category in private match settings. When turned on, LTS Rebalance changes will apply.
+This mod enables a new setting, "LTS Rebalance", under the "Promode" category in private match settings turned on by default. When turned on, LTS Rebalance changes will apply.
 
 ### Weapon Cosmetic Mod Conflictions
 
@@ -27,7 +27,7 @@ These weapons have limitations that prevent them from working with certain mods 
 
 ### Logging
 
-When playing LTS, the mod tracks a multitude of player stats and prints them at the end of each round (server-side) for those interested in stats and data.
+When playing LTS, the mod tracks a multitude of player performance stats and prints them at the end of each round (server-side) for those interested in stats and data.
 
 ## FAQs
 
@@ -37,7 +37,7 @@ Recent Northstar updates broke something, and joining normal servers with the mo
 
 ### What is Dinorush.LTSRebalance_KVFix?
 
-Basic ver: Northstar currently does not reload all the files it should when reloading mods via the mod menu. This mod fixes the problem if LTSRebalance is enabled/disabled, otherwise you may experience weird gameplay behavior or crashes. (Note: will cause a short "freeze" when loaded into MP)
+Basic ver: Northstar currently does not reload all the files it should when reloading mods via the mod menu. This mod fixes the problem if LTSRebalance is enabled/disabled, otherwise you may experience weird gameplay behavior or crashes. (Note: may cause a short "freeze" when loaded into MP)
 
 Technical ver: Northstar doesn't reparse weapon keyvalue files when reloading mods. This mod checks whether LTSRebalance is on and whether LTSRebalance keyvalue files are loaded. If it detects that these two checks do not match, it will attempt a `weapon_reparse` when possible. Otherwise, the user can get incorrect keyvalue desyncs during gameplay or even crashes for certain function calls that don't work in vanilla.
 
