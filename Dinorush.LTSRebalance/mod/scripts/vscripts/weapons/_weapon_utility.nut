@@ -118,10 +118,10 @@ const float EMP_SEVERITY_SLOWTURN = 0.35
 const float EMP_SEVERITY_SLOWMOVE = 0.50
 const float LASER_STUN_SEVERITY_SLOWTURN = 0.20
 const float LASER_STUN_SEVERITY_SLOWMOVE = 0.30
-const float ARC_BLAST_STUN_SEVERITY_SLOWTURN_MIN = 0.2
-const float ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MIN = 0.2
-const float ARC_BLAST_STUN_SEVERITY_SLOWTURN_MAX = 0.35
-const float ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MAX = 0.5
+const float UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MIN = 0.2
+const float UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MIN = 0.2
+const float UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MAX = 0.35
+const float UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MAX = 0.5
 
 const asset FX_EMP_BODY_HUMAN			= $"P_emp_body_human"
 const asset FX_EMP_BODY_TITAN			= $"P_emp_body_titan"
@@ -231,7 +231,7 @@ function WeaponUtility_Init()
 		AddDamageCallbackSourceID( eDamageSourceId.mp_titanweapon_stun_laser, VanguardEnergySiphon_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_grenade_emp, EMP_DamagedPlayerOrNPC )
 		if ( LTSRebalance_EnabledOnInit() )
-			AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_arc_blast, ArcBlast_DamagedPlayerOrNPC )
+			AddDamageCallbackSourceID( eDamageSourceId.mp_titanability_unstable_reactor, UnstableReactor_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId.mp_weapon_proximity_mine, EMP_DamagedPlayerOrNPC )
 		AddDamageCallbackSourceID( eDamageSourceId[ CHARGE_TOOL ], EMP_DamagedPlayerOrNPC )
 		if ( IsMultiplayer() )
@@ -3150,14 +3150,14 @@ void function EMP_DamagedPlayerOrNPC( entity ent, var damageInfo )
 	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, EMP_SEVERITY_SLOWTURN, EMP_SEVERITY_SLOWMOVE )
 }
 
-void function ArcBlast_DamagedPlayerOrNPC( entity ent, var damageInfo )
+void function UnstableReactor_DamagedPlayerOrNPC( entity ent, var damageInfo )
 {
 	if ( ent == DamageInfo_GetAttacker( damageInfo ) )
 		return
 	float distSqr = DistanceSqr( ent.GetWorldSpaceCenter(), DamageInfo_GetDamagePosition( damageInfo ) )
 	float percent = max( 0, 1 - ( distSqr - 150 ) / ( 350 * 350 ) ) // 150 = inner explosion radius, 350 = outer - inner explosion radius
-	float slowMove = ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MIN + ( ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MAX - ARC_BLAST_STUN_SEVERITY_SLOWMOVE_MIN ) * percent
-	float slowTurn = ARC_BLAST_STUN_SEVERITY_SLOWTURN_MIN + ( ARC_BLAST_STUN_SEVERITY_SLOWTURN_MAX - ARC_BLAST_STUN_SEVERITY_SLOWTURN_MIN ) * percent
+	float slowMove = UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MIN + ( UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MAX - UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MIN ) * percent
+	float slowTurn = UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MIN + ( UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MAX - UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MIN ) * percent
 	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, slowTurn, slowMove, percent * 0.5 + 0.5 )
 }
 
