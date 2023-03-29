@@ -6,6 +6,14 @@ const float HEALTH_COST_FRAC = 0.05
 const int MIN_HEALTH_COST = 400
 global const float UNSTABLE_REACTOR_COOLDOWN = 8.0
 
+const float UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MIN = 0.2
+const float UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MIN = 0.2
+const float UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MAX = 0.35
+const float UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MAX = 0.5
+
+const asset FX_EMP_BODY_HUMAN			= $"P_emp_body_human"
+const asset FX_EMP_BODY_TITAN			= $"P_emp_body_titan"
+
 struct {
 	table<entity, float> dashTimes
 } file
@@ -14,6 +22,7 @@ void function MpTitanabilityUnstableReactorInit()
 {
 	RegisterSignal( "UnstableReactorUse" )
 	RegisterWeaponDamageSource( "mp_titanability_unstable_reactor", "#DEATH_UNSTABLE_REACTOR" )
+	AddDamageCallbackSourceID( eDamageSourceId.mp_titanability_unstable_reactor, UnstableReactor_DamagedPlayerOrNPC )
 }
 
 void function UnstableReactor_InitForPlayer( entity player, entity soul )
@@ -133,4 +142,15 @@ function RemoveUnstableReactorCallback( soul )
 		return
 
 	RemoveButtonPressedPlayerInputCallback( player, IN_DODGE, UnstableReactor_AttemptBlast )
+}
+
+void function UnstableReactor_DamagedPlayerOrNPC( entity ent, var damageInfo )
+{
+	if ( ent == DamageInfo_GetAttacker( damageInfo ) )
+		return
+	float distSqr = DistanceSqr( ent.GetWorldSpaceCenter(), DamageInfo_GetDamagePosition( damageInfo ) )
+	float percent = max( 0, 1 - ( distSqr - 150 ) / ( 350 * 350 ) ) // 150 = inner explosion radius, 350 = outer - inner explosion radius
+	float slowMove = UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MIN + ( UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MAX - UNSTABLE_REACTOR_SEVERITY_SLOWMOVE_MIN ) * percent
+	float slowTurn = UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MIN + ( UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MAX - UNSTABLE_REACTOR_SEVERITY_SLOWTURN_MIN ) * percent
+	Elecriticy_DamagedPlayerOrNPC( ent, damageInfo, FX_EMP_BODY_HUMAN, FX_EMP_BODY_TITAN, slowTurn, slowMove, percent * 0.5 + 0.5 )
 }
