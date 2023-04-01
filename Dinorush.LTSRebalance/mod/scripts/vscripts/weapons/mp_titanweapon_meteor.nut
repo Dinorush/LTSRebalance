@@ -40,7 +40,7 @@ global const float PAS_SCORCH_FLAMECORE_MOD = 1.3
 const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_REDUCTION = 0.22
 global const float PERFECTKITS_PAS_SCORCH_SELFDMG_BAR_SLOW = 0.16
 
-const int PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT = 2
+const int PERFECTKITS_PAS_SCORCH_WEAPON_MAX_SPLIT = 4
 
 global struct MeteorRadiusDamage
 {
@@ -470,12 +470,12 @@ function Proto_MeteorCreatesThermite( entity projectile, entity hitEnt = null )
 		inflictor.s.rangeBonus <- min( LTSREBALANCE_METEOR_RANGE_BONUS_TIME, Time() - projectile.GetProjectileCreationTime() )
 		if ( wildfire )
 			inflictor.s.rangeBonus = min( 1.0, inflictor.s.rangeBonus * LTSREBALANCE_PAS_METEOR_RANGE_BONUS_MOD )
-		fireCount = PerfectKits_wildfire ? 2 : 4 + int( 4 * LTSREBALANCE_METEOR_RANGE_BONUS_THERMITE_FRAC * inflictor.s.rangeBonus )
+		fireCount = 4 + int( 4 * LTSREBALANCE_METEOR_RANGE_BONUS_THERMITE_FRAC * inflictor.s.rangeBonus )
 		fireSpeed = 200.0
 	}
 	else if ( wildfire )
 	{
-		fireCount = PerfectKits_wildfire ? 2 : 8
+		fireCount = 8
 		fireSpeed = 200
 	}
 	else
@@ -516,12 +516,12 @@ void function PerfectKits_Proto_SplitThermite( vector origin, entity inflictor, 
 	}
 	
 	const float range = 360
-	for ( int i = 0; i < 2; i++ )
+	for ( int i = 0; i < 1; i++ )
 	{
 		vector trailAngles = <RandomFloatRange( 0, range ), RandomFloatRange( -range, range ), RandomFloatRange( -range, range )>
 		vector forward = AnglesToForward( trailAngles )
 		vector up = AnglesToUp( trailAngles )
-		vector v = forward * 200 + up * 200 + < 0, 0, 200 > // Add a bit of vertical jump
+		vector v = forward * 400 + up * 200 + < 0, 0, 200 > // Add a bit of vertical jump
 		entity prop = CreatePhysicsThermiteTrail( origin, owner, inflictor, null, v, RandomFloatRange( thermiteLifetimeMin, thermiteLifetimeMax ), METEOR_FX_TRAIL, damageSourceId, splitCount + 1 )
 
 		trailAngles = VectorToAngles( v )
