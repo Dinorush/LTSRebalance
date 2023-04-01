@@ -693,7 +693,7 @@ void function PerfectKits_IceDashThink( entity player )
 
 	player.SetGroundFrictionScale( 0.0 )
 	player.SetTitanDisembarkEnabled( false )
-	float threshold = expect float( GetSettingsForPlayer_DodgeTable( MGetPlayer() )["dodgeSpeed"] ) * PERFECTKITS_ICE_THRESHOLD_STOP_DIST_FRAC
+	float threshold = expect float( GetSettingsForPlayer_DodgeTable( player )["dodgeSpeed"] ) * PERFECTKITS_ICE_THRESHOLD_STOP_DIST_FRAC
 
 	WaitEndFrame()
 
