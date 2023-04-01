@@ -29,5 +29,9 @@ WeaponData
 			"ammo_min_to_fire"								"--96" // should match ammo per shot
 			"hud_icon"										"rui/titan_loadout/passive/monarch_core_missile_racks"
 		}
+		PerfectKits_rapid_rearm
+		{
+			"deploy_time"									"*0.01"
+		}
 	}
 }
