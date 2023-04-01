@@ -59,5 +59,10 @@ WeaponData
 
 			"viewmodel"   									"models/weapons/titan_bt_rocket_pod/atpov_titan_bt_rocket_pod_right.mdl"
 		}
+
+		PerfectKits_rapid_rearm
+		{
+			"deploy_time"									"*0.01"
+		}
 	}
 }
