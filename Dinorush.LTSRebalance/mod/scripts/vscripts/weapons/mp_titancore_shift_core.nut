@@ -222,10 +222,7 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 
 			entity ordnance = titan.GetOffhandWeapon( OFFHAND_RIGHT )
 			if ( IsValid( ordnance ) && ordnance.GetWeaponClassName() == "mp_titanweapon_arc_wave" )
-			{
 				ordnance.AddMod( "LTSRebalance_core_regen" )
-				ordnance.SetWeaponPrimaryClipCount( ordnance.GetWeaponPrimaryClipCountMax() )
-			}
 		}
 		else
 		{
