@@ -199,7 +199,7 @@ void function ArcWaveOnDamage( entity ent, var damageInfo )
 
 	EmitSoundOnEntity( ent, ARC_CANNON_TITAN_SCREEN_SFX )
 
-	float duration = ( PerfectKits_Enabled() && projectile.ProjectileGetMods().contains( "pas_ronin_arcwave" ) ) ? 6.0 : 2.0
+	float duration = ( PerfectKits_Enabled() && projectile.ProjectileGetMods().contains( "pas_ronin_arcwave" ) ) ? 10.0 : 2.0
 	if ( ent.IsPlayer() || ent.IsNPC() )
 	{
 		//Run any custom callbacks for arc wave damage.
