@@ -30,6 +30,9 @@ const SPIN_EFFECT_3P = $"P_predator_barrel_blur"
 const float PAS_LEGION_SMARTCORE_DAMAGE_MOD = 0.005
 const float PAS_LEGION_SMARTCORE_EFFECT_DURATION = 2.0467 // Extra decimal since it tends to cap 1 bullet below what it should
 const int ARRAY_CAP = 64 // Used for Sensor Array, should be >= fire rate * 2 * duration
+const float PERFECTKITS_PAS_LEGION_SPINUP_SPEED_MAX = 700.0
+const float PERFECTKITS_PAS_LEGION_SPINUP_SPEED_MIN = 300.0
+const float PERFECTKITS_PAS_LEGION_SPINUP_DAMAGE_MIN = 0.5
 
 #if CLIENT
 struct {
@@ -496,9 +499,14 @@ void function PredatorCannon_DamagedTarget( entity target, var damageInfo )
 	if ( target.IsTitan() && ( flags & DF_SKIPS_DOOMED_STATE ) && GetDoomedState( target ) )
 		DamageInfo_SetDamage( damageInfo, target.GetHealth() + 1 )
 
-	// Only sensor array bonuses from here on
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
-	if ( !LTSRebalance_Enabled() || !IsValid( attacker ) || !attacker.IsTitan() || attacker.GetMainWeapons().len() == 0 )
+	if ( !IsValid( attacker ) || !attacker.IsTitan() || attacker.GetMainWeapons().len() == 0 )
+		return
+
+	if ( PerfectKits_Enabled() && attacker.GetMainWeapons()[0].HasMod( "PerfectKits_pas_legion_spinup" ) )
+		DamageInfo_ScaleDamage( damageInfo, GraphCapped( Length( attacker.GetVelocity() ), PERFECTKITS_PAS_LEGION_SPINUP_SPEED_MIN, PERFECTKITS_PAS_LEGION_SPINUP_SPEED_MAX, PERFECTKITS_PAS_LEGION_SPINUP_DAMAGE_MIN, 1.0 ) )
+
+	if ( !LTSRebalance_Enabled() )
 		return
 
 	entity inflictor = DamageInfo_GetInflictor( damageInfo )
