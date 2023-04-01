@@ -246,7 +246,9 @@ void function LTSRebalance_InitTracker( entity titan )
 	if ( LTSRebalance_Enabled() && loadout.passive2 in LTSREBALANCE_PASSIVE_TO_STRING )
 		ls.kit2 = LTSREBALANCE_PASSIVE_TO_STRING[ loadout.passive2 ]
 
-	if ( ls.kit2 == "Spectate" )
+	if ( PerfectKits_Enabled() && ls.kit2 == "Spectate" )
+		ls.kit2 = "Stealth Auto-Eject"
+	else if ( ls.kit2 == "Spectate" )
 		return
 
 	if ( loadout.titanClass == "vanguard" )

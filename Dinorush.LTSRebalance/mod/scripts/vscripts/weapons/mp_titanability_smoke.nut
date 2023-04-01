@@ -109,7 +109,17 @@ void function TitanSmokescreen( entity ent, entity weapon )
 		smokescreen.dpsPilot = 45
 		smokescreen.dpsTitan = 450
 	}
+
 	smokescreen.damageDelay = 1.0
+
+	entity soul = ent.GetTitanSoul()
+	if ( PerfectKits_Enabled() && IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_ANTI_RODEO ) )
+	{
+		smokescreen.dpsPilot = int( smokescreen.dpsPilot * PERFECTKITS_COUNTER_READY_MOD )
+		smokescreen.dpsTitan = int( smokescreen.dpsTitan * PERFECTKITS_COUNTER_READY_MOD )
+		float dpsTime = smokescreen.lifetime - smokescreen.damageDelay
+		smokescreen.lifetime = dpsTime / PERFECTKITS_COUNTER_READY_MOD + smokescreen.damageDelay
+	}
 
 	vector eyeAngles = <0.0, ent.EyeAngles().y, 0.0>
 	smokescreen.angles = eyeAngles
