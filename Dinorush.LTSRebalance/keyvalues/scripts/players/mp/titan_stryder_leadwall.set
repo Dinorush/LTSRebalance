@@ -1,0 +1,14 @@
+"titan_stryder_leadwall"
+{
+	"global"
+	{
+		ClassMods
+		{
+			PerfectKits_highlander
+			{
+				dodgeSpeed			*1.25
+				powerregenrate		*2.0
+			}
+		}
+	}
+}

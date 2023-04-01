@@ -1,6 +1,6 @@
 /* LTS Rebalance replaces this file for the following reasons:
    1. Implement baseline changes
-   2. Implement Highlander changes (LTS Rebalance + Perfect Kits)
+   2. Implement Highlander changes (LTS Rebalance)
    3. Implement Phase Reflex changes (LTS Rebalance + Perfect Kits)
 */
 global function OnWeaponPrimaryAttack_DoNothing
@@ -175,13 +175,6 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 	if ( soul != null )
 	{
 		entity titan = soul.GetTitan()
-		table titanDotS = expect table( titan.s )
-		if ( PerfectKits_Enabled() && titan.IsPlayer() && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
-		{
-			titan.SetPowerRegenRateScale( 100.0 )
-			AddEntityCallback_OnPostDamaged( titan, PerfectKits_HighlanderKnockback )
-		}
-
 		if ( titan.IsNPC() )
 		{
 			titan.SetAISettings( "npc_titan_stryder_leadwall_shift_core" )
@@ -250,15 +243,6 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 }
 
 #if SERVER
-void function PerfectKits_HighlanderKnockback( entity titan, var damageInfo )
-{
-	if ( !IsValid( titan ) || !titan.IsTitan() || DamageInfo_GetDamageType( damageInfo ) != DMG_MELEE_ATTACK )
-		return
-
-	vector dir = Normalize( titan.GetWorldSpaceCenter() - DamageInfo_GetDamagePosition( damageInfo ) )
-	titan.SetVelocity( dir * 3500 )
-}
-
 void function WatchForPhaseReflex( entity titan, StoredWeapon storedWeapon, int clipSize )
 {
     titan.EndSignal( "CoreEnd" )
@@ -385,9 +369,6 @@ void function RestorePlayerWeapons( entity player, StoredWeapon storedWeapon )
 				meleeWeapon.RemoveMod( "super_charged_SP" )
 			}
 		}
-
-		if ( PerfectKits_Enabled() && titan.IsPlayer() && SoulHasPassive( soul, ePassives.PAS_RONIN_SWORDCORE ) )
-			RemoveEntityCallback_OnPostDamaged( titan, PerfectKits_HighlanderKnockback )
 
 		if ( LTSRebalance_Enabled() && titan.IsPlayer() )
 		{
