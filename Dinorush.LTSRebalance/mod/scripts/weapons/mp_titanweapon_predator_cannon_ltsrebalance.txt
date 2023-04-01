@@ -697,7 +697,6 @@ WeaponData
 		PerfectKits_pas_legion_spinup
 		{
 			"ads_move_speed_scale"							"++100"
-			"ammo_clip_size"								"*0.8"
 		}
 		PerfectKits_Smart_Core
 		{
