@@ -94,6 +94,7 @@ int function LTSRebalance_GetEnergyCostWithReduction( entity weapon, bool stored
 
 	string key = stored ? "storedCostReduction" : "costReduction"
 	// Convert flat amount to fraction of default cost since Grand Cannon uses energy cost per shot
+	// Minimum cost of 1 since 0 cost makes ability icon disappear
 	if ( key in weapon.s )
 		return int( max( 1.0, curCost * ( 1.0 - float( weapon.s[key] ) / float( weapon.GetWeaponDefaultEnergyCost( 1 ) ) ) ) )
 
