@@ -95,7 +95,7 @@ int function LTSRebalance_GetEnergyCostWithReduction( entity weapon, bool stored
 	string key = stored ? "storedCostReduction" : "costReduction"
 	// Convert flat amount to fraction of default cost since Grand Cannon uses energy cost per shot
 	if ( key in weapon.s )
-		return int( curCost * ( 1.0 - float( weapon.s[key] ) / float( weapon.GetWeaponDefaultEnergyCost( 1 ) ) ) )
+		return int( max( 1.0, curCost * ( 1.0 - float( weapon.s[key] ) / float( weapon.GetWeaponDefaultEnergyCost( 1 ) ) ) ) )
 
 	return curCost
 }
@@ -109,7 +109,7 @@ var function OnWeaponPrimaryAttack_titanweapon_laser_lite( entity weapon, Weapon
 
 	if ( LTSRebalance_Enabled() && attackParams.burstIndex == 0 && "storedCostReduction" in weapon.s )
 	{
-		weapon.s.costReduction <- weapon.s.storedCostReduction 
+		weapon.s.costReduction <- weapon.s.storedCostReduction
 		weapon.s.storedCostReduction = 0
 		weapon.Signal( "LaserResetCost" )
 	}
