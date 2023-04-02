@@ -594,11 +594,7 @@ void function PerfectKits_OvercoreThink( entity soul )
 
 		int selfDamage = soul.IsDoomed() ? PERFECTKITS_OVERCORE_MIN_DAMAGE : int( titan.GetMaxHealth() * PERFECTKITS_OVERCORE_DRAIN_FRAC )
 		titan.TakeDamage( selfDamage, titan, titan, { scriptType = DF_DOOMED_HEALTH_LOSS, damageSourceId = eDamageSourceId.mp_titanability_overcore, origin = titan.GetWorldSpaceCenter() } )
-		float oldTotalCredit = SoulTitanCore_GetNextAvailableTime( soul )
-		float newTotalCredit = PERFECTKITS_OVERCORE_GAIN + oldTotalCredit
-		if ( newTotalCredit >= 0.998 ) //JFS - the rui has a +0.001 for showing the meter as full. This fixes the case where the core meter displays 100 but can't be fired.
-			newTotalCredit = 1.0
-		SoulTitanCore_SetNextAvailableTime( soul, newTotalCredit )
+		AddCreditToTitanCoreBuilder( titan, PERFECTKITS_OVERCORE_GAIN )
 	}
 }
 
