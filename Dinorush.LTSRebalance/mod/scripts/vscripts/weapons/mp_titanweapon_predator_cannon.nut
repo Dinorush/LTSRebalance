@@ -189,7 +189,8 @@ void function ClLTSRebalance_SensorArrayUIThink( entity player, entity weapon )
 	OnThreadEnd(
 		function() : ()
 		{
-			RuiSetFloat( file.clSensorArrayText, "msgAlpha", 0.0 )
+			if ( file.clSensorArrayText != null )
+				RuiSetFloat( file.clSensorArrayText, "msgAlpha", 0.0 )
 		}
 	)
 
