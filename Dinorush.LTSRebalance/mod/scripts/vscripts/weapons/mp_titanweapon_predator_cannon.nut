@@ -141,7 +141,7 @@ void function OnWeaponActivate_titanweapon_predator_cannon( entity weapon )
 
 	#if CLIENT
 	entity weaponOwner = weapon.GetWeaponOwner()
-	if ( ClLTSRebalance_CanDoUI( weaponOwner ) )
+	if ( ClLTSRebalance_CanDoUI( weaponOwner ) && file.clSensorArrayText != null )
 		thread ClLTSRebalance_SensorArrayUIThink( weaponOwner, weapon )
 	#endif
 
