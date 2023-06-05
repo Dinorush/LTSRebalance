@@ -477,10 +477,16 @@ float function HandleBlockingAndCalcDamageScaleForHit( entity blockingEnt, var d
         weapon.SetWeaponPrimaryClipCount( newAmmo )
         float newPower = float( weapon.GetWeaponPrimaryClipCountMax() - newAmmo ) / ( damageIncrement / 10.0 )
 
-		if ( newPower != oldPower ) // Geometric sum formula
+		if ( newPower != oldPower )
 		{
+			// Formula explanation:
+			// Numerator: Gets the difference between the damage reduction modifiers.
+			// Denominator: Gets the difference in damage values of new and old, then multiplies by a single exponent step.
+			//                Essentially, calculates the difference of singular damage increases.
+			// Result: The "average value" of the two exponents across the two powers. In essence, the equation is just an average value formula, but modified
+			//         to fit the exponential curve of the numerator.
 			float increase = ( ( pow( exponent, newPower ) - pow( exponent, oldPower ) ) /
-							( exponentMin * ( newPower - oldPower ) * LTSREBALANCE_TITAN_BLOCK_DAMAGE_PER_INCREMENT ) )
+							( exponentMin * ( newPower - oldPower ) * damageIncrement ) )
 
 			if ( remainingDamage > 0 ) // Handle overspill damage
 			{
