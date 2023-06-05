@@ -288,7 +288,7 @@ void function ServerPhaseShiftPlayerThread( entity ent, float warmupTime, float 
 		entity rider = GetRodeoPilot( ent )
 		if ( rider != null && Rodeo_IsAttached( rider ) )
 		{
-			if ( LTSRebalance_Enabled() || !rider.IsPlayer() )
+			if ( ( LTSRebalance_Enabled() && rider.GetTeam() != ent.GetTeam() ) || !rider.IsPlayer() )
 				rider.Signal( "RodeoOver" )
 			else
 				PhaseShift( rider, 0, shiftTime )
