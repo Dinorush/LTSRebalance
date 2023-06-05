@@ -25,7 +25,7 @@ const string FLAME_WAVE_MIDDLE_SFX = "flamewave_blast_middle"
 const string FLAME_WAVE_RIGHT_SFX = "flamewave_blast_right"
 
 const float LTSREBALANCE_HEALTH_FRAC_FLOOR = 0.25
-const float LTSREBALANCE_FLOOR_DAMAGE_FRAC = 0.5
+const float LTSREBALANCE_FLOOR_DAMAGE_FRAC = 0.6
 
 void function MpTitanWeaponFlameWave_Init()
 {
