@@ -244,6 +244,10 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
 
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, contactPos, damageSourceID, weaponName, "projectile" )
 		VortexDrainedByImpact( weapon, projectile, projectile, null )
+
+		if ( LTSRebalance_Enabled() )
+			projectile.s.noRefireExplosion <- true
+
 		if ( impactData.refireBehavior == VORTEX_REFIRE_ABSORB )
 			return true
 		Vortex_SpawnHeatShieldPingFX( weapon, impactData, false )

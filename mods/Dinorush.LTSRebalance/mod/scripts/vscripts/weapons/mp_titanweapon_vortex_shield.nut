@@ -419,8 +419,13 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
 
-		return TryVortexAbsorb( vortexSphere, attacker, contactPos, damageSourceID, projectile, weaponName, "projectile", projectile, null, weapon.HasMod( "burn_mod_titan_vortex_shield" ) )
+		bool result = TryVortexAbsorb( vortexSphere, attacker, contactPos, damageSourceID, projectile, weaponName, "projectile", projectile, null, weapon.HasMod( "burn_mod_titan_vortex_shield" ) )
+		if ( result && LTSRebalance_Enabled() )
+			projectile.s.noRefireExplosion <- true
+
+		return result
 	#endif
+	unreachable
 }
 
 // Dumb method to determine if it's from Northstar Prime/Tone Prime termination because we can't set refire behavior to absorb in attachments

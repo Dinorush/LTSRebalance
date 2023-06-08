@@ -33,8 +33,6 @@ global function Vortex_HandleElectricDamage
 global function VortexSphereDrainHealthForDamage
 global function Vortex_CreateImpactEventData
 global function Vortex_SpawnHeatShieldPingFX
-global function LTSRebalance_GetProjectileDamage // Needed for logging damage blocked on Vortex/Thermal
-global function LTSRebalance_GetWeaponDamage
 #endif
 
 global function Vortex_SetTagName
@@ -1995,7 +1993,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 
 		float damage = float( projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value ) )
 		if ( LTSRebalance_Enabled() )
-			damage = GetProjectileDamageToParticle( projectile, false )
+			damage = GetProjectileDamageToParticle( projectile, false, IsValid( attacker ) && attacker.IsNPC() ? false : true )
 
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )
@@ -2067,6 +2065,9 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		return false
 	}
 
+	#if SERVER
+	projectile.s.noRefireExplosion <- true
+	#endif
 	return true
 }
 
@@ -2108,6 +2109,7 @@ bool function OnVortexHitProjectile_BubbleShieldNPC( entity vortexSphere, entity
 			ClusterRocket_Detonate( projectile, normal )
 			CreateNoSpawnArea( TEAM_INVALID, TEAM_INVALID, contactPos, ( CLUSTER_ROCKET_BURST_COUNT / 5.0 ) * 0.5 + 1.0, CLUSTER_ROCKET_BURST_RANGE + 100 )
 		}
+		projectile.s.noRefireExplosion <- true
 	#endif
 	return true
 }
@@ -2250,7 +2252,7 @@ function LTSRebalance_FixVortexRefireExplosion( projectile )
 {
 	// Ignore projectiles we don't need to fix
 	expect entity( projectile )
-	if ( !( "storedFlags" in projectile.s ) )
+	if ( !( "storedFlags" in projectile.s ) || "noRefireExplosion" in projectile.s )
 		return
 
 	array var_mods = ( "storedReflectMods" in projectile.s ) ? expect array( projectile.s.storedReflectMods ) : []
@@ -2309,18 +2311,6 @@ function LTSRebalance_FixVortexRefireExplosion( projectile )
 		expect int( projectile.s.storedFlags ),
 		projectile.ProjectileGetDamageSourceID()
 		)
-}
-
-// Global version of the function with proper naming
-float function LTSRebalance_GetProjectileDamage( entity projectile, bool heavyArmor = true, bool isPlayer = true )
-{
-	return GetProjectileDamageToParticle( projectile, heavyArmor, isPlayer )
-}
-
-// Global version of the function with proper naming
-float function LTSRebalance_GetWeaponDamage( entity weapon, var damageInfo = null, bool heavyArmor = true, bool isPlayer = true )
-{
-	return GetWeaponDamageToParticle( weapon, damageInfo, heavyArmor, isPlayer )
 }
 
 // Returns the damage a hitscan weapon should have done given a weapon, its damage info,
