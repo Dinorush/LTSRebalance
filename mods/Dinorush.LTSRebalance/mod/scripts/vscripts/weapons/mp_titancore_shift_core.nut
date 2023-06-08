@@ -202,9 +202,6 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 			int clipSize = mainWeapon.GetWeaponPrimaryClipCountMax()
 
 			titan.TakeWeaponNow( storedWeapon.name )
-			// Since Leadwall is removed during Sword Core, we need to adjust held weapon data if Phase Reflex is triggered
-			// if ( SoulHasPassive( soul, ePassives.PAS_RONIN_AUTOSHIFT ) )
-			// 	thread WatchForPhaseReflex( titan, storedWeapon, clipSize )
 
 			array<string> mods = []
 			if( meleeWeapon.HasMod( "modelset_prime" ) )
@@ -240,29 +237,6 @@ var function OnAbilityStart_Shift_Core( entity weapon, WeaponPrimaryAttackParams
 }
 
 #if SERVER
-void function WatchForPhaseReflex( entity titan, StoredWeapon storedWeapon, int clipSize )
-{
-    titan.EndSignal( "CoreEnd" )
-    titan.EndSignal( "OnDestroy" )
-	titan.EndSignal( "OnDeath" )
-	titan.EndSignal( "DisembarkingTitan" )
-    titan.EndSignal( "TitanEjectionStarted" )
-
-	while(1)
-	{
-		if ( titan.IsPhaseShifted() )
-		{
-			table titanDotS = expect table( titan.s )
-			if ( "PerfectReflexForced" in titanDotS && titanDotS.PerfectReflexForced )
-				continue
-
-			storedWeapon.clipCount = minint( storedWeapon.clipCount + LTSREBALANCE_PHASE_REFLEX_AMMO, clipSize )
-			return
-		}
-		WaitFrame()
-	}
-}
-
 void function Shift_Core_End( entity weapon, entity player, float delay, StoredWeapon storedWeapon )
 {
 	weapon.EndSignal( "OnDestroy" )
