@@ -202,8 +202,6 @@ bool function OnWeaponVortexHitBullet_titanweapon_heat_shield( entity weapon, en
 		entity attackerWeapon		= DamageInfo_GetWeapon( damageInfo )
 		string attackerWeaponName	= attackerWeapon.GetWeaponClassName()
 
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), attacker, weapon, damageInfo )
-
 		// Technically runs for every single pellet, but knockback doesn't stack so idc
 		if ( LTSRebalance_Enabled() && IsValid( attacker ) && IsValid( attackerWeapon ) && attackerWeapon.HasMod( "CloseRangePowerShot") )
 		{
@@ -243,10 +241,6 @@ bool function OnWeaponVortexHitProjectile_titanweapon_heat_shield( entity weapon
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()
-
-		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
-		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), logAttacker, projectile )
 
 		local impactData = Vortex_CreateImpactEventData( weapon, attacker, contactPos, damageSourceID, weaponName, "projectile" )
 		VortexDrainedByImpact( weapon, projectile, projectile, null )

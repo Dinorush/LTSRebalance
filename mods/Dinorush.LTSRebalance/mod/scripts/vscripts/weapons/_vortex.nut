@@ -1836,10 +1836,6 @@ bool function CodeCallback_OnVortexHitBullet( entity weapon, entity vortexSphere
 		entity weapon = DamageInfo_GetWeapon( damageInfo )
 		float damage = ceil( DamageInfo_GetDamage( damageInfo ) )
 
-		entity logWeapon = LTSRebalance_DamageInfo_GetWeapon( damageInfo )
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), DamageInfo_GetAttacker( damageInfo ), logWeapon, damageInfo )
-
-
 		Assert( damage >= 0, "Bug 159851 - Damage should be greater than or equal to 0.")
 		damage = max( 0.0, damage )
 
@@ -2000,9 +1996,6 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		float damage = float( projectile.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value ) )
 		if ( LTSRebalance_Enabled() )
 			damage = GetProjectileDamageToParticle( projectile, false )
-		
-		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
-		LTSRebalance_LogDamageBlocked( vortexSphere.GetOwner(), logAttacker, projectile )
 
 		//	once damageInfo is passed correctly we'll use that instead of looking up the values from the weapon .txt file.
 		//	local damage = ceil( DamageInfo_GetDamage( damageInfo ) )

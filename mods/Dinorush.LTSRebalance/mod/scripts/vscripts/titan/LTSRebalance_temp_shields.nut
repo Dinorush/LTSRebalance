@@ -53,13 +53,6 @@ void function LTSRebalance_AddTempShields( entity soul, int tempShields, int tem
 	tempOverflow += extraShields
 	tempShields -= tempOverflow
 
-	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( soul.GetTitan() )
-	if ( ls != null )
-	{
-		expect LTSRebalance_LogStruct( ls )
-		ls.tempShieldsGained += tempShields
-	}
-
 	// Set the shield health and add the newly created temp shield to the list 
 	soul.SetShieldHealth( soul.GetShieldHealth() + tempShields )
 	soul.s.tempShields.append(
@@ -79,19 +72,6 @@ void function LTSRebalance_AddTempShields( entity soul, int tempShields, int tem
 void function LTSRebalance_HandleTempShieldChange( entity soul, int change )
 {
 	#if SERVER
-	if ( change > 0 ) // Hijacking this function to log shield gain stats
-	{
-		LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( soul.GetTitan() )
-		if ( ls != null )
-		{
-			expect LTSRebalance_LogStruct( ls )
-			int tempShields = LTSRebalance_GetTempShieldHealth( soul )
-			int shieldsGained = minint( change, soul.GetShieldHealthMax() - soul.GetShieldHealth() + tempShields )
-			ls.shieldsGained += shieldsGained
-			ls.shieldsWasted += change - shieldsGained
-		}
-	}
-
 	// Check whether temp shields exists
 	if ( !LTSRebalance_Enabled() || change == 0 || !( "tempShields" in soul.s ) || soul.s.tempShields.len() == 0 )
 		return

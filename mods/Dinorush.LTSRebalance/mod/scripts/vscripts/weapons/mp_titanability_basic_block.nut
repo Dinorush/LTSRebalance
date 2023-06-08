@@ -628,8 +628,6 @@ void function BasicBlock_OnDamage( entity blockingEnt, var damageInfo )
 
 	StartParticleEffectInWorldWithControlPoint( GetParticleSystemIndex( $"P_impact_xo_sword" ), DamageInfo_GetDamagePosition( damageInfo ) + vec1*200, VectorToAngles( vec1 ) + <90,0,0>, <255,255,255> )
 
-	LTSRebalance_LogDamageBlockedRaw( blockingEnt, DamageInfo_GetAttacker( damageInfo ), DamageInfo_GetDamage( damageInfo ) * ( 1 - damageScale ), true )
-
 	DamageInfo_ScaleDamage( damageInfo, damageScale )
 
 	// ideally this would be DF_INEFFECTIVE, but we are out of damage flags

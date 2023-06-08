@@ -25,10 +25,6 @@ These weapons have limitations that prevent them from working with certain mods 
 - 40mm Tracker Cannon
   - Reticles are replaced. Reticle mods that use KeyValue modding will not work.
 
-### Logging
-
-When playing LTS, the mod tracks a multitude of player performance stats and prints them at the end of each round (server-side) for those interested in stats and data.
-
 ## FAQs
 
 ### My game bugs out/crashed when I played Tone/Monarch on normal servers.

@@ -220,13 +220,6 @@ void function CoreActivate( entity player )
 
 	if ( IsValid( soul ) && !player.ContextAction_IsMeleeExecution() )
 	{
-		LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( player )
-		if ( ls != null )
-		{
-			expect LTSRebalance_LogStruct( ls )
-			ls.coresUsed++
-		}
-
 		if ( TitanDamageRewardsTitanCoreTime() )
 			SoulTitanCore_SetNextAvailableTime( soul, 0.0 )
 		else
