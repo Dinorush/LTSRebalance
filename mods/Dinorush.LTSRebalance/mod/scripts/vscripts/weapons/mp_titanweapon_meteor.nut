@@ -305,10 +305,7 @@ void function TemperedPlating_DamageReduction( entity ent, var damageInfo )
 	if ( IsValid( soul ) && SoulHasPassive( soul, ePassives.PAS_SCORCH_SELFDMG ) )
 	{
 		if ( "scorchLastBurnTime" in soul.s && soul.s.scorchLastBurnTime + PAS_SCORCH_SELFDMG_GRACE_PERIOD >= Time() )
-		{
-			LTSRebalance_LogDamageBlockedRaw( ent, DamageInfo_GetAttacker( damageInfo ), DamageInfo_GetDamage( damageInfo ) * PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION, true )
 			DamageInfo_ScaleDamage( damageInfo, 1.0 - PAS_SCORCH_SELFDMG_DAMAGE_REDUCTION )
-		}
 
 		if ( PerfectKits_Enabled() )
 		{
@@ -338,7 +335,7 @@ void function TemperedPlating_DamageReduction( entity ent, var damageInfo )
 				if ( segmentsLost < 4 )
 					segmentsLost++
 			}
-			LTSRebalance_LogDamageBlockedRaw( ent, DamageInfo_GetAttacker( damageInfo ), DamageInfo_GetDamage( damageInfo ) - totalDamage, true )
+
 			DamageInfo_SetDamage( damageInfo, totalDamage )
 		}
 	}

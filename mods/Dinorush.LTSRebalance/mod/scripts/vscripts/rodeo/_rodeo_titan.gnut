@@ -1824,14 +1824,6 @@ void function Rodeo_ApplyBatteryToTitan( entity battery, entity titan )
 		int totalHealth = minint( titan.GetMaxHealth(), trgtHealth )
 		int callbackHealth = minint( addHealth, titan.GetMaxHealth() - titan.GetHealth() )
 
-		LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( titan )
-		if ( ls != null )
-		{
-			expect LTSRebalance_LogStruct( ls )
-			ls.batteriesToSelf++
-			ls.healthWasted += maxint( 0, trgtHealth - totalHealth )
-		}
-
 		// Additional logic for Rebalance Survival of the Fittest
         if ( LTSRebalance_Enabled() && SoulHasPassive( soul, ePassives.PAS_VANGUARD_DOOM ) && soul.IsDoomed() && trgtHealth > totalHealth )
 		{
@@ -1948,13 +1940,6 @@ void function Rodeo_PilotAddsBatteryToFriendlyTitan( entity rider, entity titan 
 
 	if ( file.applyBatteryCallback != null )
 		file.applyBatteryCallback( rider, titan, battery )
-
-	LTSRebalance_LogStruct ornull ls = LTSRebalance_GetLogStruct( rider )
-	if ( ls != null )
-	{
-		expect LTSRebalance_LogStruct( ls )
-		ls.batteriesToAllyPilot++
-	}
 
 	Rodeo_ApplyBatteryToTitan( battery, titan ) //This destroys the battery
 

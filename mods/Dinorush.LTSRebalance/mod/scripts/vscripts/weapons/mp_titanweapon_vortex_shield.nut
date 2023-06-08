@@ -391,8 +391,6 @@ bool function OnWeaponVortexHitBullet_titanweapon_vortex_shield( entity weapon, 
 		if ( LTSRebalance_Enabled() && attacker.GetTeam() == owner.GetTeam() )
 			return false
 
-		LTSRebalance_LogDamageBlocked( owner, attacker, weapon, damageInfo )
-
 		// Technically runs for every single pellet, but knockback doesn't stack so idc
 		if ( LTSRebalance_Enabled() && IsValid( attackerWeapon ) && attackerWeapon.HasMod( "CloseRangePowerShot") )
 		{
@@ -417,10 +415,6 @@ bool function OnWeaponVortexHitProjectile_titanweapon_vortex_shield( entity weap
 
 		if ( !ValidateVortexDirection( weapon, attacker, projectile ) )
 			return false
-
-		entity logAttacker = IsValid( attacker ) ? attacker : projectile.GetOwner()
-		bool isPlayer = !IsValid( logAttacker ) || logAttacker.IsPlayer()
-		LTSRebalance_LogDamageBlocked( weapon.GetWeaponOwner(), logAttacker, projectile )
 
 		int damageSourceID = projectile.ProjectileGetDamageSourceID()
 		string weaponName = projectile.ProjectileGetWeaponClassName()

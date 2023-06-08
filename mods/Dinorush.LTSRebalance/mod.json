@@ -3,7 +3,7 @@
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.\nCredits: JustANormalUser - HUD Revamp UI scripts",
 	"LoadPriority": 2,
 	"RequiredOnClient": true,
-	"Version": "0.13.2",
+	"Version": "1.0.0",
 
 	"ConVars": [
 		{
@@ -47,13 +47,6 @@
 			"ServerCallback": {
 				"Before": "LTSRebalance_PreInit",
 				"After": "LTSRebalance_Init"
-			}
-		},
-		{
-			"Path": "LTSRebalance_log_handler.nut",
-			"RunOn": "SERVER && MP",
-			"ServerCallback": {
-				"After": "LTSRebalance_LogInit"
 			}
 		}
 	],

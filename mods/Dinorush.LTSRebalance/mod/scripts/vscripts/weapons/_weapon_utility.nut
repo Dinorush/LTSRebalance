@@ -3062,8 +3062,6 @@ void function WeaponAttackWave( entity ent, int projectileCount, entity inflicto
 					( vortexWeapon.GetWeaponClassName() == "mp_titanweapon_vortex_shield_ion" || vortexWeapon.GetWeaponClassName() == "mp_titanweapon_heat_shield" ) )
 					i = maxint( i, maxCount - 5 )
 
-				if ( i == maxCount - 1 )
-					LTSRebalance_LogDamageBlockedRaw( vortexHit.vortex.GetOwner(), owner, float( damageNearValueTitanArmor ) )
 				WaitFrame()
 				continue
 			}
