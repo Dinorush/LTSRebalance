@@ -3,5 +3,7 @@
     "version_number": "1.0.0",
     "website_url": "https://github.com/Dinorush/LTSRebalance",
     "description": "Rebalances titans for better meta diversity, especially in LTS.",
-    "dependencies": []
+    "dependencies": [
+      "northstar-Northstar-1.14.2"
+    ]
 }
