@@ -1,4 +1,4 @@
-# Dinorush.LTSRebalance
+# LTS Rebalance
 
 **Required by Server and Client**
 
@@ -7,10 +7,6 @@ A comprehensive rebalancing of titans and titan kits focused on improving balanc
 ## Balance Changelog
 
 All balancing/changes can be viewed in [this changelog document](https://docs.google.com/document/d/10mZtK7w7MOTv9kGNQru96G7XpEZqv8_dUw_I29RhDj4/edit?usp=sharing).
-
-### Installation
-
-Download the zip from the [latest release](https://github.com/Dinorush/LTSRebalance/releases) and extract the files to `Titanfall2/R2Northstar/mods`.
 
 ### Activation
 
