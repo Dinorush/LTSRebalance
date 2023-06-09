@@ -15,7 +15,7 @@ jobs:
       
       - name: Create folder
         run: |
-          mkdir -p Dinorush.LTSRebalance_ && cp -R Dinorush.LTSRebalance/ Dinorush.LTSRebalance_KVFix/ Dinorush.LTSRebalance_/
+          mkdir -p Dinorush.LTSRebalance_ && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_/
 
       - name: Prepare image tag
         run: |
