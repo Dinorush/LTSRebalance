@@ -251,13 +251,13 @@ void function LTSRebalance_SetRicochetVelocity( entity projectile, entity ent )
 {
 	float bounceTime = Time()
 	float oldDist = Distance( projectile.GetOrigin(), ent.GetWorldSpaceCenter() )
-	projectile.proj.projectileBounceCount = 100
+	projectile.proj.projectileBounceCount = 100 // An arbitrarily high value tied to a check on collision, basically just gives infinite ricochet until it homes
 	WaitEndFrame()
 	
 	if ( !IsValid( projectile ) )
 		return
 	
-	projectile.proj.projectileBounceCount = 3
+	projectile.proj.projectileBounceCount = 3 // An arbitrary value between 2 and 100. Basically marks the projectile as no longer ricochet-able
 	if ( !IsValid( ent ) )
 	{
 		return
@@ -269,6 +269,8 @@ void function LTSRebalance_SetRicochetVelocity( entity projectile, entity ent )
 	vector angle = VectorToAngles( dir )
 	vector baseUpVec = AnglesToUp( angle )
 	vector baseRightVec = AnglesToRight( angle )
+
+	// Preserved values from when the shot is fired to match the box spread pattern and ads spread reduction.
 	int index = expect int( projectile.s.index )
 	float adsMult = expect float( projectile.s.adsMultiplier )
 

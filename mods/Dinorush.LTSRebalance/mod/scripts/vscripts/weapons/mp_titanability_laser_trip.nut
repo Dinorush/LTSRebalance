@@ -544,6 +544,10 @@ void function LaserTrip_DamagedPlayerOrNPC( entity ent, var damageInfo )
 	if ( !LTSRebalance_Enabled() )
 		return
 
+	// Rest of the code handles damage falloff. Normally only one tripwire does damage, but we need
+	// the closest one to deal damage. We let all tripwire do damage and adjust damage dealt so
+	// it totals to the damage of the closest one.
+
 	entity inflictor = DamageInfo_GetInflictor( damageInfo )
 
 	if ( !IsValid( inflictor) )
@@ -568,6 +572,7 @@ void function LaserTrip_DamagedPlayerOrNPC( entity ent, var damageInfo )
 		DamageInfo_SetDamage( damageInfo, 0 )
 }
 
+// Rebalance inflictor that doesn't restrict the times an enemy is hit so we can implement damage falloff.
 entity function CreatePylonDamageInflictorHelper()
 {
 	entity inflictor = CreateEntity( "info_target" )
