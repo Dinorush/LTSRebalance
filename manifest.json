@@ -1,0 +1,10 @@
+{
+    "name": "DinorushBrute4",
+    "version_number": "1.8.4",
+    "website_url": "https://github.com/Dinorush/Brute4",
+    "description": "Implements the Brute4 titan based on cut content.",
+    "dependencies": [
+		"northstar-Northstar-1.12.0",
+		"The_Peepeepoopoo_man-Titanframework-1.2.1"
+    ]
+}
