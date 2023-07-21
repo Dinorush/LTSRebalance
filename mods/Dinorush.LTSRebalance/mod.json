@@ -1,9 +1,9 @@
 {
 	"Name": "Dinorush's LTS Rebalance",
 	"Description": "Implements a number of changes to balance titans, mainly for LTS.\nCredits: JustANormalUser - HUD Revamp UI scripts",
-	"LoadPriority": 2,
+	"LoadPriority": 4,
 	"RequiredOnClient": true,
-	"Version": "1.0.2",
+	"Version": "1.0.3",
 
 	"ConVars": [
 		{
