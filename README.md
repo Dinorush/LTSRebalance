@@ -43,6 +43,10 @@ Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you e
 
 ## Patch Notes
 
+### 1.0.3
+
+- Small fix to make compatible with Brute4 v1.8.6
+
 ### 1.0.2
 
 - Updated for Northstar v1.17.0 compatibility
