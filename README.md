@@ -40,3 +40,17 @@ Technical ver: Northstar doesn't reparse weapon keyvalue files when reloading mo
 ### Can I turn off LTSRebalance_KVFix and still use LTSRebalance?
 
 Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you ever use the mod menu to enable/disable LTSRebalance, you will need to manually run `weapon_reparse` with `sv_cheats` on in the multiplayer menu/a private match or reboot your game to avoid the aforementioned issues. Unless you know what you're doing, I wouldn't recommend turning KVFix off.
+
+## Patch Notes
+
+### 1.0.2
+
+- Updated for Northstar v1.17.0 compatibility
+
+### 1.0.1
+
+- Removed outdated German translation
+
+### 1.0.0
+
+- Public release
