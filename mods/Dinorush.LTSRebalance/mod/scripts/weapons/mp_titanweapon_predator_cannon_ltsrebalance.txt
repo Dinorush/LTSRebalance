@@ -452,6 +452,7 @@ WeaponData
 	"pass_through_depth"							"0"
 	"pass_through_damage_preserved_scale"			"1.0"
 
+	"activitymodifier"								"mp_titanweapon_predator_cannon"
 
 	Mods
 	{
