@@ -17,6 +17,7 @@ WeaponData
 		LTSRebalance
 		{
 			"deploy_time" 							".15"
+			"viewkick_spring" 						"titan_leadwall"
 		}
         LTSRebalance_core_regen
         {
