@@ -28,7 +28,7 @@ WeaponData
 	// Models
 	"viewmodel"   									"models/weapons/titan_sword/atpov_titan_sword.mdl"
 	"playermodel" 									"models/weapons/titan_sword/w_titan_sword.mdl"
-	"holstermodel"    								"models/weapons/titan_sword/w_titan_sword.mdl"
+	"holstermodel"    								"models/dev/empty_model.mdl"
 
 	"damage_flags"									"DF_MELEE | DF_GIB"
 	"impact_effect_table"							"titan_sword"
@@ -110,13 +110,15 @@ WeaponData
 
 	"npc_max_range"   								"100"	// prevent COND_CAN_RANGE_ATTACK1
 	
+	"hide_holstered_sidearm_when_active"			"1"
+	"activitymodifier"								"melee_titan_sword_super_charged"
+
 	Mods
 	{
 		modelset_prime
 		{
-            "viewmodel"   									"models/weapons/titan_sword/atpov_titan_sword_prime.mdl"
-            "playermodel" 									"models/weapons/titan_sword/w_titan_sword_prime.mdl"
-            "holstermodel"    								"models/weapons/titan_sword/w_titan_sword_prime.mdl"
+			"viewmodel"   									"models/weapons/titan_sword/atpov_titan_sword_prime.mdl"
+			"playermodel" 									"models/weapons/titan_sword/w_titan_sword_prime.mdl"
 		}
 	}
 }
