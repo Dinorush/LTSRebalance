@@ -23,7 +23,6 @@ WeaponData
 			"impact_effect_table"								"titan_sword"
 			"melee_rumble_on_hit"								"titan_melee_hit_swordcore"
 			"offhand_transition_has_attach_detach_anim_events"	"0"
-			"activitymodifier"									"melee_titan_sword_super_charged"
 			"melee_angle"										"45"
 			"clear_fx_on_new_view_model"						"0"
         }
