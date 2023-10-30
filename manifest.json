@@ -1,6 +1,6 @@
 {
     "name": "LTS_Rebalance",
-    "version_number": "1.0.3",
+    "version_number": "1.0.4",
     "website_url": "https://github.com/Dinorush/LTSRebalance",
     "description": "Rebalances titans for better meta diversity, especially in LTS.",
     "dependencies": []

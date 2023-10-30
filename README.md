@@ -43,6 +43,13 @@ Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you e
 
 ## Patch Notes
 
+### 1.0.4
+
+- Fixed 3rd person animations for Predator Cannon and Sword Core
+- Sword Core no longer has two swords visually
+- Sword Blocking immediately after firing Leadwall has much snappier recoil
+- Fixed Auto-Titan explosion damage for Rocket Salvo and Tracker Rockets
+
 ### 1.0.3
 
 - Small fix to make compatible with Brute4 v1.8.6
