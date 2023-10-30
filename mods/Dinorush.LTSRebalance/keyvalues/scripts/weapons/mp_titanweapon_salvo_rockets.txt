@@ -9,6 +9,8 @@ WeaponData
 			"damage_near_value_titanarmor"   				"300"
 			"damage_far_value_titanarmor"   				"300"
 			"explosion_damage_heavy_armor"					"300"
+			"npc_explosion_damage"							"250"
+			"npc_explosion_damage_heavy_armor"				"300"
 
 			"ammo_stockpile_max"							"108"
 			"ammo_clip_size"   								"108"

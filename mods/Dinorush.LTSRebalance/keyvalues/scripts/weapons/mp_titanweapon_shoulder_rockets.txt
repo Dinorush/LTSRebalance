@@ -5,6 +5,8 @@ WeaponData
 		LTSRebalance_upgradeCore_Vanguard
 		{
 			"explosion_inner_radius"                        "60"
+			"npc_explosion_damage"							"100"
+			"npc_explosion_damage_heavy_armor"				"350"
 
 			"deploy_time" 									"0.2"
 
