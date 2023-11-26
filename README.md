@@ -43,6 +43,10 @@ Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you e
 
 ## Patch Notes
 
+### 1.0.6
+
+- Real fix for Sword Core crash, removed FX on the held Sword Core sword to fix. 
+
 ### 1.0.5
 
 - Fixed Sword Core crash for victims
