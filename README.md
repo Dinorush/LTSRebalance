@@ -43,6 +43,10 @@ Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you e
 
 ## Patch Notes
 
+### 1.0.5
+
+- Fixed Sword Core crash for victims
+
 ### 1.0.4
 
 - Fixed 3rd person animations for Predator Cannon and Sword Core

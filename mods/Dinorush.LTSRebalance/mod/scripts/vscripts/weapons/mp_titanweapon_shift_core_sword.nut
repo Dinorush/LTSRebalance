@@ -11,6 +11,15 @@ void function MpTitanweaponShiftCoreSword_Init()
 
 void function OnWeaponActivate_titanweapon_shift_core_sword( entity weapon )
 {
+	thread PlaySwordCoreFX_OnShow( weapon )
+}
+
+void function PlaySwordCoreFX_OnShow( entity weapon )
+{
+	weapon.EndSignal( "OnDestroy" )
+	while( weapon.GetModelName() == $"models/dev/empty_model.mdl" )
+		WaitFrame()
+
 	if ( weapon.HasMod( "modelset_prime" ) )
 		weapon.PlayWeaponEffectNoCull( SWORD_GLOW_PRIME_FP, SWORD_GLOW_PRIME, "sword_edge" )
 	else
