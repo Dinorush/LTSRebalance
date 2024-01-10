@@ -39,33 +39,33 @@ jobs:
           git apply pugs_ver.patch
           mkdir -p Dinorush.LTSRebalance_pugs_ver && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_pugs_ver/
 
-      - name: Prepare image tag
+      - name: Get clean version
         run: |
-          echo IMAGE_TAG=$(echo ${{ github.ref }} | tr '[:upper:]' '[:lower:]' | awk '{split($0,a,"/"); print a[3]}') >> $GITHUB_ENV
+          echo cleanVersion=$(echo ${{github.ref_name}} | sed s/v//g) >> $GITHUB_ENV
 
       - uses: vimtor/action-zip@v1
         name: zip rebalanced
         with:
           files: ./Dinorush.LTSRebalance
-          dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
+          dest: ./Dinorush.LTSRebalance_${{ github.ref_name }}.zip
 
       - uses: vimtor/action-zip@v1
         name: zip pugs version rebalanced
         with:
           files: ./Dinorush.LTSRebalance_pugs_ver
-          dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}_pugs_ver.zip
+          dest: ./Dinorush.LTSRebalance_${{ github.ref_name }}_pugs_ver.zip
             
       - name: Attach the mod to the release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
+          files: ./Dinorush.LTSRebalance_${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach the mod to the release for pugs version
         uses: softprops/action-gh-release@v1
         with:
-          files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}_pugs_ver.zip
+          files: ./Dinorush.LTSRebalance_${{ github.ref_name }}_pugs_ver.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -75,8 +75,8 @@ jobs:
           community: northstar
           namespace: ${{ github.repository_owner }}
           name: LTS_Rebalance
-          version: ${{ github.ref_name }}
+          version: ${{ env.cleanVersion }}
           description: Rebalances titans for better meta diversity, especially in LTS.
           token: ${{ secrets.TS_KEY }}
-          file: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
+          file: ./Dinorush.LTSRebalance_${{ github.ref_name }}.zip
           categories: Mods Server-side Client-side
