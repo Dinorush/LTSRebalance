@@ -43,6 +43,10 @@ Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you e
 
 ## Patch Notes
 
+### 1.0.8
+
+- Increment version for MAD verification (I'm very mad)
+
 ### 1.0.7
 
 - Increment version for auto download verification
