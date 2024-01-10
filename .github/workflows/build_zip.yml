@@ -15,7 +15,8 @@ jobs:
           echo cleanVersion=$(echo ${{github.ref_name}} | sed s/v//g) >> $GITHUB_ENV
       - name: Check that version matches
         run: |
-          if [[ "$(grep -Po "\d+\.\d+\.\d+" $(find ./ -name mod.json))" != "${{ env.cleanVersion }}" ]]; then
+          if [[ "$(grep -Po "\d+\.\d+\.\d+" $(find ./mods/Dinorush.LTSRebalance -name mod.json))" != "${{ env.cleanVersion }}" ||
+                "$(grep -Po "\d+\.\d+\.\d+" $(find ./mods/Dinorush.LTSRebalance_KVFix -name mod.json))" != "${{ env.cleanVersion }}" ]]; then
             echo "::debug::${{env.cleanVersion}}"
             echo "::debug::$(cat $(find ./ -name mod.json ))"
             echo "::error::Version in mod.json does not match tag version"
