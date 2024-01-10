@@ -7,9 +7,6 @@ on:
 
 jobs:
   upload-zip:
-    strategy:
-      matrix:
-        branch: [main, pugs_ver]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -19,30 +16,38 @@ jobs:
         with:
           ref: ${{ matrix.branch }}
       
-      - name: Create folder
+      - name: Create Folders
         run: |
-          mkdir -p Dinorush.LTSRebalance_ && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_/
+          mkdir -p Dinorush.LTSRebalance && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_/
+          git apply pugs_ver.patch
+          mkdir -p Dinorush.LTSRebalance_pugs_ver && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_pugs_ver/
 
       - name: Prepare image tag
         run: |
           echo IMAGE_TAG=$(echo ${{ github.ref }} | tr '[:upper:]' '[:lower:]' | awk '{split($0,a,"/"); print a[3]}') >> $GITHUB_ENV
 
-      - name: Prepare zip file name
-        run: |
-          if [[ "${{ matrix.branch }}" == "pugs_ver" ]]; then
-            echo ZIP_SUFFIX="_pugs_ver" >> $GITHUB_ENV
-          else
-            echo ZIP_SUFFIX="" >> $GITHUB_ENV
-          fi
+      - uses: vimtor/action-zip@v1
+        name: zip rebalanced
+        with:
+          files: ./Dinorush.LTSRebalance
+          dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
 
       - uses: vimtor/action-zip@v1
+        name: zip pugs version rebalanced
         with:
-          files: ./Dinorush.LTSRebalance_
-          dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}${{ env.ZIP_SUFFIX }}.zip
+          files: ./Dinorush.LTSRebalance_pugs_ver
+          dest: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}_pugs_ver.zip
             
       - name: Attach the mod to the release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}${{ env.ZIP_SUFFIX }}.zip
+          files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach the mod to the release for pugs version
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}_pugs_ver.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
