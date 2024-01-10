@@ -6,8 +6,24 @@ on:
       - 'v*'
 
 jobs:
-  upload-zip:
+  verify:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get clean version
+        run: |
+          echo cleanVersion=$(echo ${{github.ref_name}} | sed s/v//g) >> $GITHUB_ENV
+      - name: Check that version matches
+        run: |
+          if [[ "$(grep -Po "\d+\.\d+\.\d+" $(find ./ -name mod.json))" != "${{ env.cleanVersion }}" ]]; then
+            echo "::debug::${{env.cleanVersion}}"
+            echo "::debug::$(cat $(find ./ -name mod.json ))"
+            echo "::error::Version in mod.json does not match tag version"
+            exit 1
+          fi
+  publish:
+    runs-on: ubuntu-latest
+    needs: verify
     permissions:
       contents: write
     steps:
@@ -51,3 +67,15 @@ jobs:
           files: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}_pugs_ver.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload to Thunderstore
+        uses: GreenTF/upload-thunderstore-package@v3.1
+        with:
+          community: northstar
+          namespace: ${{ github.repository_owner }}
+          name: LTS_Rebalance
+          version: ${{ github.ref_name }}
+          description: Rebalances titans for better meta diversity, especially in LTS.
+          token: ${{ secrets.TS_KEY }}
+          file: ./Dinorush.LTSRebalance_${{ env.IMAGE_TAG }}.zip
+          categories: Mods Server-side Client-side
