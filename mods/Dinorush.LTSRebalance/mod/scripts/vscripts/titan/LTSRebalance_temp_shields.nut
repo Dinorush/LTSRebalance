@@ -88,7 +88,7 @@ void function LTSRebalance_HandleTempShieldChange( entity soul, int change )
 
 		// Only overwrite temp shielding if shields overflow (i.e. shift temp shield amount to temp shield overflow)
 		int tempShieldOverwritten = change - ( soul.GetShieldHealthMax() - soul.GetShieldHealth() )
-		if ( tempShieldOverwritten < 0)
+		if ( tempShieldOverwritten < 0 )
 			return
 
 		LTSRebalance_HandleTempShieldChange_Internal( soul, tempShieldOverwritten, true )
