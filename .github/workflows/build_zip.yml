@@ -18,7 +18,7 @@ jobs:
       
       - name: Create Folders
         run: |
-          mkdir -p Dinorush.LTSRebalance && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_/
+          mkdir -p Dinorush.LTSRebalance && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance/
           git apply pugs_ver.patch
           mkdir -p Dinorush.LTSRebalance_pugs_ver && cp -R mods/ icon.png LICENSE manifest.json README.md Dinorush.LTSRebalance_pugs_ver/
 
