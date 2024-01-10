@@ -1,9 +1,8 @@
 name: Build mod zip
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 jobs:
   verify:
@@ -47,25 +46,25 @@ jobs:
         name: zip rebalanced
         with:
           files: ./Dinorush.LTSRebalance
-          dest: ./Dinorush.LTSRebalance_${{ github.ref_name }}.zip
+          dest: ./Dinorush.LTSRebalance_v${{ env.cleanVersion }}.zip
 
       - uses: vimtor/action-zip@v1
         name: zip pugs version rebalanced
         with:
           files: ./Dinorush.LTSRebalance_pugs_ver
-          dest: ./Dinorush.LTSRebalance_${{ github.ref_name }}_pugs_ver.zip
+          dest: ./Dinorush.LTSRebalance_v${{ env.cleanVersion }}_pugs_ver.zip
             
       - name: Attach the mod to the release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./Dinorush.LTSRebalance_${{ github.ref_name }}.zip
+          files: ./Dinorush.LTSRebalance_v${{ env.cleanVersion }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach the mod to the release for pugs version
         uses: softprops/action-gh-release@v1
         with:
-          files: ./Dinorush.LTSRebalance_${{ github.ref_name }}_pugs_ver.zip
+          files: ./Dinorush.LTSRebalance_v${{ env.cleanVersion }}_pugs_ver.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -78,5 +77,5 @@ jobs:
           version: ${{ env.cleanVersion }}
           description: Rebalances titans for better meta diversity, especially in LTS.
           token: ${{ secrets.TS_KEY }}
-          file: ./Dinorush.LTSRebalance_${{ github.ref_name }}.zip
+          file: ./Dinorush.LTSRebalance_v${{ env.cleanVersion }}.zip
           categories: Mods Server-side Client-side
