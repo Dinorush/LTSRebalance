@@ -21,4 +21,5 @@ WeaponData
 			"core_duration"									"++0.9" // About the amount of extra time added by this kit: (120 / (15.5 * 3) - 60 / (12 * 3))
 			"fire_rate"										"15.5"
 		}
+	}
 }
