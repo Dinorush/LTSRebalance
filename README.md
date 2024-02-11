@@ -43,6 +43,10 @@ Sure. LTSRebalance_KVFix is not necessary to use LTSRebalance. However, if you e
 
 ## Patch Notes
 
+### 1.1.0
+
+- Fix KeyValue compile error
+
 ### 1.0.7-9
 
 - Increment version for auto download verification
