@@ -14,7 +14,7 @@ WeaponData
 			"regen_ammo_refill_rate"						"*.5"
 			"shared_energy_cost"							"--75"
 		}
-		PerfectKits_pas_ion_tripwire
+		PerfectKitsReplace_pas_ion_tripwire
 		{
 			"shared_energy_cost"							"++750"
 		}
